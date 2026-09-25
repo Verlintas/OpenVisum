@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="common_back">返回</string>
+    <string name="common_cancel">取消</string>
+    <string name="common_play">播放</string>
+    <string name="common_off">关闭</string>
+
+    <string name="home_subtitle">什么都能播，在哪都能播。由 libVLC 驱动。</string>
+    <string name="home_open_file">打开文件</string>
+    <string name="home_open_url">打开网络串流</string>
+    <string name="home_url_title">网络串流</string>
+    <string name="home_url_hint">https://example.com/video.m3u8</string>
+    <string name="home_url_support_hint">支持 HTTP、HTTPS、HLS (m3u8)、SMB 和 WebDAV</string>
+    <string name="home_library_coming_soon">媒体库与文件夹浏览将在下个里程碑加入。</string>
+
+    <string name="player_play">播放</string>
+    <string name="player_pause">暂停</string>
+    <string name="player_back_10s">后退 10 秒</string>
+    <string name="player_forward_10s">前进 10 秒</string>
+    <string name="player_buffering">缓冲中…</string>
+    <string name="player_speed">倍速</string>
+    <string name="player_audio">音频</string>
+    <string name="player_subtitle">字幕</string>
+    <string name="player_equalizer">均衡器</string>
+    <string name="player_aspect">画面</string>
+    <string name="player_rotate">旋转</string>
+
+    <string name="player_audio_tracks">音轨</string>
+    <string name="player_subtitle_tracks">字幕轨</string>
+    <string name="player_add_subtitle">添加字幕文件</string>
+    <string name="player_no_tracks">没有可用轨道</string>
+    <string name="player_external">外挂</string>
+    <string name="player_track_default_name">轨道 %1$d</string>
+    <string name="player_audio_delay">音频延迟</string>
+    <string name="player_subtitle_delay">字幕延迟</string>
+    <string name="player_passthrough">HDMI 源码输出</string>
+    <string name="player_passthrough_hint">直接输出音频比特流给功放（实验性）</string>
+    <string name="player_passthrough_unavailable">当前输出不支持</string>
+    <string name="player_error_playback">播放失败</string>
+
+    <string name="aspect_fit_screen">适应屏幕</string>
+    <string name="aspect_fill_screen">铺满屏幕（裁剪）</string>
+    <string name="aspect_original">原始大小</string>
+    <string name="aspect_16_9">16:9</string>
+    <string name="aspect_4_3">4:3</string>
+    <string name="aspect_21_9">21:9</string>
+    <string name="aspect_235_1">2.35:1</string>
+
+    <string name="eq_enabled">启用均衡器</string>
+    <string name="eq_preset">预设</string>
+    <string name="eq_preamp">前置增益</string>
+</resources>
