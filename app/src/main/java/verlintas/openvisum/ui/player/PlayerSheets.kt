@@ -14,6 +14,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Cast
+import androidx.compose.material.icons.filled.CastConnected
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CloudDownload
 import androidx.compose.material.icons.filled.Download
@@ -46,12 +48,14 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import verlintas.openvisum.R
 import verlintas.openvisum.core.common.util.LanguageUtils
+import verlintas.openvisum.core.common.util.TimeUtils
 import verlintas.openvisum.core.data.subtitle.SubtitleSearchResult
 import verlintas.openvisum.core.player.equalizer.EqualizerPresets
 import verlintas.openvisum.core.player.model.AudioStereoMode
 import verlintas.openvisum.core.player.model.EqualizerState
 import verlintas.openvisum.core.player.model.PlaybackState
 import verlintas.openvisum.core.player.model.PlayerTrack
+import verlintas.openvisum.core.player.model.RendererDevice
 import verlintas.openvisum.core.player.model.SubtitleStyle
 import verlintas.openvisum.core.player.model.TrackType
 import verlintas.openvisum.core.player.model.VideoScaleMode
@@ -404,8 +408,11 @@ private fun DelaySlider(
 
 @Composable
 fun SpeedSheet(
-    currentRate: Float,
+    state: PlaybackState,
     onSelect: (Float) -> Unit,
+    onSetAbStart: () -> Unit,
+    onSetAbEnd: () -> Unit,
+    onClearAb: () -> Unit,
     onDismiss: () -> Unit,
 ) {
     val rates = listOf(0.25f, 0.5f, 0.75f, 1.0f, 1.25f, 1.5f, 2.0f, 2.5f, 3.0f, 4.0f)
@@ -413,16 +420,94 @@ fun SpeedSheet(
         title = stringResource(R.string.player_speed),
         onDismiss = onDismiss,
     ) {
-        LazyColumn(modifier = Modifier.heightIn(max = 360.dp)) {
+        LazyColumn(modifier = Modifier.heightIn(max = 320.dp)) {
             items(rates) { rate ->
                 ListItem(
                     headlineContent = { Text("%.2fx".format(rate)) },
-                    trailingContent = if (rate == currentRate) {
+                    trailingContent = if (rate == state.rate) {
                         { Icon(Icons.Filled.Check, contentDescription = null) }
                     } else {
                         null
                     },
                     modifier = Modifier.clickable { onSelect(rate) },
+                )
+            }
+        }
+        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+        Text(
+            text = stringResource(R.string.player_ab_loop),
+            style = MaterialTheme.typography.titleSmall,
+            modifier = Modifier.padding(vertical = 4.dp),
+        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            TextButton(onClick = onSetAbStart, modifier = Modifier.weight(1f)) {
+                Text(stringResource(R.string.player_ab_set_a))
+            }
+            TextButton(
+                onClick = onSetAbEnd,
+                enabled = state.abLoopStartMs != null,
+                modifier = Modifier.weight(1f),
+            ) {
+                Text(stringResource(R.string.player_ab_set_b))
+            }
+            TextButton(
+                onClick = onClearAb,
+                enabled = state.abLoopStartMs != null || state.abLoopEndMs != null,
+                modifier = Modifier.weight(1f),
+            ) {
+                Text(stringResource(R.string.player_ab_clear))
+            }
+        }
+        Text(
+            text = stringResource(
+                R.string.player_ab_range,
+                state.abLoopStartMs?.let(TimeUtils::formatDuration) ?: "--:--",
+                state.abLoopEndMs?.let(TimeUtils::formatDuration) ?: "--:--",
+            ),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(vertical = 4.dp),
+        )
+    }
+}
+
+@Composable
+fun CastSheet(
+    active: RendererDevice?,
+    devices: List<RendererDevice>,
+    onConnect: (String) -> Unit,
+    onDisconnect: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    TrackBottomSheet(
+        title = stringResource(R.string.player_cast),
+        onDismiss = onDismiss,
+    ) {
+        if (active != null) {
+            ListItem(
+                headlineContent = { Text(stringResource(R.string.player_cast_disconnect, active.name)) },
+                leadingContent = { Icon(Icons.Filled.CastConnected, contentDescription = null) },
+                modifier = Modifier.clickable(onClick = onDisconnect),
+            )
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+        }
+        if (devices.isEmpty()) {
+            Text(
+                text = stringResource(R.string.player_cast_searching),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(vertical = 12.dp),
+            )
+        } else {
+            devices.forEach { device ->
+                ListItem(
+                    headlineContent = { Text(device.name) },
+                    supportingContent = { Text(device.type.uppercase()) },
+                    leadingContent = { Icon(Icons.Filled.Cast, contentDescription = null) },
+                    modifier = Modifier.clickable { onConnect(device.id) },
                 )
             }
         }

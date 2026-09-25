@@ -15,6 +15,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AspectRatio
+import androidx.compose.material.icons.filled.Cast
+import androidx.compose.material.icons.filled.CastConnected
 import androidx.compose.material.icons.filled.Forward10
 import androidx.compose.material.icons.filled.GraphicEq
 import androidx.compose.material.icons.filled.MusicNote
@@ -51,11 +53,13 @@ import verlintas.openvisum.core.player.model.PlaybackState
 @Composable
 fun PlayerControls(
     state: PlaybackState,
+    isCasting: Boolean,
     onBack: () -> Unit,
     onTogglePlayPause: () -> Unit,
     onSeek: (Long) -> Unit,
     onSeekBy: (Long) -> Unit,
     onOpenSheet: (PlayerSheet) -> Unit,
+    onOpenCast: () -> Unit,
 ) {
     var sliderPosition by remember { mutableFloatStateOf(-1f) }
     var isDragging by remember { mutableStateOf(false) }
@@ -102,6 +106,13 @@ fun PlayerControls(
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f),
             )
+            IconButton(onClick = onOpenCast) {
+                Icon(
+                    imageVector = if (isCasting) Icons.Filled.CastConnected else Icons.Filled.Cast,
+                    contentDescription = stringResource(R.string.player_cast),
+                    tint = if (isCasting) MaterialTheme.colorScheme.primary else Color.White,
+                )
+            }
             if (state.videoWidth > 0 && state.videoHeight > 0) {
                 Text(
                     text = "${state.videoWidth}×${state.videoHeight}",

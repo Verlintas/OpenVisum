@@ -29,6 +29,8 @@ data class PlaybackState(
     val equalizer: EqualizerState = EqualizerState(),
     val subtitleStyle: SubtitleStyle = SubtitleStyle(),
     val stereoMode: AudioStereoMode = AudioStereoMode.AUTO,
+    val abLoopStartMs: Long? = null,
+    val abLoopEndMs: Long? = null,
     val audioDigitalOutput: Boolean = false,
     val passthroughAvailable: Boolean = false,
     val errorMessage: String? = null,

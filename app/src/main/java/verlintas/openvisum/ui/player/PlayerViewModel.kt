@@ -26,6 +26,7 @@ import verlintas.openvisum.core.player.PlaybackEngine
 import verlintas.openvisum.core.player.model.AudioStereoMode
 import verlintas.openvisum.core.player.model.EqualizerState
 import verlintas.openvisum.core.player.model.PlaybackState
+import verlintas.openvisum.core.player.model.RendererDevice
 import verlintas.openvisum.core.player.model.SubtitleStyle
 import verlintas.openvisum.core.player.model.VideoScaleMode
 
@@ -46,6 +47,10 @@ class PlayerViewModel(
 ) : ViewModel() {
 
     val state: StateFlow<PlaybackState> = engine.state
+
+    val renderers: StateFlow<List<RendererDevice>> = engine.renderers
+
+    val activeRenderer: StateFlow<RendererDevice?> = engine.activeRenderer
 
     private val _onlineSubtitles = MutableStateFlow(OnlineSubtitleState())
     val onlineSubtitles: StateFlow<OnlineSubtitleState> = _onlineSubtitles.asStateFlow()
@@ -272,6 +277,28 @@ class PlayerViewModel(
     fun setEqualizer(config: EqualizerState) = engine.setEqualizer(config)
 
     fun setAudioDigitalOutput(enabled: Boolean) = engine.setAudioDigitalOutputEnabled(enabled)
+
+    fun markAbLoopStart() {
+        val playbackState = engine.state.value
+        engine.setAbLoop(playbackState.positionMs, playbackState.abLoopEndMs)
+    }
+
+    fun markAbLoopEnd() {
+        val playbackState = engine.state.value
+        val start = playbackState.abLoopStartMs ?: return
+        val end = playbackState.positionMs
+        if (end > start) engine.setAbLoop(start, end)
+    }
+
+    fun clearAbLoop() = engine.setAbLoop(null, null)
+
+    fun startRendererDiscovery() = engine.startRendererDiscovery()
+
+    fun stopRendererDiscovery() = engine.stopRendererDiscovery()
+
+    fun connectRenderer(deviceId: String) = engine.connectRenderer(deviceId)
+
+    fun disconnectRenderer() = engine.disconnectRenderer()
 
     fun setSubtitleStyle(style: SubtitleStyle) {
         engine.setSubtitleStyle(style)

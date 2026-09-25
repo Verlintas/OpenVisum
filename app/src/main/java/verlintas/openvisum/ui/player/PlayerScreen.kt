@@ -54,6 +54,8 @@ fun PlayerScreen(
     )
     val state by viewModel.state.collectAsStateWithLifecycle()
     val onlineSubtitles by viewModel.onlineSubtitles.collectAsStateWithLifecycle()
+    val renderers by viewModel.renderers.collectAsStateWithLifecycle()
+    val activeRenderer by viewModel.activeRenderer.collectAsStateWithLifecycle()
     val uri = remember(mediaUri) { Uri.parse(mediaUri) }
 
     LaunchedEffect(uri, mediaTitle) {
@@ -67,6 +69,14 @@ fun PlayerScreen(
         if (controlsVisible && state.isPlaying) {
             delay(CONTROLS_AUTO_HIDE_MS)
             controlsVisible = false
+        }
+    }
+
+    LaunchedEffect(activeSheet) {
+        if (activeSheet == PlayerSheet.CAST) {
+            viewModel.startRendererDiscovery()
+        } else {
+            viewModel.stopRendererDiscovery()
         }
     }
 
@@ -105,11 +115,13 @@ fun PlayerScreen(
         ) {
             PlayerControls(
                 state = state,
+                isCasting = activeRenderer != null,
                 onBack = onBack,
                 onTogglePlayPause = viewModel::togglePlayPause,
                 onSeek = viewModel::seekTo,
                 onSeekBy = viewModel::seekBy,
                 onOpenSheet = { activeSheet = it },
+                onOpenCast = { activeSheet = PlayerSheet.CAST },
             )
         }
 
@@ -155,8 +167,19 @@ fun PlayerScreen(
         )
 
         PlayerSheet.SPEED -> SpeedSheet(
-            currentRate = state.rate,
+            state = state,
             onSelect = viewModel::setRate,
+            onSetAbStart = viewModel::markAbLoopStart,
+            onSetAbEnd = viewModel::markAbLoopEnd,
+            onClearAb = viewModel::clearAbLoop,
+            onDismiss = { activeSheet = null },
+        )
+
+        PlayerSheet.CAST -> CastSheet(
+            active = activeRenderer,
+            devices = renderers,
+            onConnect = viewModel::connectRenderer,
+            onDisconnect = viewModel::disconnectRenderer,
             onDismiss = { activeSheet = null },
         )
 

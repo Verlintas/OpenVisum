@@ -11,6 +11,8 @@ import kotlinx.coroutines.flow.update
 import org.videolan.libvlc.LibVLC
 import org.videolan.libvlc.Media
 import org.videolan.libvlc.MediaPlayer
+import org.videolan.libvlc.RendererDiscoverer
+import org.videolan.libvlc.RendererItem
 import org.videolan.libvlc.interfaces.IMedia
 import org.videolan.libvlc.util.DisplayManager
 import org.videolan.libvlc.util.VLCVideoLayout
@@ -19,6 +21,7 @@ import verlintas.openvisum.core.player.model.AudioStereoMode
 import verlintas.openvisum.core.player.model.EqualizerState
 import verlintas.openvisum.core.player.model.PlaybackState
 import verlintas.openvisum.core.player.model.PlayerTrack
+import verlintas.openvisum.core.player.model.RendererDevice
 import verlintas.openvisum.core.player.model.SubtitleStyle
 import verlintas.openvisum.core.player.model.TrackType
 import verlintas.openvisum.core.player.model.VideoScaleMode
@@ -31,6 +34,15 @@ class VlcPlaybackEngine(context: Context) : PlaybackEngine {
 
     private val _state = MutableStateFlow(PlaybackState())
     override val state: StateFlow<PlaybackState> = _state.asStateFlow()
+
+    private val _renderers = MutableStateFlow<List<RendererDevice>>(emptyList())
+    override val renderers: StateFlow<List<RendererDevice>> = _renderers.asStateFlow()
+
+    private val _activeRenderer = MutableStateFlow<RendererDevice?>(null)
+    override val activeRenderer: StateFlow<RendererDevice?> = _activeRenderer.asStateFlow()
+
+    private val rendererDiscoverers = mutableListOf<RendererDiscoverer>()
+    private val rendererItems = mutableMapOf<String, RendererItem>()
 
     private var currentMedia: Media? = null
     private var currentFileDescriptor: ParcelFileDescriptor? = null
@@ -381,6 +393,80 @@ class VlcPlaybackEngine(context: Context) : PlaybackEngine {
     override fun setAbLoop(startMs: Long?, endMs: Long?) {
         abLoopStartMs = startMs
         abLoopEndMs = endMs
+        _state.update { it.copy(abLoopStartMs = startMs, abLoopEndMs = endMs) }
+    }
+
+    override fun startRendererDiscovery() {
+        if (rendererDiscoverers.isNotEmpty()) return
+        RendererDiscoverer.list(libVlc).orEmpty().forEach { description ->
+            runCatching {
+                val discoverer = RendererDiscoverer(libVlc, description.name)
+                discoverer.setEventListener { event ->
+                    when (event.type) {
+                        RendererDiscoverer.Event.ItemAdded -> event.item?.let { item ->
+                            item.retain()
+                            rendererItems[rendererKey(item)] = item
+                        }
+
+                        RendererDiscoverer.Event.ItemDeleted -> event.item?.let { item ->
+                            rendererItems.remove(rendererKey(item))?.release()
+                        }
+                    }
+                    runCatching { event.release() }
+                    publishRenderers()
+                }
+                discoverer.start()
+                rendererDiscoverers += discoverer
+            }.onFailure { throwable ->
+                Log.w(TAG, "Renderer discovery unavailable for ${description.name}", throwable)
+            }
+        }
+    }
+
+    override fun stopRendererDiscovery() {
+        rendererDiscoverers.forEach { discoverer ->
+            runCatching {
+                discoverer.stop()
+                discoverer.release()
+            }
+        }
+        rendererDiscoverers.clear()
+        rendererItems.values.forEach { item -> runCatching { item.release() } }
+        rendererItems.clear()
+        publishRenderers()
+    }
+
+    override fun connectRenderer(deviceId: String) {
+        val item = rendererItems[deviceId] ?: return
+        val result = mediaPlayer.setRenderer(item)
+        if (result == 0) {
+            _activeRenderer.value = RendererDevice(
+                id = deviceId,
+                name = item.displayName.ifBlank { item.name },
+                type = item.type,
+            )
+            play()
+        } else {
+            Log.w(TAG, "Failed to select renderer $deviceId (code $result)")
+            _state.update { it.copy(errorMessage = "Failed to connect to renderer") }
+        }
+    }
+
+    override fun disconnectRenderer() {
+        mediaPlayer.setRenderer(null)
+        _activeRenderer.value = null
+    }
+
+    private fun rendererKey(item: RendererItem): String = "${item.type}:${item.name}"
+
+    private fun publishRenderers() {
+        _renderers.value = rendererItems.map { (key, item) ->
+            RendererDevice(
+                id = key,
+                name = item.displayName.ifBlank { item.name },
+                type = item.type,
+            )
+        }
     }
 
     private fun onTimeChanged(positionMs: Long) {
@@ -594,6 +680,7 @@ class VlcPlaybackEngine(context: Context) : PlaybackEngine {
         runCatching {
             mediaPlayer.stop()
             mediaPlayer.detachViews()
+            stopRendererDiscovery()
             releaseMedia()
             mediaPlayer.release()
             libVlc.release()

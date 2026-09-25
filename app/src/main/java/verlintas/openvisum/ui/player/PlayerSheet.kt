@@ -7,4 +7,5 @@ enum class PlayerSheet {
     ASPECT,
     EQUALIZER,
     ONLINE_SUBTITLE,
+    CAST,
 }

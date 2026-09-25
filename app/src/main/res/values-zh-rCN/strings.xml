@@ -138,4 +138,12 @@
     <string name="player_online_subtitles">在线搜索字幕</string>
     <string name="player_online_search">搜索</string>
     <string name="player_online_search_hint">影片或剧集名称</string>
+    <string name="player_ab_loop">A-B 循环</string>
+    <string name="player_ab_set_a">设置 A 点</string>
+    <string name="player_ab_set_b">设置 B 点</string>
+    <string name="player_ab_clear">清除</string>
+    <string name="player_ab_range">A：%1$s   B：%2$s</string>
+    <string name="player_cast">投屏</string>
+    <string name="player_cast_disconnect">停止投屏到 %1$s</string>
+    <string name="player_cast_searching">正在搜索设备…</string>
 </resources>

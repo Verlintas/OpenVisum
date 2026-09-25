@@ -7,12 +7,25 @@ import org.videolan.libvlc.util.VLCVideoLayout
 import verlintas.openvisum.core.player.model.AudioStereoMode
 import verlintas.openvisum.core.player.model.EqualizerState
 import verlintas.openvisum.core.player.model.PlaybackState
+import verlintas.openvisum.core.player.model.RendererDevice
 import verlintas.openvisum.core.player.model.SubtitleStyle
 import verlintas.openvisum.core.player.model.VideoScaleMode
 
 interface PlaybackEngine {
 
     val state: StateFlow<PlaybackState>
+
+    val renderers: StateFlow<List<RendererDevice>>
+
+    val activeRenderer: StateFlow<RendererDevice?>
+
+    fun startRendererDiscovery()
+
+    fun stopRendererDiscovery()
+
+    fun connectRenderer(deviceId: String)
+
+    fun disconnectRenderer()
 
     fun configureTrackPreferences(
         preferredAudioLanguages: List<String>,

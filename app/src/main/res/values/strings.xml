@@ -140,4 +140,12 @@
     <string name="player_online_subtitles">Search online subtitles</string>
     <string name="player_online_search">Search</string>
     <string name="player_online_search_hint">Movie or episode name</string>
+    <string name="player_ab_loop">A-B loop</string>
+    <string name="player_ab_set_a">Set A</string>
+    <string name="player_ab_set_b">Set B</string>
+    <string name="player_ab_clear">Clear</string>
+    <string name="player_ab_range">A: %1$s   B: %2$s</string>
+    <string name="player_cast">Cast</string>
+    <string name="player_cast_disconnect">Stop casting to %1$s</string>
+    <string name="player_cast_searching">Searching for devices…</string>
 </resources>
