@@ -27,6 +27,8 @@ data class PlaybackState(
     val videoScale: VideoScaleMode = VideoScaleMode.FIT_SCREEN,
     val aspectRatio: String? = null,
     val equalizer: EqualizerState = EqualizerState(),
+    val subtitleStyle: SubtitleStyle = SubtitleStyle(),
+    val stereoMode: AudioStereoMode = AudioStereoMode.AUTO,
     val audioDigitalOutput: Boolean = false,
     val passthroughAvailable: Boolean = false,
     val errorMessage: String? = null,

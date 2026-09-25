@@ -4,13 +4,24 @@ import android.net.Uri
 import kotlinx.coroutines.flow.StateFlow
 import org.videolan.libvlc.util.DisplayManager
 import org.videolan.libvlc.util.VLCVideoLayout
+import verlintas.openvisum.core.player.model.AudioStereoMode
 import verlintas.openvisum.core.player.model.EqualizerState
 import verlintas.openvisum.core.player.model.PlaybackState
+import verlintas.openvisum.core.player.model.SubtitleStyle
 import verlintas.openvisum.core.player.model.VideoScaleMode
 
 interface PlaybackEngine {
 
     val state: StateFlow<PlaybackState>
+
+    fun configureTrackPreferences(
+        preferredAudioLanguages: List<String>,
+        preferredSubtitleLanguages: List<String>,
+    )
+
+    fun setSubtitleStyle(style: SubtitleStyle)
+
+    fun setStereoMode(mode: AudioStereoMode)
 
     fun attachViews(layout: VLCVideoLayout, displayManager: DisplayManager? = null)
 

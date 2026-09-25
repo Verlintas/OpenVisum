@@ -128,6 +128,7 @@ fun PlayerScreen(
             state = state,
             onSelect = viewModel::selectAudioTrack,
             onDelayChange = viewModel::setAudioDelay,
+            onStereoModeChange = viewModel::setStereoMode,
             onPassthroughChange = viewModel::setAudioDigitalOutput,
             onDismiss = { activeSheet = null },
         )
@@ -137,6 +138,7 @@ fun PlayerScreen(
             onSelect = viewModel::selectSubtitleTrack,
             onAddSubtitle = { subtitlePicker.launch(arrayOf("*/*")) },
             onDelayChange = viewModel::setSubtitleDelay,
+            onStyleChange = viewModel::setSubtitleStyle,
             onDismiss = { activeSheet = null },
         )
 

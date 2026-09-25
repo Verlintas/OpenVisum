@@ -15,6 +15,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
@@ -37,9 +38,11 @@ import androidx.compose.ui.unit.dp
 import verlintas.openvisum.R
 import verlintas.openvisum.core.common.util.LanguageUtils
 import verlintas.openvisum.core.player.equalizer.EqualizerPresets
+import verlintas.openvisum.core.player.model.AudioStereoMode
 import verlintas.openvisum.core.player.model.EqualizerState
 import verlintas.openvisum.core.player.model.PlaybackState
 import verlintas.openvisum.core.player.model.PlayerTrack
+import verlintas.openvisum.core.player.model.SubtitleStyle
 import verlintas.openvisum.core.player.model.TrackType
 import verlintas.openvisum.core.player.model.VideoScaleMode
 
@@ -110,6 +113,7 @@ fun AudioTrackSheet(
     state: PlaybackState,
     onSelect: (Int) -> Unit,
     onDelayChange: (Long) -> Unit,
+    onStereoModeChange: (AudioStereoMode) -> Unit,
     onPassthroughChange: (Boolean) -> Unit,
     onDismiss: () -> Unit,
 ) {
@@ -135,6 +139,10 @@ fun AudioTrackSheet(
             label = stringResource(R.string.player_audio_delay),
             delayMs = state.audioDelayMs,
             onDelayChange = onDelayChange,
+        )
+        StereoModeSelector(
+            current = state.stereoMode,
+            onSelect = onStereoModeChange,
         )
         Row(
             modifier = Modifier
@@ -169,11 +177,47 @@ fun AudioTrackSheet(
 }
 
 @Composable
+private fun StereoModeSelector(
+    current: AudioStereoMode,
+    onSelect: (AudioStereoMode) -> Unit,
+) {
+    val modes = listOf(
+        AudioStereoMode.AUTO to stringResource(R.string.stereo_auto),
+        AudioStereoMode.STEREO to stringResource(R.string.stereo_stereo),
+        AudioStereoMode.REVERSE_STEREO to stringResource(R.string.stereo_reverse),
+        AudioStereoMode.LEFT to stringResource(R.string.stereo_left),
+        AudioStereoMode.RIGHT to stringResource(R.string.stereo_right),
+        AudioStereoMode.DOLBY to stringResource(R.string.stereo_dolby),
+    )
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Text(
+            text = stringResource(R.string.player_stereo_mode),
+            style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier.padding(vertical = 4.dp),
+        )
+        LazyColumn(modifier = Modifier.heightIn(max = 200.dp)) {
+            items(modes) { (mode, label) ->
+                ListItem(
+                    headlineContent = { Text(label) },
+                    trailingContent = if (mode == current) {
+                        { Icon(Icons.Filled.Check, contentDescription = null) }
+                    } else {
+                        null
+                    },
+                    modifier = Modifier.clickable { onSelect(mode) },
+                )
+            }
+        }
+    }
+}
+
+@Composable
 fun SubtitleTrackSheet(
     state: PlaybackState,
     onSelect: (Int) -> Unit,
     onAddSubtitle: () -> Unit,
     onDelayChange: (Long) -> Unit,
+    onStyleChange: (SubtitleStyle) -> Unit,
     onDismiss: () -> Unit,
 ) {
     TrackBottomSheet(
@@ -215,6 +259,92 @@ fun SubtitleTrackSheet(
             delayMs = state.subtitleDelayMs,
             onDelayChange = onDelayChange,
         )
+        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+        SubtitleStyleSection(
+            style = state.subtitleStyle,
+            onStyleChange = onStyleChange,
+        )
+    }
+}
+
+@Composable
+private fun SubtitleStyleSection(
+    style: SubtitleStyle,
+    onStyleChange: (SubtitleStyle) -> Unit,
+) {
+    var scale by remember(style.textScale) { mutableFloatStateOf(style.textScale) }
+
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Text(
+            text = stringResource(R.string.player_subtitle_style),
+            style = MaterialTheme.typography.titleSmall,
+            modifier = Modifier.padding(vertical = 4.dp),
+        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Text(stringResource(R.string.player_subtitle_scale), style = MaterialTheme.typography.bodyMedium)
+            Text(
+                text = "%.1fx".format(scale),
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.primary,
+            )
+        }
+        Slider(
+            value = scale,
+            onValueChange = { scale = it },
+            onValueChangeFinished = { onStyleChange(style.copy(textScale = scale)) },
+            valueRange = SubtitleStyle.MIN_SCALE..SubtitleStyle.MAX_SCALE,
+        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = stringResource(R.string.player_subtitle_bold),
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.weight(1f),
+            )
+            Switch(
+                checked = style.bold,
+                onCheckedChange = { onStyleChange(style.copy(bold = it)) },
+            )
+        }
+        Text(
+            text = stringResource(R.string.player_subtitle_color),
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier.padding(vertical = 4.dp),
+        )
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FilterChip(
+                selected = style.color == null,
+                onClick = { onStyleChange(style.copy(color = null)) },
+                label = { Text(stringResource(R.string.subtitle_color_default)) },
+            )
+            FilterChip(
+                selected = style.color == 0xFFFFFF,
+                onClick = { onStyleChange(style.copy(color = 0xFFFFFF)) },
+                label = { Text(stringResource(R.string.subtitle_color_white)) },
+            )
+            FilterChip(
+                selected = style.color == 0xFFFF00,
+                onClick = { onStyleChange(style.copy(color = 0xFFFF00)) },
+                label = { Text(stringResource(R.string.subtitle_color_yellow)) },
+            )
+            FilterChip(
+                selected = style.color == 0x00FFFF,
+                onClick = { onStyleChange(style.copy(color = 0x00FFFF)) },
+                label = { Text(stringResource(R.string.subtitle_color_cyan)) },
+            )
+            FilterChip(
+                selected = style.color == 0x00FF00,
+                onClick = { onStyleChange(style.copy(color = 0x00FF00)) },
+                label = { Text(stringResource(R.string.subtitle_color_green)) },
+            )
+        }
     }
 }
 

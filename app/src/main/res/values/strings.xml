@@ -77,4 +77,20 @@
     <string name="eq_enabled">Enable equalizer</string>
     <string name="eq_preset">Preset</string>
     <string name="eq_preamp">Preamp</string>
+    <string name="player_stereo_mode">Stereo mode</string>
+    <string name="stereo_auto">Auto</string>
+    <string name="stereo_stereo">Stereo</string>
+    <string name="stereo_reverse">Reverse stereo</string>
+    <string name="stereo_left">Left only</string>
+    <string name="stereo_right">Right only</string>
+    <string name="stereo_dolby">Dolby Surround</string>
+    <string name="player_subtitle_style">Subtitle style</string>
+    <string name="player_subtitle_scale">Text size</string>
+    <string name="player_subtitle_bold">Bold</string>
+    <string name="player_subtitle_color">Text color</string>
+    <string name="subtitle_color_default">Default</string>
+    <string name="subtitle_color_white">White</string>
+    <string name="subtitle_color_yellow">Yellow</string>
+    <string name="subtitle_color_cyan">Cyan</string>
+    <string name="subtitle_color_green">Green</string>
 </resources>

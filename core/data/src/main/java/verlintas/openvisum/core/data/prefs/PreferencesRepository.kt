@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
+import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
@@ -26,7 +27,10 @@ data class AppSettings(
     val preferredSubtitleLanguages: List<String> = defaultSubtitleLanguages(),
     val preferredAudioLanguages: List<String> = defaultAudioLanguages(),
     val autoLoadExternalSubtitles: Boolean = true,
-    val subtitleTextSize: Int = 0,
+    val subtitleScale: Float = 1.0f,
+    val subtitleBold: Boolean = false,
+    val subtitleColor: Int? = null,
+    val stereoMode: Int = 0,
     val themeMode: Int = THEME_SYSTEM,
 ) {
     companion object {
@@ -54,7 +58,10 @@ class PreferencesRepository(private val context: Context) {
         val PREFERRED_SUBTITLE_LANGUAGES = stringSetPreferencesKey("preferred_subtitle_languages")
         val PREFERRED_AUDIO_LANGUAGES = stringSetPreferencesKey("preferred_audio_languages")
         val AUTO_LOAD_EXTERNAL_SUBTITLES = booleanPreferencesKey("auto_load_external_subtitles")
-        val SUBTITLE_TEXT_SIZE = intPreferencesKey("subtitle_text_size")
+        val SUBTITLE_SCALE = floatPreferencesKey("subtitle_scale")
+        val SUBTITLE_BOLD = booleanPreferencesKey("subtitle_bold")
+        val SUBTITLE_COLOR = intPreferencesKey("subtitle_color")
+        val STEREO_MODE = intPreferencesKey("stereo_mode")
         val THEME_MODE = intPreferencesKey("theme_mode")
     }
 
@@ -73,7 +80,10 @@ class PreferencesRepository(private val context: Context) {
                 preferredAudioLanguages = preferences[Keys.PREFERRED_AUDIO_LANGUAGES]?.toList()
                     ?: defaultAudioLanguages(),
                 autoLoadExternalSubtitles = preferences[Keys.AUTO_LOAD_EXTERNAL_SUBTITLES] ?: true,
-                subtitleTextSize = preferences[Keys.SUBTITLE_TEXT_SIZE] ?: 0,
+                subtitleScale = preferences[Keys.SUBTITLE_SCALE] ?: 1.0f,
+                subtitleBold = preferences[Keys.SUBTITLE_BOLD] ?: false,
+                subtitleColor = preferences[Keys.SUBTITLE_COLOR]?.takeIf { it >= 0 },
+                stereoMode = preferences[Keys.STEREO_MODE] ?: 0,
                 themeMode = preferences[Keys.THEME_MODE] ?: AppSettings.THEME_SYSTEM,
             )
         }
@@ -98,8 +108,16 @@ class PreferencesRepository(private val context: Context) {
         context.dataStore.edit { it[Keys.AUTO_LOAD_EXTERNAL_SUBTITLES] = enabled }
     }
 
-    suspend fun setSubtitleTextSize(size: Int) {
-        context.dataStore.edit { it[Keys.SUBTITLE_TEXT_SIZE] = size }
+    suspend fun setSubtitleStyle(scale: Float, bold: Boolean, color: Int?) {
+        context.dataStore.edit { preferences ->
+            preferences[Keys.SUBTITLE_SCALE] = scale
+            preferences[Keys.SUBTITLE_BOLD] = bold
+            preferences[Keys.SUBTITLE_COLOR] = color ?: -1
+        }
+    }
+
+    suspend fun setStereoMode(mode: Int) {
+        context.dataStore.edit { it[Keys.STEREO_MODE] = mode }
     }
 
     suspend fun setThemeMode(mode: Int) {

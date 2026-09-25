@@ -14,9 +14,12 @@ import org.videolan.libvlc.MediaPlayer
 import org.videolan.libvlc.interfaces.IMedia
 import org.videolan.libvlc.util.DisplayManager
 import org.videolan.libvlc.util.VLCVideoLayout
+import java.io.File
+import verlintas.openvisum.core.player.model.AudioStereoMode
 import verlintas.openvisum.core.player.model.EqualizerState
 import verlintas.openvisum.core.player.model.PlaybackState
 import verlintas.openvisum.core.player.model.PlayerTrack
+import verlintas.openvisum.core.player.model.SubtitleStyle
 import verlintas.openvisum.core.player.model.TrackType
 import verlintas.openvisum.core.player.model.VideoScaleMode
 
@@ -33,11 +36,20 @@ class VlcPlaybackEngine(context: Context) : PlaybackEngine {
     private var currentFileDescriptor: ParcelFileDescriptor? = null
     private var hwDecodingEnabled = true
     private var rotationDegrees = 0
-    private var externalSubtitleUri: Uri? = null
+    private val externalSubtitleUris = mutableListOf<Uri>()
     private var abLoopStartMs: Long? = null
     private var abLoopEndMs: Long? = null
     private var restoring = false
     private var released = false
+
+    private var preferredAudioLanguages: List<String> = emptyList()
+    private var preferredSubtitleLanguages: List<String> = emptyList()
+    private var autoAudioApplied = false
+    private var autoSubtitleApplied = false
+    private var userAudioSelected = false
+    private var userSubtitleSelected = false
+    private var subtitleStyle = SubtitleStyle()
+    private var stereoMode = AudioStereoMode.AUTO
 
     init {
         _state.update { it.copy(passthroughAvailable = mediaPlayer.canDoPassthrough()) }
@@ -95,8 +107,39 @@ class VlcPlaybackEngine(context: Context) : PlaybackEngine {
 
     override fun setMedia(uri: Uri, title: String?, options: List<String>) {
         check(!released) { "Engine already released" }
-        externalSubtitleUri = null
+        externalSubtitleUris.clear()
+        autoAudioApplied = false
+        autoSubtitleApplied = false
+        userAudioSelected = false
+        userSubtitleSelected = false
         openMedia(uri, title, options, positionMs = 0L)
+    }
+
+    override fun configureTrackPreferences(
+        preferredAudioLanguages: List<String>,
+        preferredSubtitleLanguages: List<String>,
+    ) {
+        this.preferredAudioLanguages = preferredAudioLanguages
+        this.preferredSubtitleLanguages = preferredSubtitleLanguages
+        applyAutoSelection()
+    }
+
+    override fun setSubtitleStyle(style: SubtitleStyle) {
+        if (subtitleStyle == style) return
+        subtitleStyle = style
+        _state.update { it.copy(subtitleStyle = style) }
+        if (_state.value.mediaUri != null) {
+            reloadPreservingState()
+        }
+    }
+
+    override fun setStereoMode(mode: AudioStereoMode) {
+        if (stereoMode == mode) return
+        stereoMode = mode
+        _state.update { it.copy(stereoMode = mode) }
+        if (_state.value.mediaUri != null) {
+            reloadPreservingState()
+        }
     }
 
     private fun openMedia(uri: Uri, title: String?, options: List<String>, positionMs: Long) {
@@ -144,6 +187,18 @@ class VlcPlaybackEngine(context: Context) : PlaybackEngine {
         }
         media.setHWDecoderEnabled(hwDecodingEnabled, false)
         media.addOption(":sub-autodetect-file=false")
+        if (subtitleStyle.textScale != SubtitleStyle.DEFAULT_SCALE) {
+            media.addOption(":sub-text-scale=${subtitleStyle.textScale}")
+        }
+        if (subtitleStyle.bold) {
+            media.addOption(":freetype-bold")
+        }
+        subtitleStyle.color?.let { color ->
+            media.addOption(":freetype-color=$color")
+        }
+        if (stereoMode != AudioStereoMode.AUTO) {
+            media.addOption(":stereo-mode=${stereoMode.vlcValue}")
+        }
         if (rotationDegrees != 0) addRotationOption(media)
         options.forEach { media.addOption(it) }
         return media
@@ -204,30 +259,54 @@ class VlcPlaybackEngine(context: Context) : PlaybackEngine {
     }
 
     override fun selectAudioTrack(trackId: Int) {
+        userAudioSelected = true
+        autoAudioApplied = true
         mediaPlayer.setAudioTrack(trackId)
         refreshTracks()
     }
 
     override fun selectSubtitleTrack(trackId: Int) {
+        userSubtitleSelected = true
+        autoSubtitleApplied = true
         if (trackId == PlayerTrack.TRACK_DISABLED) {
             disableSubtitles()
         } else {
-            mediaPlayer.setSpuTrack(trackId)
+            val success = mediaPlayer.setSpuTrack(trackId)
+            Log.i(TAG, "setSpuTrack($trackId) -> $success, spuTrack=${mediaPlayer.spuTrack}")
             refreshTracks()
         }
     }
 
     override fun addSubtitleFile(uri: Uri) {
-        externalSubtitleUri = uri
-        val added = mediaPlayer.addSlave(IMedia.Slave.Type.Subtitle, uri, true)
+        val effectiveUri = resolveSubtitleUri(uri)
+        externalSubtitleUris += effectiveUri
+        val added = mediaPlayer.addSlave(IMedia.Slave.Type.Subtitle, effectiveUri, true)
         if (!added) {
+            Log.w(TAG, "addSlave failed for $effectiveUri")
             _state.update { it.copy(errorMessage = "Failed to load subtitle: ${uri.lastPathSegment}") }
         } else {
             refreshTracks()
         }
     }
 
+    private fun resolveSubtitleUri(uri: Uri): Uri {
+        if (uri.scheme != "content") return uri
+        return runCatching {
+            val name = uri.lastPathSegment?.substringAfterLast('/')?.takeIf { it.isNotBlank() }
+                ?: "subtitle"
+            val safeName = name.replace(Regex("[^A-Za-z0-9._-]"), "_")
+            val directory = File(appContext.cacheDir, "subtitles").apply { mkdirs() }
+            val target = File(directory, "${uri.toString().hashCode()}_$safeName")
+            appContext.contentResolver.openInputStream(uri)?.use { input ->
+                target.outputStream().use { output -> input.copyTo(output) }
+            } ?: return uri
+            Uri.fromFile(target)
+        }.getOrDefault(uri)
+    }
+
     override fun disableSubtitles() {
+        userSubtitleSelected = true
+        autoSubtitleApplied = true
         mediaPlayer.setSpuTrack(PlayerTrack.TRACK_DISABLED)
         _state.update { it.copy(selectedSubtitleTrackId = PlayerTrack.TRACK_DISABLED) }
     }
@@ -329,7 +408,13 @@ class VlcPlaybackEngine(context: Context) : PlaybackEngine {
             toPlayerTrack(TrackType.AUDIO, description.id, description.name, details)
         }
         val subtitleTracks = mediaPlayer.spuTracks.orEmpty().map { description ->
-            toPlayerTrack(TrackType.SUBTITLE, description.id, description.name, details)
+            toPlayerTrack(
+                type = TrackType.SUBTITLE,
+                id = description.id,
+                fallbackName = description.name,
+                details = details,
+                external = isExternalSubtitle(description.name, description.id, details),
+            )
         }
         _state.update {
             it.copy(
@@ -341,6 +426,46 @@ class VlcPlaybackEngine(context: Context) : PlaybackEngine {
                 selectedSubtitleTrackId = mediaPlayer.spuTrack,
             )
         }
+        Log.d(
+            TAG,
+            "tracks: video=${videoTracks.size} audio=${audioTracks.map { it.id }} " +
+                "subtitle=${subtitleTracks.map { it.id }} spuTrack=${mediaPlayer.spuTrack}",
+        )
+        applyAutoSelection()
+    }
+
+    private fun applyAutoSelection() {
+        val current = _state.value
+        if (!autoAudioApplied && !userAudioSelected && current.audioTracks.isNotEmpty()) {
+            val selected = TrackSelector.selectAudio(current.audioTracks, preferredAudioLanguages)
+            if (selected != null) {
+                mediaPlayer.setAudioTrack(selected.id)
+                _state.update { it.copy(selectedAudioTrackId = selected.id) }
+            }
+            autoAudioApplied = true
+        }
+        if (!autoSubtitleApplied && !userSubtitleSelected &&
+            current.subtitleTracks.isNotEmpty() && preferredSubtitleLanguages.isNotEmpty()
+        ) {
+            val selected = TrackSelector.selectSubtitle(
+                current.subtitleTracks,
+                preferredSubtitleLanguages,
+            )
+            if (selected != null) {
+                mediaPlayer.setSpuTrack(selected.id)
+                _state.update { it.copy(selectedSubtitleTrackId = selected.id) }
+            }
+            autoSubtitleApplied = true
+        }
+    }
+
+    private fun isExternalSubtitle(name: String, id: Int, details: Map<Int, IMedia.Track>): Boolean {
+        if (details[id] == null) return true
+        return externalSubtitleUris.any { uri ->
+            val segment = uri.lastPathSegment ?: return@any false
+            val fileName = segment.substringAfterLast('/')
+            name.contains(fileName) || fileName.contains(name)
+        }
     }
 
     private fun toPlayerTrack(
@@ -348,10 +473,10 @@ class VlcPlaybackEngine(context: Context) : PlaybackEngine {
         id: Int,
         fallbackName: String,
         details: Map<Int, IMedia.Track>,
+        external: Boolean = false,
     ): PlayerTrack {
         val detail = details[id]
         val name = detail?.description?.takeIf { it.isNotBlank() } ?: fallbackName
-        val external = detail?.let { it.fourcc == 0 && it.bitrate == 0 && id < 0 } ?: false
         return when (detail) {
             is IMedia.AudioTrack -> PlayerTrack(
                 id = id,
@@ -435,7 +560,7 @@ class VlcPlaybackEngine(context: Context) : PlaybackEngine {
         val position = _state.value.positionMs
         val selectedAudio = _state.value.selectedAudioTrackId
         val selectedSubtitle = _state.value.selectedSubtitleTrackId
-        val subtitleUri = externalSubtitleUri
+        val subtitleUris = externalSubtitleUris.toList()
         val wasPlaying = mediaPlayer.isPlaying
         restoring = true
         try {
@@ -443,7 +568,7 @@ class VlcPlaybackEngine(context: Context) : PlaybackEngine {
             mediaPlayer.play()
             if (selectedAudio >= 0) mediaPlayer.setAudioTrack(selectedAudio)
             if (selectedSubtitle >= 0) mediaPlayer.setSpuTrack(selectedSubtitle)
-            subtitleUri?.let { mediaPlayer.addSlave(IMedia.Slave.Type.Subtitle, it, true) }
+            subtitleUris.forEach { mediaPlayer.addSlave(IMedia.Slave.Type.Subtitle, it, true) }
             if (!wasPlaying) mediaPlayer.pause()
         } finally {
             restoring = false

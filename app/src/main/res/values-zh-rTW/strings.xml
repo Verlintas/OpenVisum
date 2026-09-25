@@ -75,4 +75,20 @@
     <string name="eq_enabled">啟用等化器</string>
     <string name="eq_preset">預設</string>
     <string name="eq_preamp">前置增益</string>
+    <string name="player_stereo_mode">聲道模式</string>
+    <string name="stereo_auto">自動</string>
+    <string name="stereo_stereo">立體聲</string>
+    <string name="stereo_reverse">反向立體聲</string>
+    <string name="stereo_left">僅左聲道</string>
+    <string name="stereo_right">僅右聲道</string>
+    <string name="stereo_dolby">杜比環繞</string>
+    <string name="player_subtitle_style">字幕樣式</string>
+    <string name="player_subtitle_scale">文字大小</string>
+    <string name="player_subtitle_bold">加粗</string>
+    <string name="player_subtitle_color">文字顏色</string>
+    <string name="subtitle_color_default">預設</string>
+    <string name="subtitle_color_white">白色</string>
+    <string name="subtitle_color_yellow">黃色</string>
+    <string name="subtitle_color_cyan">青色</string>
+    <string name="subtitle_color_green">綠色</string>
 </resources>

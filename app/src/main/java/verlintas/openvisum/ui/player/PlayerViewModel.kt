@@ -2,18 +2,25 @@ package verlintas.openvisum.ui.player
 
 import android.net.Uri
 import android.os.SystemClock
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import org.videolan.libvlc.util.VLCVideoLayout
+import verlintas.openvisum.core.common.util.LanguageUtils
 import verlintas.openvisum.core.data.MediaRepository
+import verlintas.openvisum.core.data.prefs.AppSettings
 import verlintas.openvisum.core.data.prefs.PreferencesRepository
+import verlintas.openvisum.core.data.source.SubtitleFile
 import verlintas.openvisum.core.player.PlaybackEngine
+import verlintas.openvisum.core.player.model.AudioStereoMode
 import verlintas.openvisum.core.player.model.EqualizerState
 import verlintas.openvisum.core.player.model.PlaybackState
+import verlintas.openvisum.core.player.model.SubtitleStyle
 import verlintas.openvisum.core.player.model.VideoScaleMode
 
 class PlayerViewModel(
@@ -53,14 +60,78 @@ class PlayerViewModel(
         viewModelScope.launch {
             val settings = preferences.settings.first()
             engine.setHardwareDecodingEnabled(settings.hardwareDecoding)
-            engine.setMedia(uri, title)
+            engine.setSubtitleStyle(settings.toSubtitleStyle())
+            engine.setStereoMode(AudioStereoMode.fromValue(settings.stereoMode))
+            engine.configureTrackPreferences(
+                preferredAudioLanguages = settings.preferredAudioLanguages,
+                preferredSubtitleLanguages = settings.preferredSubtitleLanguages,
+            )
             val item = runCatching { repository.find(uri.toString()) }.getOrNull()
+            val resolvedTitle = title ?: item?.displayName ?: repository.resolveDisplayName(uri)
+            engine.setMedia(uri, resolvedTitle)
             val resumePosition = item?.resumePositionMs ?: 0L
             if (resumePosition > 0L) {
                 engine.seekTo(resumePosition)
             }
             engine.play()
+            autoLoadExternalSubtitles(
+                uri = uri,
+                displayName = resolvedTitle,
+                settings = settings,
+            )
         }
+    }
+
+    private suspend fun autoLoadExternalSubtitles(
+        uri: Uri,
+        displayName: String?,
+        settings: AppSettings,
+    ) {
+        if (!settings.autoLoadExternalSubtitles) return
+        val files = repository.findSiblingSubtitles(uri.toString(), displayName)
+        if (files.isEmpty()) {
+            Log.i(TAG, "No sibling subtitles found for $displayName ($uri)")
+            return
+        }
+        Log.i(TAG, "External subtitles found: ${files.map { "${it.name}(${it.language})" }}")
+
+        val trackIds = mutableMapOf<SubtitleFile, Int>()
+        files.take(MAX_EXTERNAL_SUBTITLES).forEach { file ->
+            val known = engine.state.value.subtitleTracks.mapTo(mutableSetOf()) { it.id }
+            engine.addSubtitleFile(file.uri)
+            waitForNewSubtitleTrack(known)?.let { trackId -> trackIds[file] = trackId }
+        }
+        Log.i(TAG, "External subtitle tracks: ${trackIds.mapValues { it.value }}")
+
+        val best = pickBestSubtitle(files, settings.preferredSubtitleLanguages) ?: return
+        val bestTrackId = trackIds[best] ?: return
+        Log.i(TAG, "Auto-selected subtitle: ${best.name} (track $bestTrackId)")
+        engine.selectSubtitleTrack(bestTrackId)
+    }
+
+    private suspend fun waitForNewSubtitleTrack(knownIds: Set<Int>): Int? {
+        val deadline = SystemClock.elapsedRealtime() + SUBTITLE_TRACK_WAIT_MS
+        while (SystemClock.elapsedRealtime() < deadline) {
+            val newTrack = engine.state.value.subtitleTracks.firstOrNull { track ->
+                track.id >= 0 && track.id !in knownIds
+            }
+            if (newTrack != null) return newTrack.id
+            delay(150L)
+        }
+        return null
+    }
+
+    private fun pickBestSubtitle(
+        files: List<SubtitleFile>,
+        preferredLanguages: List<String>,
+    ): SubtitleFile? {
+        for (language in preferredLanguages) {
+            val match = files.firstOrNull { file ->
+                LanguageUtils.matches(listOf(language), file.language)
+            }
+            if (match != null) return match
+        }
+        return files.singleOrNull()
     }
 
     fun saveProgressNow() {
@@ -114,12 +185,27 @@ class PlayerViewModel(
 
     fun setAudioDigitalOutput(enabled: Boolean) = engine.setAudioDigitalOutputEnabled(enabled)
 
+    fun setSubtitleStyle(style: SubtitleStyle) {
+        engine.setSubtitleStyle(style)
+        viewModelScope.launch {
+            preferences.setSubtitleStyle(style.textScale, style.bold, style.color)
+        }
+    }
+
+    fun setStereoMode(mode: AudioStereoMode) {
+        engine.setStereoMode(mode)
+        viewModelScope.launch { preferences.setStereoMode(mode.vlcValue) }
+    }
+
     override fun onCleared() {
         engine.stop()
     }
 
     companion object {
+        private const val TAG = "PlayerViewModel"
         private const val SAVE_INTERVAL_MS = 5_000L
+        private const val MAX_EXTERNAL_SUBTITLES = 5
+        private const val SUBTITLE_TRACK_WAIT_MS = 6_000L
 
         fun factory(
             engine: PlaybackEngine,
@@ -133,3 +219,9 @@ class PlayerViewModel(
         }
     }
 }
+
+fun AppSettings.toSubtitleStyle(): SubtitleStyle = SubtitleStyle(
+    textScale = subtitleScale,
+    bold = subtitleBold,
+    color = subtitleColor,
+)

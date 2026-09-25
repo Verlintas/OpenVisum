@@ -11,6 +11,7 @@ import verlintas.openvisum.core.data.db.OpenVisumDatabase
 import verlintas.openvisum.core.data.prefs.PreferencesRepository
 import verlintas.openvisum.core.data.source.MediaStoreScanner
 import verlintas.openvisum.core.data.source.SafFolderRepository
+import verlintas.openvisum.core.data.source.SubtitleFinder
 import verlintas.openvisum.core.player.PlaybackEngine
 import verlintas.openvisum.core.player.VlcPlaybackEngine
 
@@ -45,6 +46,7 @@ class AppContainer(context: Context) {
             database = database,
             scanner = MediaStoreScanner(appContext),
             safFolders = SafFolderRepository(appContext, database.safFolderDao()),
+            subtitleFinder = SubtitleFinder(appContext),
         )
     }
 

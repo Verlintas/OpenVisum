@@ -2,8 +2,10 @@ package verlintas.openvisum.core.data
 
 import android.content.Context
 import android.net.Uri
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.withContext
 import verlintas.openvisum.core.data.db.MediaEntity
 import verlintas.openvisum.core.data.db.OpenVisumDatabase
 import verlintas.openvisum.core.data.model.MediaItem
@@ -11,6 +13,8 @@ import verlintas.openvisum.core.data.model.MediaSource
 import verlintas.openvisum.core.data.model.toModel
 import verlintas.openvisum.core.data.source.MediaStoreScanner
 import verlintas.openvisum.core.data.source.SafFolderRepository
+import verlintas.openvisum.core.data.source.SubtitleFile
+import verlintas.openvisum.core.data.source.SubtitleFinder
 
 data class FolderSummary(
     val folderKey: String,
@@ -24,6 +28,7 @@ class MediaRepository(
     database: OpenVisumDatabase,
     private val scanner: MediaStoreScanner,
     val safFolders: SafFolderRepository,
+    private val subtitleFinder: SubtitleFinder,
 ) {
 
     private val mediaDao = database.mediaDao()
@@ -91,4 +96,31 @@ class MediaRepository(
     suspend fun removeSafFolder(treeUri: String) = safFolders.removeFolder(treeUri)
 
     fun safFolderList() = safFolders.observeFolders()
+
+    suspend fun findSiblingSubtitles(mediaUri: String, displayName: String?): List<SubtitleFile> =
+        runCatching { subtitleFinder.findFor(mediaUri, displayName) }
+            .onFailure { throwable ->
+                android.util.Log.w(TAG, "Subtitle search failed for $mediaUri", throwable)
+            }
+            .getOrDefault(emptyList())
+
+    suspend fun resolveDisplayName(uri: Uri): String? = withContext(Dispatchers.IO) {
+        runCatching {
+            context.contentResolver.query(
+                uri,
+                arrayOf(android.provider.OpenableColumns.DISPLAY_NAME),
+                null,
+                null,
+                null,
+            )?.use { cursor ->
+                if (cursor.moveToFirst()) cursor.getString(0) else null
+            }
+        }.getOrNull() ?: runCatching {
+            androidx.documentfile.provider.DocumentFile.fromSingleUri(context, uri)?.name
+        }.getOrNull()
+    }
+
+    companion object {
+        private const val TAG = "MediaRepository"
+    }
 }
