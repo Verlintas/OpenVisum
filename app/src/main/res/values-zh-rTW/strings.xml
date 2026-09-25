@@ -4,14 +4,40 @@
     <string name="common_cancel">取消</string>
     <string name="common_play">播放</string>
     <string name="common_off">關閉</string>
+    <string name="common_remove">移除</string>
+    <string name="common_delete">刪除</string>
 
-    <string name="home_subtitle">什麼都能播，在哪都能播。由 libVLC 驅動。</string>
-    <string name="home_open_file">開啟檔案</string>
-    <string name="home_open_url">開啟網路串流</string>
+    <string name="library_search">搜尋</string>
+    <string name="library_search_hint">搜尋影片</string>
+    <string name="library_sort">排序</string>
+    <string name="library_sort_date">加入時間</string>
+    <string name="library_sort_name">名稱</string>
+    <string name="library_sort_size">檔案大小</string>
+    <string name="library_sort_duration">時長</string>
+    <string name="library_refresh">重新掃描媒體庫</string>
+    <string name="library_open_file">開啟檔案</string>
+    <string name="library_open_url">開啟網路串流</string>
+    <string name="library_tab_library">媒體庫</string>
+    <string name="library_tab_folders">資料夾</string>
+    <string name="library_continue_watching">繼續觀看</string>
+    <string name="library_filter_all">全部</string>
+    <string name="library_filter_favorites">收藏</string>
+    <string name="library_items_count">%1$d 部影片</string>
+    <string name="library_empty">沒有找到影片。試試重新掃描或加入資料夾。</string>
+    <string name="library_resume_at">續播於 %1$s</string>
+    <string name="library_permission_title">需要媒體存取權限</string>
+    <string name="library_permission_message">OpenVisum 需要讀取本機影片的權限來建立媒體庫。</string>
+    <string name="library_permission_grant">授予權限</string>
+    <string name="library_add_folder">加入資料夾</string>
+    <string name="library_saf_folders">已加入的資料夾</string>
+    <string name="library_device_folders">本機影片資料夾</string>
+    <string name="library_folder_empty">此資料夾是空的。</string>
+    <string name="library_remove_folder_title">移除資料夾</string>
+    <string name="library_remove_folder_message">從 OpenVisum 移除「%1$s」？不會影響磁碟上的檔案。</string>
+
     <string name="home_url_title">網路串流</string>
     <string name="home_url_hint">https://example.com/video.m3u8</string>
     <string name="home_url_support_hint">支援 HTTP、HTTPS、HLS (m3u8)、SMB 與 WebDAV</string>
-    <string name="home_library_coming_soon">媒體庫與資料夾瀏覽將於下個里程碑加入。</string>
 
     <string name="player_play">播放</string>
     <string name="player_pause">暫停</string>

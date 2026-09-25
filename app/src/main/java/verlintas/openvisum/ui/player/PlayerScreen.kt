@@ -44,7 +44,11 @@ fun PlayerScreen(
         (context.applicationContext as OpenVisumApp).container
     }
     val viewModel: PlayerViewModel = viewModel(
-        factory = PlayerViewModel.factory(container.playbackEngine),
+        factory = PlayerViewModel.factory(
+            engine = container.playbackEngine,
+            repository = container.mediaRepository,
+            preferences = container.preferencesRepository,
+        ),
     )
     val state by viewModel.state.collectAsStateWithLifecycle()
     val uri = remember(mediaUri) { Uri.parse(mediaUri) }
@@ -159,7 +163,10 @@ fun PlayerScreen(
     }
 
     DisposableEffect(Unit) {
-        onDispose { viewModel.detach() }
+        onDispose {
+            viewModel.saveProgressNow()
+            viewModel.detach()
+        }
     }
 }
 

@@ -2,6 +2,7 @@ package verlintas.openvisum.core.player
 
 import android.content.Context
 import android.net.Uri
+import android.os.ParcelFileDescriptor
 import android.util.Log
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -29,6 +30,7 @@ class VlcPlaybackEngine(context: Context) : PlaybackEngine {
     override val state: StateFlow<PlaybackState> = _state.asStateFlow()
 
     private var currentMedia: Media? = null
+    private var currentFileDescriptor: ParcelFileDescriptor? = null
     private var hwDecodingEnabled = true
     private var rotationDegrees = 0
     private var externalSubtitleUri: Uri? = null
@@ -99,11 +101,18 @@ class VlcPlaybackEngine(context: Context) : PlaybackEngine {
 
     private fun openMedia(uri: Uri, title: String?, options: List<String>, positionMs: Long) {
         releaseMedia()
-        val media = Media(libVlc, uri).apply {
-            setHWDecoderEnabled(hwDecodingEnabled, false)
-            addOption(":sub-autodetect-file=false")
-            if (rotationDegrees != 0) addOption(":video-rotate=$rotationDegrees")
-            options.forEach { addOption(it) }
+        val media = runCatching { createMedia(uri, options) }.getOrElse { throwable ->
+            Log.e(TAG, "Failed to open media: $uri", throwable)
+            _state.update {
+                it.copy(
+                    mediaUri = uri,
+                    title = title ?: uri.lastPathSegment,
+                    isPlaying = false,
+                    isBuffering = false,
+                    errorMessage = "Cannot open media: ${uri.lastPathSegment}",
+                )
+            }
+            return
         }
         currentMedia = media
         mediaPlayer.media = media
@@ -122,6 +131,26 @@ class VlcPlaybackEngine(context: Context) : PlaybackEngine {
         if (positionMs > 0L) {
             pendingSeekMs = positionMs
         }
+    }
+
+    private fun createMedia(uri: Uri, options: List<String>): Media {
+        val media = if (uri.scheme == "content") {
+            val descriptor = appContext.contentResolver.openFileDescriptor(uri, "r")
+                ?: throw IllegalStateException("Unable to open content uri: $uri")
+            currentFileDescriptor = descriptor
+            Media(libVlc, descriptor.fileDescriptor)
+        } else {
+            Media(libVlc, uri)
+        }
+        media.setHWDecoderEnabled(hwDecodingEnabled, false)
+        media.addOption(":sub-autodetect-file=false")
+        if (rotationDegrees != 0) addRotationOption(media)
+        options.forEach { media.addOption(it) }
+        return media
+    }
+
+    private fun addRotationOption(media: Media) {
+        media.addOption(":video-rotate=$rotationDegrees")
     }
 
     private var pendingSeekMs: Long? = null
@@ -428,6 +457,8 @@ class VlcPlaybackEngine(context: Context) : PlaybackEngine {
             it.release()
         }
         currentMedia = null
+        currentFileDescriptor?.let { descriptor -> runCatching { descriptor.close() } }
+        currentFileDescriptor = null
     }
 
     override fun release() {

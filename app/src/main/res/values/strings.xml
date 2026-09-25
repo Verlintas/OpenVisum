@@ -6,14 +6,40 @@
     <string name="common_cancel">Cancel</string>
     <string name="common_play">Play</string>
     <string name="common_off">Off</string>
+    <string name="common_remove">Remove</string>
+    <string name="common_delete">Delete</string>
 
-    <string name="home_subtitle">Play anything, anywhere. Powered by libVLC.</string>
-    <string name="home_open_file">Open file</string>
-    <string name="home_open_url">Open network stream</string>
+    <string name="library_search">Search</string>
+    <string name="library_search_hint">Search videos</string>
+    <string name="library_sort">Sort</string>
+    <string name="library_sort_date">Date added</string>
+    <string name="library_sort_name">Name</string>
+    <string name="library_sort_size">File size</string>
+    <string name="library_sort_duration">Duration</string>
+    <string name="library_refresh">Rescan library</string>
+    <string name="library_open_file">Open file</string>
+    <string name="library_open_url">Open network stream</string>
+    <string name="library_tab_library">Library</string>
+    <string name="library_tab_folders">Folders</string>
+    <string name="library_continue_watching">Continue watching</string>
+    <string name="library_filter_all">All</string>
+    <string name="library_filter_favorites">Favorites</string>
+    <string name="library_items_count">%1$d items</string>
+    <string name="library_empty">No videos found. Try rescanning or add a folder.</string>
+    <string name="library_resume_at">Resume at %1$s</string>
+    <string name="library_permission_title">Media access required</string>
+    <string name="library_permission_message">OpenVisum needs permission to read videos on this device to build your library.</string>
+    <string name="library_permission_grant">Grant permission</string>
+    <string name="library_add_folder">Add folder</string>
+    <string name="library_saf_folders">Added folders</string>
+    <string name="library_device_folders">Device folders</string>
+    <string name="library_folder_empty">This folder is empty.</string>
+    <string name="library_remove_folder_title">Remove folder</string>
+    <string name="library_remove_folder_message">Remove “%1$s” from OpenVisum? Files on disk are not affected.</string>
+
     <string name="home_url_title">Network stream</string>
     <string name="home_url_hint">https://example.com/video.m3u8</string>
     <string name="home_url_support_hint">HTTP, HTTPS, HLS (m3u8), SMB and WebDAV</string>
-    <string name="home_library_coming_soon">Media library and folder browsing arrive in the next milestone.</string>
 
     <string name="player_play">Play</string>
     <string name="player_pause">Pause</string>

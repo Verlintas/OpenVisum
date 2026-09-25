@@ -1,26 +1,79 @@
 package verlintas.openvisum.ui.player
 
 import android.net.Uri
+import android.os.SystemClock
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import org.videolan.libvlc.util.VLCVideoLayout
+import verlintas.openvisum.core.data.MediaRepository
+import verlintas.openvisum.core.data.prefs.PreferencesRepository
 import verlintas.openvisum.core.player.PlaybackEngine
 import verlintas.openvisum.core.player.model.EqualizerState
 import verlintas.openvisum.core.player.model.PlaybackState
 import verlintas.openvisum.core.player.model.VideoScaleMode
 
-class PlayerViewModel(private val engine: PlaybackEngine) : ViewModel() {
+class PlayerViewModel(
+    private val engine: PlaybackEngine,
+    private val repository: MediaRepository,
+    private val preferences: PreferencesRepository,
+) : ViewModel() {
 
     val state: StateFlow<PlaybackState> = engine.state
 
     private var openedUri: Uri? = null
+    private var lastSavedAt = 0L
+
+    init {
+        viewModelScope.launch {
+            engine.state.collect { playbackState ->
+                val uri = playbackState.mediaUri ?: return@collect
+                if (playbackState.positionMs <= 0L) return@collect
+                val now = SystemClock.elapsedRealtime()
+                val shouldSave = now - lastSavedAt >= SAVE_INTERVAL_MS ||
+                    (!playbackState.isPlaying && playbackState.positionMs != playbackState.durationMs)
+                if (shouldSave) {
+                    lastSavedAt = now
+                    repository.saveProgress(
+                        uri = uri.toString(),
+                        positionMs = playbackState.positionMs,
+                        durationMs = playbackState.durationMs,
+                    )
+                }
+            }
+        }
+    }
 
     fun openIfNeeded(uri: Uri, title: String?) {
         if (openedUri == uri) return
         openedUri = uri
-        engine.setMedia(uri, title)
-        engine.play()
+        viewModelScope.launch {
+            val settings = preferences.settings.first()
+            engine.setHardwareDecodingEnabled(settings.hardwareDecoding)
+            engine.setMedia(uri, title)
+            val item = runCatching { repository.find(uri.toString()) }.getOrNull()
+            val resumePosition = item?.resumePositionMs ?: 0L
+            if (resumePosition > 0L) {
+                engine.seekTo(resumePosition)
+            }
+            engine.play()
+        }
+    }
+
+    fun saveProgressNow() {
+        val playbackState = engine.state.value
+        val uri = playbackState.mediaUri ?: return
+        if (playbackState.positionMs <= 0L) return
+        viewModelScope.launch {
+            repository.saveProgress(
+                uri = uri.toString(),
+                positionMs = playbackState.positionMs,
+                durationMs = playbackState.durationMs,
+            )
+        }
     }
 
     fun attach(layout: VLCVideoLayout) = engine.attachViews(layout)
@@ -66,12 +119,17 @@ class PlayerViewModel(private val engine: PlaybackEngine) : ViewModel() {
     }
 
     companion object {
-        fun factory(engine: PlaybackEngine): ViewModelProvider.Factory =
-            object : ViewModelProvider.Factory {
-                @Suppress("UNCHECKED_CAST")
-                override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                    return PlayerViewModel(engine) as T
-                }
+        private const val SAVE_INTERVAL_MS = 5_000L
+
+        fun factory(
+            engine: PlaybackEngine,
+            repository: MediaRepository,
+            preferences: PreferencesRepository,
+        ): ViewModelProvider.Factory = object : ViewModelProvider.Factory {
+            @Suppress("UNCHECKED_CAST")
+            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                return PlayerViewModel(engine, repository, preferences) as T
             }
+        }
     }
 }
