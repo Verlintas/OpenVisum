@@ -8,19 +8,27 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.CloudDownload
+import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.Subtitles
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -34,9 +42,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import verlintas.openvisum.R
 import verlintas.openvisum.core.common.util.LanguageUtils
+import verlintas.openvisum.core.data.subtitle.SubtitleSearchResult
 import verlintas.openvisum.core.player.equalizer.EqualizerPresets
 import verlintas.openvisum.core.player.model.AudioStereoMode
 import verlintas.openvisum.core.player.model.EqualizerState
@@ -216,6 +226,7 @@ fun SubtitleTrackSheet(
     state: PlaybackState,
     onSelect: (Int) -> Unit,
     onAddSubtitle: () -> Unit,
+    onOnlineSearch: () -> Unit,
     onDelayChange: (Long) -> Unit,
     onStyleChange: (SubtitleStyle) -> Unit,
     onDismiss: () -> Unit,
@@ -252,6 +263,11 @@ fun SubtitleTrackSheet(
             Icon(Icons.Filled.Add, contentDescription = null)
             Spacer(Modifier.width(8.dp))
             Text(stringResource(R.string.player_add_subtitle))
+        }
+        TextButton(onClick = onOnlineSearch) {
+            Icon(Icons.Filled.CloudDownload, contentDescription = null)
+            Spacer(Modifier.width(8.dp))
+            Text(stringResource(R.string.player_online_subtitles))
         }
         HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
         DelaySlider(
@@ -462,6 +478,83 @@ fun AspectSheet(
                         null
                     },
                     modifier = Modifier.clickable { onRotate(degrees) },
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun OnlineSubtitleSheet(
+    state: OnlineSubtitleState,
+    initialQuery: String,
+    onSearch: (String) -> Unit,
+    onDownload: (SubtitleSearchResult) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    var query by remember { mutableStateOf(initialQuery) }
+    TrackBottomSheet(
+        title = stringResource(R.string.player_online_subtitles),
+        onDismiss = onDismiss,
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            OutlinedTextField(
+                value = query,
+                onValueChange = { query = it },
+                singleLine = true,
+                placeholder = { Text(stringResource(R.string.player_online_search_hint)) },
+                modifier = Modifier.weight(1f),
+            )
+            Spacer(Modifier.width(8.dp))
+            Button(
+                onClick = { onSearch(query.trim()) },
+                enabled = query.isNotBlank() && !state.isSearching,
+            ) {
+                Text(stringResource(R.string.player_online_search))
+            }
+        }
+        if (state.isSearching) {
+            LinearProgressIndicator(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp))
+        }
+        state.message?.let { message ->
+            Text(
+                text = message,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.error,
+                modifier = Modifier.padding(vertical = 4.dp),
+            )
+        }
+        LazyColumn(modifier = Modifier.heightIn(max = 420.dp)) {
+            items(state.results, key = { "${it.providerId}-${it.id}" }) { result ->
+                ListItem(
+                    headlineContent = {
+                        Text(result.title, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    },
+                    supportingContent = {
+                        Text(
+                            buildString {
+                                append(LanguageUtils.displayName(result.language) ?: result.language)
+                                result.format?.let { append(" · ${it.uppercase()}") }
+                                result.downloads?.let { append(" · ${it} downloads") }
+                            },
+                        )
+                    },
+                    leadingContent = {
+                        Icon(Icons.Filled.Subtitles, contentDescription = null)
+                    },
+                    trailingContent = {
+                        if (state.downloadingId == result.id) {
+                            CircularProgressIndicator(modifier = Modifier.size(20.dp))
+                        } else {
+                            Icon(Icons.Filled.Download, contentDescription = null)
+                        }
+                    },
+                    modifier = Modifier.clickable(enabled = state.downloadingId == null) {
+                        onDownload(result)
+                    },
                 )
             }
         }

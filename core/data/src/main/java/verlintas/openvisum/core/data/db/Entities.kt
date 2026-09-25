@@ -36,3 +36,25 @@ data class SafFolderEntity(
     val name: String,
     val addedAt: Long,
 )
+
+@Entity(tableName = "network_sources")
+data class NetworkSourceEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val type: String,
+    val name: String,
+    val host: String,
+    val port: Int,
+    val username: String?,
+    val passwordEncrypted: String?,
+    val domain: String?,
+    val basePath: String?,
+    val useHttps: Boolean,
+    val addedAt: Long,
+)
+
+@Entity(tableName = "stream_history")
+data class StreamHistoryEntity(
+    @PrimaryKey val url: String,
+    val title: String?,
+    val lastPlayedAt: Long,
+)

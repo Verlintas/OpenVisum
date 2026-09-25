@@ -5,6 +5,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
+import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -123,4 +124,39 @@ interface SafFolderDao {
 
     @Query("DELETE FROM saf_folders WHERE treeUri = :treeUri")
     suspend fun delete(treeUri: String)
+}
+
+@Dao
+interface NetworkSourceDao {
+
+    @Query("SELECT * FROM network_sources ORDER BY addedAt ASC")
+    fun observeAll(): Flow<List<NetworkSourceEntity>>
+
+    @Query("SELECT * FROM network_sources WHERE id = :id LIMIT 1")
+    suspend fun find(id: Long): NetworkSourceEntity?
+
+    @Query("SELECT * FROM network_sources ORDER BY addedAt ASC")
+    suspend fun all(): List<NetworkSourceEntity>
+
+    @Insert
+    suspend fun insert(source: NetworkSourceEntity): Long
+
+    @Update
+    suspend fun update(source: NetworkSourceEntity)
+
+    @Query("DELETE FROM network_sources WHERE id = :id")
+    suspend fun delete(id: Long)
+}
+
+@Dao
+interface StreamHistoryDao {
+
+    @Query("SELECT * FROM stream_history ORDER BY lastPlayedAt DESC LIMIT 30")
+    fun observeAll(): Flow<List<StreamHistoryEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsert(entry: StreamHistoryEntity)
+
+    @Query("DELETE FROM stream_history WHERE url = :url")
+    suspend fun delete(url: String)
 }

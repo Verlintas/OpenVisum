@@ -25,7 +25,13 @@ import verlintas.openvisum.ui.library.LibraryScreen
 import verlintas.openvisum.ui.library.LibraryViewModel
 import verlintas.openvisum.ui.library.SafBrowserScreen
 import verlintas.openvisum.ui.library.SafBrowserViewModel
+import verlintas.openvisum.ui.network.NetworkBrowserScreen
+import verlintas.openvisum.ui.network.NetworkBrowserViewModel
+import verlintas.openvisum.ui.network.NetworkScreen
+import verlintas.openvisum.ui.network.NetworkViewModel
 import verlintas.openvisum.ui.player.PlayerScreen
+import verlintas.openvisum.ui.settings.SettingsScreen
+import verlintas.openvisum.ui.settings.SettingsViewModel
 import verlintas.openvisum.ui.theme.OpenVisumTheme
 
 class MainActivity : ComponentActivity() {
@@ -74,6 +80,67 @@ class MainActivity : ComponentActivity() {
                             onOpenSafFolder = { folder ->
                                 navController.navigate(Routes.safBrowser(folder.treeUri, folder.name))
                             },
+                            onOpenNetwork = { navController.navigate(Routes.NETWORK) },
+                            onOpenSettings = { navController.navigate(Routes.SETTINGS) },
+                        )
+                    }
+
+                    composable(Routes.SETTINGS) {
+                        val settingsViewModel: SettingsViewModel = viewModel(
+                            factory = SettingsViewModel.factory(
+                                preferences = app.container.preferencesRepository,
+                                versionName = BuildConfig.VERSION_NAME,
+                            ),
+                        )
+                        SettingsScreen(
+                            viewModel = settingsViewModel,
+                            onBack = { navController.popBackStack() },
+                        )
+                    }
+
+                    composable(Routes.NETWORK) {
+                        val networkViewModel: NetworkViewModel = viewModel(
+                            factory = NetworkViewModel.factory(app.container.networkRepository),
+                        )
+                        NetworkScreen(
+                            viewModel = networkViewModel,
+                            onPlayUri = { uri, title ->
+                                navController.navigate(Routes.player(uri, title))
+                            },
+                            onBrowseSource = { source ->
+                                navController.navigate(
+                                    Routes.networkBrowser(source.id, source.name),
+                                )
+                            },
+                            onBack = { navController.popBackStack() },
+                        )
+                    }
+
+                    composable(
+                        route = Routes.NETWORK_BROWSER_PATTERN,
+                        arguments = listOf(
+                            navArgument("sourceId") { type = NavType.LongType },
+                            navArgument("name") {
+                                type = NavType.StringType
+                                defaultValue = ""
+                            },
+                        ),
+                    ) { entry ->
+                        val sourceId = entry.arguments?.getLong("sourceId") ?: 0L
+                        val name = entry.arguments?.getString("name").orEmpty()
+                        val browserViewModel: NetworkBrowserViewModel = viewModel(
+                            factory = NetworkBrowserViewModel.factory(
+                                repository = app.container.networkRepository,
+                                sourceId = sourceId,
+                                sourceName = name,
+                            ),
+                        )
+                        NetworkBrowserScreen(
+                            viewModel = browserViewModel,
+                            onPlayUri = { uri, title ->
+                                navController.navigate(Routes.player(uri, title))
+                            },
+                            onBack = { navController.popBackStack() },
                         )
                     }
 

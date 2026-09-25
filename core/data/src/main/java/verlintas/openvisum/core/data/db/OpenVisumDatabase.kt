@@ -6,8 +6,13 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 
 @Database(
-    entities = [MediaEntity::class, SafFolderEntity::class],
-    version = 1,
+    entities = [
+        MediaEntity::class,
+        SafFolderEntity::class,
+        NetworkSourceEntity::class,
+        StreamHistoryEntity::class,
+    ],
+    version = 2,
     exportSchema = true,
 )
 abstract class OpenVisumDatabase : RoomDatabase() {
@@ -15,6 +20,10 @@ abstract class OpenVisumDatabase : RoomDatabase() {
     abstract fun mediaDao(): MediaDao
 
     abstract fun safFolderDao(): SafFolderDao
+
+    abstract fun networkSourceDao(): NetworkSourceDao
+
+    abstract fun streamHistoryDao(): StreamHistoryDao
 
     companion object {
         fun create(context: Context): OpenVisumDatabase =

@@ -6,4 +6,5 @@ enum class PlayerSheet {
     SPEED,
     ASPECT,
     EQUALIZER,
+    ONLINE_SUBTITLE,
 }

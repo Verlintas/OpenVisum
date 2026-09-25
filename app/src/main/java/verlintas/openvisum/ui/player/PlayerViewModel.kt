@@ -7,15 +7,21 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.videolan.libvlc.util.VLCVideoLayout
 import verlintas.openvisum.core.common.util.LanguageUtils
 import verlintas.openvisum.core.data.MediaRepository
+import verlintas.openvisum.core.data.NetworkRepository
 import verlintas.openvisum.core.data.prefs.AppSettings
 import verlintas.openvisum.core.data.prefs.PreferencesRepository
 import verlintas.openvisum.core.data.source.SubtitleFile
+import verlintas.openvisum.core.data.subtitle.SubtitleSearchRepository
+import verlintas.openvisum.core.data.subtitle.SubtitleSearchResult
 import verlintas.openvisum.core.player.PlaybackEngine
 import verlintas.openvisum.core.player.model.AudioStereoMode
 import verlintas.openvisum.core.player.model.EqualizerState
@@ -23,13 +29,26 @@ import verlintas.openvisum.core.player.model.PlaybackState
 import verlintas.openvisum.core.player.model.SubtitleStyle
 import verlintas.openvisum.core.player.model.VideoScaleMode
 
+data class OnlineSubtitleState(
+    val query: String = "",
+    val isSearching: Boolean = false,
+    val results: List<SubtitleSearchResult> = emptyList(),
+    val downloadingId: String? = null,
+    val message: String? = null,
+)
+
 class PlayerViewModel(
     private val engine: PlaybackEngine,
     private val repository: MediaRepository,
+    private val networkRepository: NetworkRepository,
+    private val subtitleSearchRepository: SubtitleSearchRepository,
     private val preferences: PreferencesRepository,
 ) : ViewModel() {
 
     val state: StateFlow<PlaybackState> = engine.state
+
+    private val _onlineSubtitles = MutableStateFlow(OnlineSubtitleState())
+    val onlineSubtitles: StateFlow<OnlineSubtitleState> = _onlineSubtitles.asStateFlow()
 
     private var openedUri: Uri? = null
     private var lastSavedAt = 0L
@@ -68,18 +87,76 @@ class PlayerViewModel(
             )
             val item = runCatching { repository.find(uri.toString()) }.getOrNull()
             val resolvedTitle = title ?: item?.displayName ?: repository.resolveDisplayName(uri)
-            engine.setMedia(uri, resolvedTitle)
+            val options = runCatching { networkRepository.playbackOptionsForUri(uri.toString()) }
+                .getOrDefault(emptyList())
+            engine.setMedia(uri, resolvedTitle, options)
             val resumePosition = item?.resumePositionMs ?: 0L
             if (resumePosition > 0L) {
                 engine.seekTo(resumePosition)
             }
             engine.play()
+            if (uri.scheme == "http" || uri.scheme == "https" || uri.scheme == "smb") {
+                runCatching { networkRepository.rememberStream(uri.toString(), resolvedTitle) }
+            }
             autoLoadExternalSubtitles(
                 uri = uri,
                 displayName = resolvedTitle,
                 settings = settings,
             )
         }
+    }
+
+    fun searchOnlineSubtitles(query: String) {
+        _onlineSubtitles.update {
+            it.copy(query = query, isSearching = true, results = emptyList(), message = null)
+        }
+        viewModelScope.launch {
+            val settings = preferences.settings.first()
+            val languages = openSubtitlesLanguages(settings.preferredSubtitleLanguages)
+            runCatching { subtitleSearchRepository.search(query, languages) }
+                .onSuccess { results ->
+                    _onlineSubtitles.update {
+                        it.copy(
+                            isSearching = false,
+                            results = results,
+                            message = if (results.isEmpty()) ONLINE_EMPTY_MESSAGE else null,
+                        )
+                    }
+                }
+                .onFailure { throwable ->
+                    _onlineSubtitles.update {
+                        it.copy(
+                            isSearching = false,
+                            message = throwable.message ?: ONLINE_ERROR_MESSAGE,
+                        )
+                    }
+                }
+        }
+    }
+
+    fun downloadSubtitle(result: SubtitleSearchResult) {
+        _onlineSubtitles.update { it.copy(downloadingId = result.id, message = null) }
+        viewModelScope.launch {
+            subtitleSearchRepository.download(result)
+                .onSuccess { file ->
+                    val known = engine.state.value.subtitleTracks.mapTo(mutableSetOf()) { it.id }
+                    engine.addSubtitleFile(Uri.fromFile(file))
+                    waitForNewSubtitleTrack(known)?.let(engine::selectSubtitleTrack)
+                    _onlineSubtitles.update { it.copy(downloadingId = null, message = null) }
+                }
+                .onFailure { throwable ->
+                    _onlineSubtitles.update {
+                        it.copy(
+                            downloadingId = null,
+                            message = throwable.message ?: ONLINE_ERROR_MESSAGE,
+                        )
+                    }
+                }
+        }
+    }
+
+    fun dismissOnlineSubtitleMessage() {
+        _onlineSubtitles.update { it.copy(message = null) }
     }
 
     private suspend fun autoLoadExternalSubtitles(
@@ -133,6 +210,17 @@ class PlayerViewModel(
         }
         return files.singleOrNull()
     }
+
+    private fun openSubtitlesLanguages(languages: List<String>): String =
+        languages.mapNotNull { language ->
+            when (LanguageUtils.normalize(language)) {
+                "zh-Hans" -> "zh-cn"
+                "zh-Hant" -> "zh-tw"
+                "zh" -> "zh-cn"
+                null -> null
+                else -> LanguageUtils.normalize(language)
+            }
+        }.distinct().joinToString(",").ifBlank { "en" }
 
     fun saveProgressNow() {
         val playbackState = engine.state.value
@@ -206,15 +294,25 @@ class PlayerViewModel(
         private const val SAVE_INTERVAL_MS = 5_000L
         private const val MAX_EXTERNAL_SUBTITLES = 5
         private const val SUBTITLE_TRACK_WAIT_MS = 6_000L
+        private const val ONLINE_EMPTY_MESSAGE = "No subtitles found"
+        private const val ONLINE_ERROR_MESSAGE = "Subtitle search failed"
 
         fun factory(
             engine: PlaybackEngine,
             repository: MediaRepository,
+            networkRepository: NetworkRepository,
+            subtitleSearchRepository: SubtitleSearchRepository,
             preferences: PreferencesRepository,
         ): ViewModelProvider.Factory = object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                return PlayerViewModel(engine, repository, preferences) as T
+                return PlayerViewModel(
+                    engine,
+                    repository,
+                    networkRepository,
+                    subtitleSearchRepository,
+                    preferences,
+                ) as T
             }
         }
     }

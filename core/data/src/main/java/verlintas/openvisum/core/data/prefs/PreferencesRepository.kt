@@ -14,6 +14,7 @@ import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
+import verlintas.openvisum.core.data.security.SecretCipher
 import java.io.IOException
 import java.util.Locale
 
@@ -31,6 +32,9 @@ data class AppSettings(
     val subtitleBold: Boolean = false,
     val subtitleColor: Int? = null,
     val stereoMode: Int = 0,
+    val openSubtitlesApiKey: String? = null,
+    val openSubtitlesUsername: String? = null,
+    val openSubtitlesPassword: String? = null,
     val themeMode: Int = THEME_SYSTEM,
 ) {
     companion object {
@@ -50,7 +54,10 @@ fun defaultSubtitleLanguages(): List<String> = buildList {
 
 fun defaultAudioLanguages(): List<String> = listOf(Locale.getDefault().language, "en").filter { it.isNotBlank() }
 
-class PreferencesRepository(private val context: Context) {
+class PreferencesRepository(
+    private val context: Context,
+    private val cipher: SecretCipher,
+) {
 
     private object Keys {
         val SORT_ORDER = stringPreferencesKey("sort_order")
@@ -62,6 +69,9 @@ class PreferencesRepository(private val context: Context) {
         val SUBTITLE_BOLD = booleanPreferencesKey("subtitle_bold")
         val SUBTITLE_COLOR = intPreferencesKey("subtitle_color")
         val STEREO_MODE = intPreferencesKey("stereo_mode")
+        val OPEN_SUBTITLES_API_KEY = stringPreferencesKey("opensubtitles_api_key")
+        val OPEN_SUBTITLES_USERNAME = stringPreferencesKey("opensubtitles_username")
+        val OPEN_SUBTITLES_PASSWORD = stringPreferencesKey("opensubtitles_password")
         val THEME_MODE = intPreferencesKey("theme_mode")
     }
 
@@ -84,6 +94,9 @@ class PreferencesRepository(private val context: Context) {
                 subtitleBold = preferences[Keys.SUBTITLE_BOLD] ?: false,
                 subtitleColor = preferences[Keys.SUBTITLE_COLOR]?.takeIf { it >= 0 },
                 stereoMode = preferences[Keys.STEREO_MODE] ?: 0,
+                openSubtitlesApiKey = preferences[Keys.OPEN_SUBTITLES_API_KEY],
+                openSubtitlesUsername = preferences[Keys.OPEN_SUBTITLES_USERNAME],
+                openSubtitlesPassword = preferences[Keys.OPEN_SUBTITLES_PASSWORD]?.let(cipher::decrypt),
                 themeMode = preferences[Keys.THEME_MODE] ?: AppSettings.THEME_SYSTEM,
             )
         }
@@ -118,6 +131,17 @@ class PreferencesRepository(private val context: Context) {
 
     suspend fun setStereoMode(mode: Int) {
         context.dataStore.edit { it[Keys.STEREO_MODE] = mode }
+    }
+
+    suspend fun setOpenSubtitlesCredentials(apiKey: String, username: String?, password: String?) {
+        context.dataStore.edit { preferences ->
+            preferences[Keys.OPEN_SUBTITLES_API_KEY] = apiKey
+            preferences[Keys.OPEN_SUBTITLES_USERNAME] = username.orEmpty()
+            preferences[Keys.OPEN_SUBTITLES_PASSWORD] = password
+                ?.takeIf { it.isNotBlank() }
+                ?.let(cipher::encrypt)
+                ?: ""
+        }
     }
 
     suspend fun setThemeMode(mode: Int) {

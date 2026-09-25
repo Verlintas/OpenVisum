@@ -47,10 +47,13 @@ fun PlayerScreen(
         factory = PlayerViewModel.factory(
             engine = container.playbackEngine,
             repository = container.mediaRepository,
+            networkRepository = container.networkRepository,
+            subtitleSearchRepository = container.subtitleSearchRepository,
             preferences = container.preferencesRepository,
         ),
     )
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val onlineSubtitles by viewModel.onlineSubtitles.collectAsStateWithLifecycle()
     val uri = remember(mediaUri) { Uri.parse(mediaUri) }
 
     LaunchedEffect(uri, mediaTitle) {
@@ -137,8 +140,17 @@ fun PlayerScreen(
             state = state,
             onSelect = viewModel::selectSubtitleTrack,
             onAddSubtitle = { subtitlePicker.launch(arrayOf("*/*")) },
+            onOnlineSearch = { activeSheet = PlayerSheet.ONLINE_SUBTITLE },
             onDelayChange = viewModel::setSubtitleDelay,
             onStyleChange = viewModel::setSubtitleStyle,
+            onDismiss = { activeSheet = null },
+        )
+
+        PlayerSheet.ONLINE_SUBTITLE -> OnlineSubtitleSheet(
+            state = onlineSubtitles,
+            initialQuery = mediaTitle ?: state.title.orEmpty(),
+            onSearch = viewModel::searchOnlineSubtitles,
+            onDownload = viewModel::downloadSubtitle,
             onDismiss = { activeSheet = null },
         )
 

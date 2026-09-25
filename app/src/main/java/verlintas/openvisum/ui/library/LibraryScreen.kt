@@ -24,6 +24,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Cloud
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.FolderOpen
@@ -31,6 +32,7 @@ import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Sort
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -88,6 +90,8 @@ fun LibraryScreen(
     onPlayUri: (String, String?) -> Unit,
     onOpenFolder: (FolderSummary) -> Unit,
     onOpenSafFolder: (SafFolderEntity) -> Unit,
+    onOpenNetwork: () -> Unit,
+    onOpenSettings: () -> Unit,
 ) {
     val context = LocalContext.current
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -155,6 +159,9 @@ fun LibraryScreen(
                             Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.common_cancel))
                         }
                     } else {
+                        IconButton(onClick = onOpenNetwork) {
+                            Icon(Icons.Filled.Cloud, contentDescription = stringResource(R.string.network_title))
+                        }
                         IconButton(onClick = { searchActive = true }) {
                             Icon(Icons.Filled.Search, contentDescription = stringResource(R.string.library_search))
                         }
@@ -212,6 +219,16 @@ fun LibraryScreen(
                                     onClick = {
                                         showOverflow = false
                                         showUrlDialog = true
+                                    },
+                                )
+                                DropdownMenuItem(
+                                    text = { Text(stringResource(R.string.settings_title)) },
+                                    leadingIcon = {
+                                        Icon(Icons.Filled.Settings, contentDescription = null)
+                                    },
+                                    onClick = {
+                                        showOverflow = false
+                                        onOpenSettings()
                                     },
                                 )
                             }

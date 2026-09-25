@@ -14,6 +14,12 @@ object Routes {
 
     const val SAF_BROWSER_PATTERN = "saf?uri={uri}&name={name}"
 
+    const val SETTINGS = "settings"
+
+    const val NETWORK = "network"
+
+    const val NETWORK_BROWSER_PATTERN = "network_browser?sourceId={sourceId}&name={name}"
+
     fun player(uri: String, title: String? = null): String {
         val encodedUri = Uri.encode(uri)
         val encodedTitle = Uri.encode(title.orEmpty())
@@ -25,4 +31,7 @@ object Routes {
 
     fun safBrowser(uri: String, name: String): String =
         "saf?uri=${Uri.encode(uri)}&name=${Uri.encode(name)}"
+
+    fun networkBrowser(sourceId: Long, name: String): String =
+        "network_browser?sourceId=$sourceId&name=${Uri.encode(name)}"
 }

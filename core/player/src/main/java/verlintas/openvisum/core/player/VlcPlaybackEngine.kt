@@ -34,6 +34,7 @@ class VlcPlaybackEngine(context: Context) : PlaybackEngine {
 
     private var currentMedia: Media? = null
     private var currentFileDescriptor: ParcelFileDescriptor? = null
+    private var lastMediaOptions: List<String> = emptyList()
     private var hwDecodingEnabled = true
     private var rotationDegrees = 0
     private val externalSubtitleUris = mutableListOf<Uri>()
@@ -112,6 +113,7 @@ class VlcPlaybackEngine(context: Context) : PlaybackEngine {
         autoSubtitleApplied = false
         userAudioSelected = false
         userSubtitleSelected = false
+        lastMediaOptions = options
         openMedia(uri, title, options, positionMs = 0L)
     }
 
@@ -564,7 +566,7 @@ class VlcPlaybackEngine(context: Context) : PlaybackEngine {
         val wasPlaying = mediaPlayer.isPlaying
         restoring = true
         try {
-            openMedia(uri, _state.value.title, emptyList(), position)
+            openMedia(uri, _state.value.title, lastMediaOptions, position)
             mediaPlayer.play()
             if (selectedAudio >= 0) mediaPlayer.setAudioTrack(selectedAudio)
             if (selectedSubtitle >= 0) mediaPlayer.setSpuTrack(selectedSubtitle)
