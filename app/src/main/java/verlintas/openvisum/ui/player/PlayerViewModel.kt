@@ -320,7 +320,7 @@ class PlayerViewModel(
         private const val TAG = "PlayerViewModel"
         private const val SAVE_INTERVAL_MS = 5_000L
         private const val MAX_EXTERNAL_SUBTITLES = 5
-        private const val SUBTITLE_TRACK_WAIT_MS = 6_000L
+        private const val SUBTITLE_TRACK_WAIT_MS = 10_000L
         private const val ONLINE_EMPTY_MESSAGE = "No subtitles found"
         private const val ONLINE_ERROR_MESSAGE = "Subtitle search failed"
 
