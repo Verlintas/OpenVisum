@@ -262,4 +262,8 @@
     <string name="sidebar_stats">%1$d 个视频 · %2$s</string>
     <string name="sidebar_ready">已就绪</string>
     <string name="sidebar_quick_actions">快捷操作</string>
+    <string name="sidebar_storage">存储</string>
+    <string name="sidebar_storage_used">已用 %1$s / %2$s</string>
+    <string name="sidebar_storage_library">媒体库 %1$s</string>
+    <string name="sidebar_storage_counts">%1$d 个视频 · %2$d 个文件夹</string>
 </resources>

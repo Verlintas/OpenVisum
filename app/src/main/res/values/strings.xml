@@ -264,4 +264,8 @@
     <string name="sidebar_stats">%1$d videos · %2$s</string>
     <string name="sidebar_ready">Ready</string>
     <string name="sidebar_quick_actions">Quick actions</string>
+    <string name="sidebar_storage">Storage</string>
+    <string name="sidebar_storage_used">%1$s / %2$s used</string>
+    <string name="sidebar_storage_library">Library %1$s</string>
+    <string name="sidebar_storage_counts">%1$d videos · %2$d folders</string>
 </resources>

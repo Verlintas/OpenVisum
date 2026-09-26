@@ -95,12 +95,23 @@ class MainActivity : ComponentActivity() {
                     ),
                 )
                 val homeState by homeViewModel.uiState.collectAsStateWithLifecycle()
+                val storageStats = remember {
+                    runCatching {
+                        val stat = android.os.StatFs(
+                            android.os.Environment.getExternalStorageDirectory().absolutePath,
+                        )
+                        val total = stat.totalBytes
+                        val used = total - stat.availableBytes
+                        used to total
+                    }.getOrDefault(0L to 0L)
+                }
                 val sidebarData = remember(
                     homeState.folders,
                     homeState.safFolders,
                     homeState.networkSources,
                     homeState.totalCount,
                     homeState.totalSizeBytes,
+                    storageStats,
                 ) {
                     verlintas.openvisum.ui.navigation.SidebarData(
                         folders = homeState.folders.map {
@@ -120,6 +131,8 @@ class MainActivity : ComponentActivity() {
                         networkSourceCount = homeState.networkSources.size,
                         totalCount = homeState.totalCount,
                         totalSizeBytes = homeState.totalSizeBytes,
+                        storageUsedBytes = storageStats.first,
+                        storageTotalBytes = storageStats.second,
                     )
                 }
 
@@ -168,11 +181,6 @@ class MainActivity : ComponentActivity() {
                 val appSnackbar = remember { androidx.compose.material3.SnackbarHostState() }
                 androidx.compose.runtime.CompositionLocalProvider(
                     verlintas.openvisum.ui.components.LocalAppSnackbar provides appSnackbar,
-                    verlintas.openvisum.ui.navigation.LocalSidebarController provides
-                        verlintas.openvisum.ui.navigation.SidebarController(
-                            enabled = true,
-                            open = { scope.launch { drawerState.open() } },
-                        ),
                 ) {
                     Box(modifier = Modifier.fillMaxSize()) {
                         BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
@@ -217,12 +225,10 @@ class MainActivity : ComponentActivity() {
                                     }
                                 }
                             } else {
-                                val gesturesEnabled = currentRoute == Routes.HOME ||
-                                    currentRoute == Routes.LIBRARY ||
-                                    currentRoute == Routes.LIBRARY_PATTERN
+                                val isPlayer = currentRoute == Routes.PLAYER_PATTERN
                                 androidx.compose.material3.ModalNavigationDrawer(
                                     drawerState = drawerState,
-                                    gesturesEnabled = gesturesEnabled,
+                                    gesturesEnabled = !isPlayer,
                                     drawerContent = {
                                         verlintas.openvisum.ui.navigation.AppSidebar(
                                             selectedRoute = currentRoute,
@@ -266,11 +272,26 @@ class MainActivity : ComponentActivity() {
                                         )
                                     },
                                 ) {
-                                    AppNavGraph(
-                                        navController = navController,
-                                        app = app,
-                                        homeViewModel = homeViewModel,
-                                    )
+                                    Row(modifier = Modifier.fillMaxSize()) {
+                                        if (!isPlayer) {
+                                            verlintas.openvisum.ui.navigation.MiniSidebar(
+                                                selectedRoute = currentRoute,
+                                                storageUsedBytes = storageStats.first,
+                                                storageTotalBytes = storageStats.second,
+                                                onNavigate = navigateTopLevel,
+                                                onOpen = {
+                                                    scope.launch { drawerState.open() }
+                                                },
+                                            )
+                                        }
+                                        Box(modifier = Modifier.weight(1f)) {
+                                            AppNavGraph(
+                                                navController = navController,
+                                                app = app,
+                                                homeViewModel = homeViewModel,
+                                            )
+                                        }
+                                    }
                                 }
                             }
                         }

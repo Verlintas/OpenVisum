@@ -34,6 +34,7 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -133,7 +134,6 @@ fun HomeScreen(
     onOpenWebsite: () -> Unit,
 ) {
     val context = LocalContext.current
-    val sidebarController = verlintas.openvisum.ui.navigation.LocalSidebarController.current
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     var hasPermission by remember { mutableStateOf(hasMediaPermission(context)) }
 
@@ -163,8 +163,6 @@ fun HomeScreen(
             state = state,
             hasPermission = hasPermission,
             viewModel = viewModel,
-            showMenuButton = maxWidth < 840.dp,
-            onOpenDrawer = { sidebarController.open() },
             onPlayUri = onPlayUri,
             onOpenLibrary = onOpenLibrary,
             onOpenSearch = onOpenSearch,
@@ -197,8 +195,6 @@ private fun HomeContent(
     state: HomeUiState,
     hasPermission: Boolean,
     viewModel: HomeViewModel,
-    showMenuButton: Boolean,
-    onOpenDrawer: () -> Unit,
     onPlayUri: (String, String?, Boolean) -> Unit,
     onOpenLibrary: (Int) -> Unit,
     onOpenSearch: () -> Unit,
@@ -218,7 +214,7 @@ private fun HomeContent(
             androidx.compose.material3.TopAppBar(
                 title = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        verlintas.openvisum.ui.components.BrandMark(size = 30.dp)
+                        verlintas.openvisum.ui.components.AppIcon(size = 30.dp)
                         Spacer(Modifier.width(9.dp))
                         Text(
                             text = stringResource(R.string.app_name),
@@ -226,16 +222,6 @@ private fun HomeContent(
                             fontWeight = FontWeight.ExtraBold,
                             letterSpacing = (-0.3).sp,
                         )
-                    }
-                },
-                navigationIcon = {
-                    if (showMenuButton) {
-                        IconButton(onClick = onOpenDrawer) {
-                            Icon(
-                                imageVector = Icons.Filled.Menu,
-                                contentDescription = stringResource(R.string.drawer_open),
-                            )
-                        }
                     }
                 },
                 actions = {
@@ -268,20 +254,6 @@ private fun HomeContent(
                     CircularProgressIndicator()
                 }
             } else {
-                Box(modifier = Modifier.fillMaxSize()) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(380.dp)
-                        .background(
-                            Brush.verticalGradient(
-                                listOf(
-                                    MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f),
-                                    MaterialTheme.colorScheme.background.copy(alpha = 0f),
-                                ),
-                            ),
-                        ),
-                )
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
@@ -493,7 +465,6 @@ private fun HomeContent(
                         )
                     }
                 }
-                }
             }
         }
     }
@@ -525,11 +496,11 @@ private fun HeroBanner(
             .fillMaxWidth()
             .padding(horizontal = 16.dp),
     ) {
-        val heroHeight = minOf(maxWidth * 9f / 16f, 420.dp)
+        val heroMinHeight = minOf(maxWidth * 9f / 16f, 420.dp)
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(heroHeight)
+                .heightIn(min = heroMinHeight)
                 .shadow(18.dp, cardShape)
                 .clip(cardShape)
                 .border(1.dp, Color.White.copy(alpha = 0.12f), cardShape),
@@ -541,7 +512,7 @@ private fun HeroBanner(
                 } else {
                     8_000L
                 },
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier.matchParentSize(),
             )
             Box(
                 modifier = Modifier
@@ -704,20 +675,19 @@ private fun HeroBanner(
                     Button(
                         onClick = onPlay,
                         shape = RoundedCornerShape(14.dp),
-                        contentPadding = PaddingValues(horizontal = 22.dp, vertical = 12.dp),
+                        contentPadding = PaddingValues(horizontal = 18.dp, vertical = 12.dp),
                     ) {
                         Icon(Icons.Filled.PlayArrow, contentDescription = null)
                         Spacer(Modifier.width(8.dp))
                         Text(
                             text = if (isResume) {
-                                stringResource(
-                                    R.string.home_resume_button,
-                                    TimeUtils.formatDuration(item.playbackPositionMs),
-                                )
+                                stringResource(R.string.library_continue_watching)
                             } else {
                                 stringResource(R.string.common_play)
                             },
                             fontWeight = FontWeight.SemiBold,
+                            maxLines = 1,
+                            softWrap = false,
                         )
                     }
                     OutlinedButton(
@@ -727,13 +697,15 @@ private fun HeroBanner(
                         colors = androidx.compose.material3.ButtonDefaults.outlinedButtonColors(
                             contentColor = Color.White,
                         ),
-                        contentPadding = PaddingValues(horizontal = 18.dp, vertical = 12.dp),
+                        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 12.dp),
                     ) {
                         Icon(Icons.Filled.Replay, contentDescription = null)
                         Spacer(Modifier.width(8.dp))
                         Text(
                             text = stringResource(R.string.home_restart),
                             fontWeight = FontWeight.SemiBold,
+                            maxLines = 1,
+                            softWrap = false,
                         )
                     }
                 }
@@ -914,18 +886,28 @@ private fun PrivacyGate(
                 Button(
                     onClick = onReveal,
                     shape = RoundedCornerShape(14.dp),
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 10.dp),
                 ) {
                     Icon(Icons.Filled.Visibility, contentDescription = null)
                     Spacer(Modifier.width(8.dp))
-                    Text(stringResource(R.string.home_privacy_reveal))
+                    Text(
+                        text = stringResource(R.string.home_privacy_reveal),
+                        maxLines = 1,
+                        softWrap = false,
+                    )
                 }
                 FilledTonalButton(
                     onClick = onOpenFile,
                     shape = RoundedCornerShape(14.dp),
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 10.dp),
                 ) {
                     Icon(Icons.Filled.FolderOpen, contentDescription = null)
                     Spacer(Modifier.width(8.dp))
-                    Text(stringResource(R.string.sidebar_open_file))
+                    Text(
+                        text = stringResource(R.string.sidebar_open_file),
+                        maxLines = 1,
+                        softWrap = false,
+                    )
                 }
             }
         }
@@ -1159,16 +1141,6 @@ private fun LibraryStatsCard(
         shape = RoundedCornerShape(22.dp),
         color = MaterialTheme.colorScheme.surfaceContainerLow,
     ) {
-        Box(
-            modifier = Modifier.background(
-                Brush.linearGradient(
-                    listOf(
-                        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.55f),
-                        MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.30f),
-                    ),
-                ),
-            ),
-        ) {
         Column(modifier = Modifier.padding(18.dp)) {
             Text(
                 text = stringResource(R.string.home_overview),
@@ -1211,7 +1183,6 @@ private fun LibraryStatsCard(
                 )
             }
         }
-        }
     }
 }
 
@@ -1222,7 +1193,7 @@ private fun StatColumn(value: String, label: String) {
             text = value,
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.ExtraBold,
-            color = MaterialTheme.colorScheme.onPrimaryContainer,
+            color = MaterialTheme.colorScheme.primary,
         )
         Text(
             text = label,
