@@ -1,6 +1,11 @@
 package verlintas.openvisum.ui.components
 
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
@@ -94,5 +99,39 @@ fun Modifier.popOnChange(trigger: Boolean, popScale: Float = 1.25f): Modifier {
     return this.graphicsLayer {
         scaleX = scale
         scaleY = scale
+    }
+}
+
+@Composable
+fun Modifier.pressScale(
+    interactionSource: MutableInteractionSource,
+    pressedScale: Float = 0.96f,
+): Modifier {
+    val pressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (pressed) pressedScale else 1f,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
+        label = "buttonPressScale",
+    )
+    return this.graphicsLayer {
+        scaleX = scale
+        scaleY = scale
+    }
+}
+
+@Composable
+fun Modifier.floatingIcon(amplitudeDp: Float = 5f): Modifier {
+    val transition = rememberInfiniteTransition(label = "floating")
+    val offset by transition.animateFloat(
+        initialValue = -amplitudeDp,
+        targetValue = amplitudeDp,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 2600, easing = androidx.compose.animation.core.FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse,
+        ),
+        label = "floatingOffset",
+    )
+    return this.graphicsLayer {
+        translationY = offset * density
     }
 }

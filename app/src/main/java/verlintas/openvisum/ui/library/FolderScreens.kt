@@ -32,6 +32,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import verlintas.openvisum.R
 import verlintas.openvisum.core.common.util.FileSizeUtils
 import verlintas.openvisum.ui.components.MediaRow
+import verlintas.openvisum.ui.components.staggeredEntrance
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -122,7 +123,7 @@ fun SafBrowserScreen(
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
             } else {
                 LazyColumn(modifier = Modifier.fillMaxSize()) {
-                    items(state.entries, key = { it.uri }) { entry ->
+                    itemsIndexed(state.entries, key = { _, entry -> entry.uri }) { index, entry ->
                         ListItem(
                             headlineContent = {
                                 Text(entry.name, maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -142,13 +143,15 @@ fun SafBrowserScreen(
                                     contentDescription = null,
                                 )
                             },
-                            modifier = Modifier.clickable(enabled = entry.isDirectory || entry.isPlayable) {
-                                if (entry.isDirectory) {
-                                    viewModel.open(entry)
-                                } else if (entry.isPlayable) {
-                                    onPlayUri(entry.uri, entry.name)
-                                }
-                            },
+                            modifier = Modifier
+                                .staggeredEntrance(index)
+                                .clickable(enabled = entry.isDirectory || entry.isPlayable) {
+                                    if (entry.isDirectory) {
+                                        viewModel.open(entry)
+                                    } else if (entry.isPlayable) {
+                                        onPlayUri(entry.uri, entry.name)
+                                    }
+                                },
                         )
                     }
                     if (state.entries.isEmpty() && !state.isLoading) {

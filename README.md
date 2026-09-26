@@ -8,7 +8,7 @@ An open-source Android video player powered by libVLC. Plays virtually any forma
   <img src="docs/screenshots/library.png" width="24%" alt="Library" />
   <img src="docs/screenshots/player.png" width="24%" alt="Player with subtitles" />
   <img src="docs/screenshots/appearance.png" width="24%" alt="Theme colors" />
-  <img src="docs/screenshots/settings.png" width="24%" alt="Settings" />
+  <img src="docs/screenshots/about.png" width="24%" alt="About" />
 </p>
 
 ## 特性 Features

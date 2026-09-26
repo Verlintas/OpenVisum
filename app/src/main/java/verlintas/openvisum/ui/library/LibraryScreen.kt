@@ -6,6 +6,7 @@ import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -34,6 +35,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -105,6 +107,7 @@ import verlintas.openvisum.core.data.db.SafFolderEntity
 import verlintas.openvisum.core.data.model.MediaItem
 import verlintas.openvisum.core.data.prefs.SortOrder
 import verlintas.openvisum.ui.components.LibrarySkeletonGrid
+import verlintas.openvisum.ui.components.floatingIcon
 import verlintas.openvisum.ui.components.MediaGridCard
 import verlintas.openvisum.ui.components.pressScaleClickable
 import verlintas.openvisum.ui.components.staggeredEntrance
@@ -136,6 +139,16 @@ fun LibraryScreen(
     var hasPermission by remember { mutableStateOf(hasMediaPermission(context)) }
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(
         rememberTopAppBarState(),
+    )
+    val collapsedFraction = scrollBehavior.state.collapsedFraction
+    val topBarColor by animateColorAsState(
+        targetValue = if (collapsedFraction > 0.5f) {
+            MaterialTheme.colorScheme.surfaceContainerLow
+        } else {
+            MaterialTheme.colorScheme.background
+        },
+        animationSpec = tween(300),
+        label = "topBarColor",
     )
 
     val permissionLauncher = rememberLauncherForActivityResult(
@@ -204,6 +217,9 @@ fun LibraryScreen(
                             fontWeight = FontWeight.Bold,
                         )
                     },
+                    colors = TopAppBarDefaults.largeTopAppBarColors(
+                        containerColor = topBarColor,
+                    ),
                     scrollBehavior = scrollBehavior,
                     actions = {
                         IconButton(onClick = onOpenNetwork) {
@@ -577,7 +593,9 @@ private fun EmptyLibraryHint() {
             imageVector = Icons.Filled.VideoLibrary,
             contentDescription = null,
             tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.size(56.dp),
+            modifier = Modifier
+                .size(56.dp)
+                .floatingIcon(),
         )
         Spacer(Modifier.height(12.dp))
         Text(
@@ -662,7 +680,7 @@ private fun FoldersContent(
 
         if (state.safFolders.isNotEmpty()) {
             item { SectionTitle(stringResource(R.string.library_saf_folders)) }
-            items(state.safFolders, key = { it.treeUri }) { folder ->
+            itemsIndexed(state.safFolders, key = { _, folder -> folder.treeUri }) { index, folder ->
                 ListItem(
                     headlineContent = { Text(folder.name) },
                     leadingContent = { Icon(Icons.Filled.Folder, contentDescription = null) },
@@ -673,6 +691,7 @@ private fun FoldersContent(
                     },
                     modifier = Modifier
                         .animateItem()
+                        .staggeredEntrance(index)
                         .clickable { onOpenSafFolder(folder) },
                 )
             }
@@ -680,7 +699,7 @@ private fun FoldersContent(
 
         if (state.folders.isNotEmpty()) {
             item { SectionTitle(stringResource(R.string.library_device_folders)) }
-            items(state.folders, key = { it.folderKey }) { folder ->
+            itemsIndexed(state.folders, key = { _, folder -> folder.folderKey }) { index, folder ->
                 ListItem(
                     headlineContent = { Text(folder.folderName) },
                     supportingContent = {
@@ -689,6 +708,7 @@ private fun FoldersContent(
                     leadingContent = { Icon(Icons.Filled.FolderOpen, contentDescription = null) },
                     modifier = Modifier
                         .animateItem()
+                        .staggeredEntrance(index)
                         .clickable { onOpenFolder(folder) },
                 )
             }

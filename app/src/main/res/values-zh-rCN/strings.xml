@@ -172,4 +172,27 @@
     <string name="settings_theme_mode">主题模式</string>
     <string name="settings_theme_color">主题颜色</string>
     <string name="settings_group_languages">语言</string>
+    <string name="about_tagline">开源 Android 视频播放器，由 libVLC 驱动</string>
+    <string name="about_section_links">链接</string>
+    <string name="about_section_developer">开发者</string>
+    <string name="about_link_repo">源代码仓库</string>
+    <string name="about_link_releases">版本发布</string>
+    <string name="about_link_releases_summary">下载最新 APK</string>
+    <string name="about_link_issues">问题反馈</string>
+    <string name="about_link_issues_summary">报告问题或提交建议</string>
+    <string name="about_link_changelog">更新日志</string>
+    <string name="about_link_changelog_summary">每个版本的变更记录</string>
+    <string name="about_link_license">开源许可证</string>
+    <string name="about_open_source_licenses">开源许可清单</string>
+    <string name="about_open_source_licenses_summary">OpenVisum 使用的开源项目</string>
+    <string name="about_load_failed">无法加载 GitHub 信息</string>
+    <string name="about_retry">重试</string>
+    <string name="about_license_note">OpenVisum 是遵循 GPL-3.0 的自由软件；由 libVLC（LGPL-2.1-or-later）驱动。</string>
+    <string name="about_stats_repos">仓库</string>
+    <string name="about_stats_followers">关注者</string>
+    <string name="about_latest_release">最新版本：%1$s</string>
+    <string name="about_release_published">发布于 %1$s</string>
+    <string name="licenses_title">开源许可</string>
+    <string name="licenses_intro">OpenVisum 构建于以下开源项目之上：</string>
+    <string name="licenses_footer">点击条目可打开项目主页。</string>
 </resources>

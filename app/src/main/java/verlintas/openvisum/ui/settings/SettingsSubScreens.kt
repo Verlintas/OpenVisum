@@ -11,6 +11,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -74,6 +75,7 @@ import verlintas.openvisum.ui.components.SettingsGroupLabel
 import verlintas.openvisum.ui.components.SettingsHintText
 import verlintas.openvisum.ui.components.SettingsToggleRow
 import verlintas.openvisum.ui.components.SettingsValueRow
+import verlintas.openvisum.ui.components.pressScale
 import verlintas.openvisum.ui.components.pressScaleClickable
 import verlintas.openvisum.ui.components.staggeredEntrance
 import verlintas.openvisum.ui.theme.ThemeColor
@@ -274,9 +276,13 @@ fun OnlineSubtitleSettingsScreen(
             }
         }
         Spacer(Modifier.height(16.dp))
+        val saveInteraction = remember { MutableInteractionSource() }
         Button(
             onClick = { viewModel.setOpenSubtitlesCredentials(apiKey, username, password) },
-            modifier = Modifier.fillMaxWidth(),
+            interactionSource = saveInteraction,
+            modifier = Modifier
+                .fillMaxWidth()
+                .pressScale(saveInteraction),
         ) {
             Text(stringResource(R.string.common_save))
         }
@@ -446,57 +452,6 @@ private fun ColorSwatch(
             },
             fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
         )
-    }
-}
-
-@Composable
-fun AboutSettingsScreen(
-    viewModel: SettingsViewModel,
-    onBack: () -> Unit,
-) {
-    val state by viewModel.uiState.collectAsStateWithLifecycle()
-    val uriHandler = LocalUriHandler.current
-
-    SettingsPage(
-        title = stringResource(R.string.settings_section_about),
-        onBack = onBack,
-    ) {
-        SettingsGroup(modifier = Modifier.staggeredEntrance(index = 0)) {
-            Column(modifier = Modifier.padding(20.dp)) {
-                Text(
-                    text = stringResource(R.string.app_name),
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = MaterialTheme.colorScheme.primary,
-                )
-                Text(
-                    text = stringResource(R.string.settings_version, state.versionName),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                Spacer(Modifier.height(16.dp))
-                Text(
-                    text = stringResource(R.string.settings_about_license),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                Spacer(Modifier.height(8.dp))
-                Text(
-                    text = stringResource(R.string.settings_about_libvlc),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                Spacer(Modifier.height(16.dp))
-                Text(
-                    text = stringResource(R.string.settings_about_github),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Medium,
-                    modifier = Modifier.clickable {
-                        uriHandler.openUri("https://github.com/Verlintas/OpenVisum")
-                    },
-                )
-            }
-        }
     }
 }
 

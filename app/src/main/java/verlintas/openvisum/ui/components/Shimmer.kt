@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -59,6 +60,32 @@ fun ShimmerBox(
             .clip(shape)
             .background(shimmerBrush()),
     )
+}
+
+@Composable
+fun ShimmerRowPlaceholder() {
+    Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+        ShimmerBox(
+            modifier = Modifier
+                .size(56.dp),
+            shape = androidx.compose.foundation.shape.CircleShape,
+        )
+        Spacer(Modifier.width(16.dp))
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            ShimmerBox(
+                modifier = Modifier
+                    .width(140.dp)
+                    .height(16.dp),
+                shape = RoundedCornerShape(6.dp),
+            )
+            ShimmerBox(
+                modifier = Modifier
+                    .width(200.dp)
+                    .height(12.dp),
+                shape = RoundedCornerShape(6.dp),
+            )
+        }
+    }
 }
 
 @Composable

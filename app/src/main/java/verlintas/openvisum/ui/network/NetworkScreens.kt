@@ -2,6 +2,7 @@ package verlintas.openvisum.ui.network
 
 import android.net.Uri
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,6 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -66,6 +68,7 @@ import verlintas.openvisum.core.common.util.FileSizeUtils
 import verlintas.openvisum.core.data.NetworkSource
 import verlintas.openvisum.core.data.NetworkSourceType
 import verlintas.openvisum.core.data.source.SafFolderRepository
+import verlintas.openvisum.ui.components.pressScale
 import verlintas.openvisum.ui.components.staggeredEntrance
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -122,6 +125,7 @@ fun NetworkScreen(
                         modifier = Modifier.fillMaxWidth(),
                     )
                     Spacer(Modifier.height(8.dp))
+                    val playInteraction = remember { MutableInteractionSource() }
                     Button(
                         onClick = {
                             val trimmed = url.trim()
@@ -131,7 +135,10 @@ fun NetworkScreen(
                                 onPlayUri(trimmed, null)
                             }
                         },
-                        modifier = Modifier.fillMaxWidth(),
+                        interactionSource = playInteraction,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .pressScale(playInteraction),
                     ) {
                         Icon(Icons.Filled.PlayArrow, contentDescription = null)
                         Spacer(Modifier.width(8.dp))
@@ -390,7 +397,7 @@ fun NetworkBrowserScreen(
 
                 else -> {
                     LazyColumn(modifier = Modifier.fillMaxSize()) {
-                        items(state.entries, key = { it.path }) { entry ->
+                        itemsIndexed(state.entries, key = { _, entry -> entry.path }) { index, entry ->
                             val extension = entry.name.substringAfterLast('.', "").lowercase()
                             val playable = !entry.isDirectory &&
                                 SafFolderRepository.PLAYABLE_EXTENSIONS.contains(extension)
@@ -415,17 +422,19 @@ fun NetworkBrowserScreen(
                                         contentDescription = null,
                                     )
                                 },
-                                modifier = Modifier.clickableItem {
-                                    when {
-                                        entry.isDirectory -> viewModel.open(entry)
-                                        playable -> scope.launch {
-                                            viewModel.playbackTarget(entry)
-                                                .onSuccess { target ->
-                                                    onPlayUri(target.uri.toString(), target.title)
-                                                }
+                                modifier = Modifier
+                                    .staggeredEntrance(index)
+                                    .clickableItem {
+                                        when {
+                                            entry.isDirectory -> viewModel.open(entry)
+                                            playable -> scope.launch {
+                                                viewModel.playbackTarget(entry)
+                                                    .onSuccess { target ->
+                                                        onPlayUri(target.uri.toString(), target.title)
+                                                    }
+                                            }
                                         }
-                                    }
-                                },
+                                    },
                             )
                         }
                         if (state.entries.isEmpty() && !state.isLoading) {

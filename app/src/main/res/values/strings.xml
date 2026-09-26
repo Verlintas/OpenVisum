@@ -174,4 +174,27 @@
     <string name="settings_theme_mode">Theme mode</string>
     <string name="settings_theme_color">Theme color</string>
     <string name="settings_group_languages">Languages</string>
+    <string name="about_tagline">Open-source Android video player powered by libVLC</string>
+    <string name="about_section_links">Links</string>
+    <string name="about_section_developer">Developer</string>
+    <string name="about_link_repo">Source code</string>
+    <string name="about_link_releases">Releases</string>
+    <string name="about_link_releases_summary">Download the latest APK</string>
+    <string name="about_link_issues">Issues &amp; feedback</string>
+    <string name="about_link_issues_summary">Report bugs or request features</string>
+    <string name="about_link_changelog">Changelog</string>
+    <string name="about_link_changelog_summary">What changed in each version</string>
+    <string name="about_link_license">License</string>
+    <string name="about_open_source_licenses">Open-source licenses</string>
+    <string name="about_open_source_licenses_summary">Libraries used by OpenVisum</string>
+    <string name="about_load_failed">Could not load GitHub info</string>
+    <string name="about_retry">Retry</string>
+    <string name="about_license_note">OpenVisum is free software under GPL-3.0. Powered by libVLC (LGPL-2.1-or-later).</string>
+    <string name="about_stats_repos">Repos</string>
+    <string name="about_stats_followers">Followers</string>
+    <string name="about_latest_release">Latest release: %1$s</string>
+    <string name="about_release_published">Published %1$s</string>
+    <string name="licenses_title">Open-source licenses</string>
+    <string name="licenses_intro">OpenVisum is built on the following open-source projects:</string>
+    <string name="licenses_footer">Tap an entry to open the project page.</string>
 </resources>

@@ -2,6 +2,26 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.0.4] - 2026-09-26
+
+### 修复 Fixed
+
+- **设置页转场闪黑**：窗口背景不再只跟随系统深色模式，而是实时跟随 App 主题背景色；设置/子页面改为侧滑推入转场，底层页面保持静止，从根源消除闪黑
+
+### 新增 Added
+
+- **关于页完整重做**（参考 BetterAIChat）：
+  - 动态渐变应用卡（渐变缓慢流动）+ 名称/标语/版本
+  - GitHub 实时数据：开发者头像（呼吸动画）、简介、仓库数/关注者数（数字滚动动画）
+  - 仓库卡：Star/Fork/Issue 统计（数字滚动）、最新版本号与发布时间
+  - 完整链接：源代码、Releases（显示最新 tag）、Issues、Changelog、License
+  - **开源许可清单页**：libVLC/FFmpeg/jcifs-ng/jUPnP/AndroidX/Kotlin/OkHttp/Coil/Room 等 14 项，可跳转项目主页
+- 首页顶栏滚动折叠时背景色平滑过渡
+- 播放器底部面板列表（音轨/字幕/倍速）交错入场
+- 文件夹/SAF/网络浏览列表交错入场
+- 空态图标缓慢浮动动画
+- 主要按钮（播放/保存等）按压缩放动效
+
 ## [1.0.3] - 2026-09-26
 
 ### 动画 Animation

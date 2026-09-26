@@ -26,6 +26,8 @@ object Routes {
 
     const val SETTINGS_ABOUT = "settings/about"
 
+    const val SETTINGS_LICENSES = "settings/licenses"
+
     const val NETWORK = "network"
 
     const val NETWORK_BROWSER_PATTERN = "network_browser?sourceId={sourceId}&name={name}"

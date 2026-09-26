@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Cast
@@ -51,6 +52,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import verlintas.openvisum.ui.components.staggeredEntrance
 import verlintas.openvisum.R
 import verlintas.openvisum.core.common.util.LanguageUtils
 import verlintas.openvisum.core.common.util.TimeUtils
@@ -96,6 +98,7 @@ private fun TrackRow(
     track: PlayerTrack,
     selected: Boolean,
     onSelect: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val subtitle = buildList {
         LanguageUtils.displayName(track.language)?.let { add(it) }
@@ -138,7 +141,7 @@ private fun TrackRow(
                 },
             )
         },
-        modifier = Modifier.clickable(onClick = onSelect),
+        modifier = modifier.clickable(onClick = onSelect),
     )
 }
 
@@ -159,11 +162,12 @@ fun AudioTrackSheet(
             EmptyTracksHint()
         } else {
             LazyColumn(modifier = Modifier.heightIn(max = 280.dp)) {
-                items(state.audioTracks) { track ->
+                itemsIndexed(state.audioTracks) { index, track ->
                     TrackRow(
                         track = track,
                         selected = track.id == state.selectedAudioTrackId,
                         onSelect = { onSelect(track.id) },
+                        modifier = Modifier.staggeredEntrance(index),
                     )
                 }
             }
@@ -272,12 +276,13 @@ fun SubtitleTrackSheet(
             EmptyTracksHint()
         } else {
             LazyColumn(modifier = Modifier.heightIn(max = 240.dp)) {
-                items(state.subtitleTracks) { track ->
+                itemsIndexed(state.subtitleTracks) { index, track ->
                     if (track.id != PlayerTrack.TRACK_DISABLED) {
                         TrackRow(
                             track = track,
                             selected = track.id == state.selectedSubtitleTrackId,
                             onSelect = { onSelect(track.id) },
+                            modifier = Modifier.staggeredEntrance(index),
                         )
                     }
                 }
@@ -441,7 +446,7 @@ fun SpeedSheet(
         onDismiss = onDismiss,
     ) {
         LazyColumn(modifier = Modifier.heightIn(max = 320.dp)) {
-            items(rates) { rate ->
+            itemsIndexed(rates) { index, rate ->
                 ListItem(
                     headlineContent = { Text("%.2fx".format(rate)) },
                     trailingContent = if (rate == state.rate) {
@@ -449,7 +454,9 @@ fun SpeedSheet(
                     } else {
                         null
                     },
-                    modifier = Modifier.clickable { onSelect(rate) },
+                    modifier = Modifier
+                        .staggeredEntrance(index)
+                        .clickable { onSelect(rate) },
                 )
             }
         }

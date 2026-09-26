@@ -6,6 +6,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -41,6 +42,7 @@ import verlintas.openvisum.ui.network.NetworkViewModel
 import verlintas.openvisum.ui.player.PlayerScreen
 import verlintas.openvisum.ui.settings.AboutSettingsScreen
 import verlintas.openvisum.ui.settings.AppearanceSettingsScreen
+import verlintas.openvisum.ui.settings.LicensesScreen
 import verlintas.openvisum.ui.settings.OnlineSubtitleSettingsScreen
 import verlintas.openvisum.ui.settings.PlaybackSettingsScreen
 import verlintas.openvisum.ui.settings.SettingsScreen
@@ -80,17 +82,17 @@ class MainActivity : ComponentActivity() {
                     startDestination = Routes.LIBRARY,
                     enterTransition = {
                         slideInHorizontally(
-                            animationSpec = tween(260),
-                            initialOffsetX = { fullWidth -> fullWidth / 5 },
-                        ) + fadeIn(tween(260))
+                            animationSpec = tween(340, easing = FastOutSlowInEasing),
+                            initialOffsetX = { fullWidth -> fullWidth },
+                        )
                     },
-                    exitTransition = { fadeOut(tween(180)) },
-                    popEnterTransition = { fadeIn(tween(200)) },
+                    exitTransition = { androidx.compose.animation.ExitTransition.None },
+                    popEnterTransition = { androidx.compose.animation.EnterTransition.None },
                     popExitTransition = {
                         slideOutHorizontally(
-                            animationSpec = tween(220),
-                            targetOffsetX = { fullWidth -> fullWidth / 5 },
-                        ) + fadeOut(tween(200))
+                            animationSpec = tween(300, easing = FastOutSlowInEasing),
+                            targetOffsetX = { fullWidth -> fullWidth },
+                        )
                     },
                 ) {
                     composable(Routes.LIBRARY) {
@@ -167,6 +169,13 @@ class MainActivity : ComponentActivity() {
                     composable(Routes.SETTINGS_ABOUT) {
                         AboutSettingsScreen(
                             viewModel = settingsViewModel(app),
+                            onBack = { navController.popBackStack() },
+                            onOpenLicenses = { navController.navigate(Routes.SETTINGS_LICENSES) },
+                        )
+                    }
+
+                    composable(Routes.SETTINGS_LICENSES) {
+                        LicensesScreen(
                             onBack = { navController.popBackStack() },
                         )
                     }
