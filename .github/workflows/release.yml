@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: write
+  actions: write
 
 env:
   ANDROID_HOME: /usr/local/lib/android/sdk
@@ -56,3 +57,8 @@ jobs:
           generate_release_notes: true
           draft: false
           prerelease: false
+
+      - name: Refresh project website
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run pages.yml --repo "$GITHUB_REPOSITORY" --ref main
