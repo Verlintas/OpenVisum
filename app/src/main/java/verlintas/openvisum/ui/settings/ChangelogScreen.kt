@@ -156,6 +156,11 @@ private fun ChangelogCard(entry: ChangelogEntry, index: Int) {
     }
 }
 
+private fun sanitizeMarkdown(text: String): String = text
+    .replace(Regex("""\*\*(.+?)\*\*"""), "$1")
+    .replace(Regex("`(.+?)`"), "$1")
+    .replace(Regex("""\[(.+?)]\(https?://[^)]+\)"""), "$1")
+
 private fun readChangelogAsset(context: Context): String =
     context.assets.open("CHANGELOG.md").bufferedReader().use { it.readText() }
 
@@ -207,7 +212,7 @@ private fun parseChangelog(markdown: String): List<ChangelogEntry> {
             }
 
             line.startsWith("- ") -> {
-                val item = line.removePrefix("- ").trim()
+                val item = sanitizeMarkdown(line.removePrefix("- ").trim())
                 if (currentSectionTitle != null) {
                     sectionItems += item
                 } else {
@@ -216,7 +221,7 @@ private fun parseChangelog(markdown: String): List<ChangelogEntry> {
             }
 
             line.startsWith("  ") && line.isNotBlank() -> {
-                val continuation = line.trim()
+                val continuation = sanitizeMarkdown(line.trim())
                 if (currentSectionTitle != null && sectionItems.isNotEmpty()) {
                     sectionItems[sectionItems.lastIndex] =
                         sectionItems.last() + " " + continuation

@@ -2,6 +2,13 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.0.8] - 2026-09-26
+
+### 修复 Fixed
+
+- 应用内更新日志去除 Markdown 标记（加粗、行内代码、链接）残留，按原文渲染
+- 发版后自动刷新项目官网（Release 工作流触发 Pages 部署）
+
 ## [1.0.7] - 2026-09-26
 
 ### 新增 Added
