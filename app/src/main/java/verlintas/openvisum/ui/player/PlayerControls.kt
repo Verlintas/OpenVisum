@@ -1,5 +1,12 @@
 package verlintas.openvisum.ui.player
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -142,13 +149,23 @@ fun PlayerControls(
                     .size(72.dp)
                     .clip(CircleShape),
             ) {
-                Icon(
-                    imageVector = if (state.isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
-                    contentDescription = stringResource(
-                        if (state.isPlaying) R.string.player_pause else R.string.player_play,
-                    ),
-                    modifier = Modifier.size(40.dp),
-                )
+                AnimatedContent(
+                    targetState = state.isPlaying,
+                    transitionSpec = {
+                        (scaleIn(initialScale = 0.6f) + fadeIn()).togetherWith(
+                            scaleOut(targetScale = 0.6f) + fadeOut(),
+                        )
+                    },
+                    label = "playPauseIcon",
+                ) { playing ->
+                    Icon(
+                        imageVector = if (playing) Icons.Filled.Pause else Icons.Filled.PlayArrow,
+                        contentDescription = stringResource(
+                            if (playing) R.string.player_pause else R.string.player_play,
+                        ),
+                        modifier = Modifier.size(40.dp),
+                    )
+                }
             }
             IconButton(onClick = { onSeekBy(10_000L) }) {
                 Icon(

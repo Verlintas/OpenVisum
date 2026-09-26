@@ -5,10 +5,19 @@ import android.content.Context
 import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,6 +29,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items as gridItems
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
@@ -34,6 +47,7 @@ import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Sort
+import androidx.compose.material.icons.filled.VideoLibrary
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -80,8 +94,12 @@ import verlintas.openvisum.core.data.FolderSummary
 import verlintas.openvisum.core.data.db.SafFolderEntity
 import verlintas.openvisum.core.data.model.MediaItem
 import verlintas.openvisum.core.data.prefs.SortOrder
+import verlintas.openvisum.ui.components.MediaGridCard
 import verlintas.openvisum.ui.components.MediaRow
 import verlintas.openvisum.ui.components.MediaThumbnail
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -135,19 +153,27 @@ fun LibraryScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    if (searchActive) {
-                        OutlinedTextField(
-                            value = state.query,
-                            onValueChange = viewModel::setQuery,
-                            singleLine = true,
-                            placeholder = { Text(stringResource(R.string.library_search_hint)) },
-                            modifier = Modifier.fillMaxWidth(),
-                        )
-                    } else {
-                        Text(
-                            text = stringResource(R.string.app_name),
-                            fontWeight = FontWeight.SemiBold,
-                        )
+                    AnimatedContent(
+                        targetState = searchActive,
+                        transitionSpec = {
+                            (fadeIn() + expandVertically()).togetherWith(fadeOut())
+                        },
+                        label = "libraryTitle",
+                    ) { searching ->
+                        if (searching) {
+                            OutlinedTextField(
+                                value = state.query,
+                                onValueChange = viewModel::setQuery,
+                                singleLine = true,
+                                placeholder = { Text(stringResource(R.string.library_search_hint)) },
+                                modifier = Modifier.fillMaxWidth(),
+                            )
+                        } else {
+                            Text(
+                                text = stringResource(R.string.app_name),
+                                fontWeight = FontWeight.SemiBold,
+                            )
+                        }
                     }
                 },
                 actions = {
@@ -264,25 +290,30 @@ fun LibraryScreen(
                 }
             }
 
-            when (tab) {
-                0 -> LibraryContent(
-                    state = state,
-                    hasPermission = hasPermission,
-                    onRequestPermission = {
-                        permissionLauncher.launch(Manifest.permission.READ_MEDIA_VIDEO)
-                    },
-                    onPlay = { item -> onPlayUri(item.uri, item.title) },
-                    onToggleFavorite = viewModel::toggleFavorite,
-                    onFilterChange = viewModel::setFilter,
-                )
+            Crossfade(
+                targetState = tab,
+                label = "libraryTab",
+            ) { currentTab ->
+                when (currentTab) {
+                    0 -> LibraryContent(
+                        state = state,
+                        hasPermission = hasPermission,
+                        onRequestPermission = {
+                            permissionLauncher.launch(Manifest.permission.READ_MEDIA_VIDEO)
+                        },
+                        onPlay = { item -> onPlayUri(item.uri, item.title) },
+                        onToggleFavorite = viewModel::toggleFavorite,
+                        onFilterChange = viewModel::setFilter,
+                    )
 
-                else -> FoldersContent(
-                    state = state,
-                    onAddFolder = { folderPicker.launch(null) },
-                    onOpenFolder = onOpenFolder,
-                    onOpenSafFolder = onOpenSafFolder,
-                    onRemoveSafFolder = { folderToRemove = it },
-                )
+                    else -> FoldersContent(
+                        state = state,
+                        onAddFolder = { folderPicker.launch(null) },
+                        onOpenFolder = onOpenFolder,
+                        onOpenSafFolder = onOpenSafFolder,
+                        onRemoveSafFolder = { folderToRemove = it },
+                    )
+                }
             }
         }
     }
@@ -321,6 +352,37 @@ fun LibraryScreen(
     }
 }
 
+private enum class DateGroup { TODAY, YESTERDAY, THIS_WEEK, THIS_MONTH, EARLIER }
+
+private data class MediaSection(
+    val group: DateGroup?,
+    val items: List<MediaItem>,
+)
+
+private fun buildSections(items: List<MediaItem>, sortOrder: SortOrder): List<MediaSection> {
+    if (sortOrder != SortOrder.DATE_DESC) {
+        return listOf(MediaSection(group = null, items = items))
+    }
+    val today = LocalDate.now()
+    val grouped = items.groupBy { item -> dateGroupOf(item, today) }
+    return DateGroup.entries.mapNotNull { group ->
+        grouped[group]?.let { MediaSection(group = group, items = it) }
+    }
+}
+
+private fun dateGroupOf(item: MediaItem, today: LocalDate): DateGroup {
+    val date = runCatching {
+        Instant.ofEpochSecond(item.dateAddedSeconds).atZone(ZoneId.systemDefault()).toLocalDate()
+    }.getOrDefault(LocalDate.MIN)
+    return when {
+        !date.isBefore(today) -> DateGroup.TODAY
+        date == today.minusDays(1) -> DateGroup.YESTERDAY
+        !date.isBefore(today.minusDays(7)) -> DateGroup.THIS_WEEK
+        !date.isBefore(today.minusDays(31)) -> DateGroup.THIS_MONTH
+        else -> DateGroup.EARLIER
+    }
+}
+
 @Composable
 private fun LibraryContent(
     state: LibraryUiState,
@@ -330,87 +392,164 @@ private fun LibraryContent(
     onToggleFavorite: (MediaItem) -> Unit,
     onFilterChange: (LibraryFilter) -> Unit,
 ) {
-    when {
-        !hasPermission -> PermissionCard(onRequestPermission)
-        state.isLoading -> Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center,
-        ) {
-            CircularProgressIndicator()
-        }
+    Crossfade(
+        targetState = when {
+            !hasPermission -> LibraryStage.PERMISSION
+            state.isLoading -> LibraryStage.LOADING
+            else -> LibraryStage.CONTENT
+        },
+        label = "libraryStage",
+    ) { stage ->
+        when (stage) {
+            LibraryStage.PERMISSION -> PermissionCard(onRequestPermission)
 
-        else -> LazyColumn(modifier = Modifier.fillMaxSize()) {
-            if (state.query.isBlank() && state.continueWatching.isNotEmpty()) {
-                item(key = "continue-title") {
-                    SectionTitle(stringResource(R.string.library_continue_watching))
+            LibraryStage.LOADING -> Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center,
+            ) {
+                CircularProgressIndicator()
+            }
+
+            LibraryStage.CONTENT -> {
+                val sections = remember(state.items, state.sortOrder) {
+                    buildSections(state.items, state.sortOrder)
                 }
-                item(key = "continue-row") {
-                    LazyRow(
-                        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(2),
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 24.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    if (state.query.isBlank() && state.continueWatching.isNotEmpty()) {
+                        item(
+                            key = "continue-title",
+                            span = { GridItemSpan(maxLineSpan) },
+                        ) {
+                            AnimatedVisibility(
+                                visible = true,
+                                enter = fadeIn() + expandVertically(),
+                            ) {
+                                SectionTitle(stringResource(R.string.library_continue_watching))
+                            }
+                        }
+                        item(
+                            key = "continue-row",
+                            span = { GridItemSpan(maxLineSpan) },
+                        ) {
+                            LazyRow(
+                                contentPadding = PaddingValues(bottom = 4.dp),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            ) {
+                                items(state.continueWatching, key = { it.uri }) { item ->
+                                    ContinueWatchingCard(
+                                        item = item,
+                                        onClick = { onPlay(item) },
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    item(
+                        key = "filters",
+                        span = { GridItemSpan(maxLineSpan) },
                     ) {
-                        items(state.continueWatching, key = { it.uri }) { item ->
-                            ContinueWatchingCard(
-                                item = item,
-                                onClick = { onPlay(item) },
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            FilterChip(
+                                selected = state.filter == LibraryFilter.ALL,
+                                onClick = { onFilterChange(LibraryFilter.ALL) },
+                                label = { Text(stringResource(R.string.library_filter_all)) },
                             )
+                            Spacer(Modifier.width(8.dp))
+                            FilterChip(
+                                selected = state.filter == LibraryFilter.FAVORITES,
+                                onClick = { onFilterChange(LibraryFilter.FAVORITES) },
+                                label = { Text(stringResource(R.string.library_filter_favorites)) },
+                            )
+                            Spacer(Modifier.weight(1f))
+                            Text(
+                                text = stringResource(R.string.library_items_count, state.items.size),
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
+
+                    if (state.items.isEmpty()) {
+                        item(
+                            key = "empty",
+                            span = { GridItemSpan(maxLineSpan) },
+                        ) {
+                            EmptyLibraryHint()
+                        }
+                    } else {
+                        sections.forEach { section ->
+                            section.group?.let { group ->
+                                item(
+                                    key = "header-${group.name}",
+                                    span = { GridItemSpan(maxLineSpan) },
+                                ) {
+                                    SectionTitle(dateGroupLabel(group))
+                                }
+                            }
+                            gridItems(
+                                items = section.items,
+                                key = { it.uri },
+                            ) { item ->
+                                MediaGridCard(
+                                    item = item,
+                                    onClick = { onPlay(item) },
+                                    onToggleFavorite = { onToggleFavorite(item) },
+                                    modifier = Modifier.animateItem(),
+                                )
+                            }
                         }
                     }
                 }
             }
-
-            item(key = "filters") {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    FilterChip(
-                        selected = state.filter == LibraryFilter.ALL,
-                        onClick = { onFilterChange(LibraryFilter.ALL) },
-                        label = { Text(stringResource(R.string.library_filter_all)) },
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    FilterChip(
-                        selected = state.filter == LibraryFilter.FAVORITES,
-                        onClick = { onFilterChange(LibraryFilter.FAVORITES) },
-                        label = { Text(stringResource(R.string.library_filter_favorites)) },
-                    )
-                    Spacer(Modifier.weight(1f))
-                    Text(
-                        text = stringResource(R.string.library_items_count, state.items.size),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-            }
-
-            if (state.items.isEmpty()) {
-                item(key = "empty") {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(48.dp),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text(
-                            text = stringResource(R.string.library_empty),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                }
-            } else {
-                items(state.items, key = { it.uri }) { item ->
-                    MediaRow(
-                        item = item,
-                        onClick = { onPlay(item) },
-                        onToggleFavorite = { onToggleFavorite(item) },
-                    )
-                }
-            }
         }
+    }
+}
+
+private enum class LibraryStage { PERMISSION, LOADING, CONTENT }
+
+@Composable
+private fun dateGroupLabel(group: DateGroup): String = stringResource(
+    when (group) {
+        DateGroup.TODAY -> R.string.library_date_today
+        DateGroup.YESTERDAY -> R.string.library_date_yesterday
+        DateGroup.THIS_WEEK -> R.string.library_date_this_week
+        DateGroup.THIS_MONTH -> R.string.library_date_this_month
+        DateGroup.EARLIER -> R.string.library_date_earlier
+    },
+)
+
+@Composable
+private fun EmptyLibraryHint() {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 64.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Icon(
+            imageVector = Icons.Filled.VideoLibrary,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.size(56.dp),
+        )
+        Spacer(Modifier.height(12.dp))
+        Text(
+            text = stringResource(R.string.library_empty),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
     }
 }
 
@@ -421,7 +560,7 @@ private fun ContinueWatchingCard(
 ) {
     Card(
         modifier = Modifier
-            .width(200.dp)
+            .width(220.dp)
             .clickable(onClick = onClick),
     ) {
         Column {
@@ -429,16 +568,17 @@ private fun ContinueWatchingCard(
                 item = item,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(112.dp),
+                    .height(124.dp),
             )
-            Column(modifier = Modifier.padding(8.dp)) {
+            Column(modifier = Modifier.padding(10.dp)) {
                 Text(
                     text = item.title,
                     style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Medium,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )
-                Spacer(Modifier.height(4.dp))
+                Spacer(Modifier.height(6.dp))
                 LinearProgressIndicator(
                     progress = {
                         (item.playbackPositionMs.toFloat() / item.playbackDurationMs.coerceAtLeast(1L))
@@ -446,7 +586,7 @@ private fun ContinueWatchingCard(
                     },
                     modifier = Modifier.fillMaxWidth(),
                 )
-                Spacer(Modifier.height(4.dp))
+                Spacer(Modifier.height(6.dp))
                 Text(
                     text = stringResource(
                         R.string.library_resume_at,
@@ -493,7 +633,9 @@ private fun FoldersContent(
                             Icon(Icons.Filled.Delete, contentDescription = stringResource(R.string.common_remove))
                         }
                     },
-                    modifier = Modifier.clickable { onOpenSafFolder(folder) },
+                    modifier = Modifier
+                        .animateItem()
+                        .clickable { onOpenSafFolder(folder) },
                 )
             }
         }
@@ -507,7 +649,9 @@ private fun FoldersContent(
                         Text(stringResource(R.string.library_items_count, folder.itemCount))
                     },
                     leadingContent = { Icon(Icons.Filled.FolderOpen, contentDescription = null) },
-                    modifier = Modifier.clickable { onOpenFolder(folder) },
+                    modifier = Modifier
+                        .animateItem()
+                        .clickable { onOpenFolder(folder) },
                 )
             }
         }
@@ -563,7 +707,7 @@ private fun SectionTitle(text: String) {
         text = text,
         style = MaterialTheme.typography.titleMedium,
         fontWeight = FontWeight.SemiBold,
-        modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+        modifier = Modifier.padding(top = 12.dp, bottom = 4.dp),
     )
 }
 

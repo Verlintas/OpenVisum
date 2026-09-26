@@ -16,6 +16,16 @@ object Routes {
 
     const val SETTINGS = "settings"
 
+    const val SETTINGS_PLAYBACK = "settings/playback"
+
+    const val SETTINGS_SUBTITLES = "settings/subtitles"
+
+    const val SETTINGS_ONLINE = "settings/online"
+
+    const val SETTINGS_APPEARANCE = "settings/appearance"
+
+    const val SETTINGS_ABOUT = "settings/about"
+
     const val NETWORK = "network"
 
     const val NETWORK_BROWSER_PATTERN = "network_browser?sourceId={sourceId}&name={name}"

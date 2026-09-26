@@ -33,6 +33,10 @@ class SettingsViewModel(
         viewModelScope.launch { preferences.setHardwareDecoding(enabled) }
     }
 
+    fun setDisableDirectRendering(enabled: Boolean) {
+        viewModelScope.launch { preferences.setDisableDirectRendering(enabled) }
+    }
+
     fun setAutoLoadExternalSubtitles(enabled: Boolean) {
         viewModelScope.launch { preferences.setAutoLoadExternalSubtitles(enabled) }
     }

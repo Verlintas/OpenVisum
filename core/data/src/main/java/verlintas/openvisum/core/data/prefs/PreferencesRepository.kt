@@ -25,6 +25,7 @@ enum class SortOrder { DATE_DESC, NAME_ASC, SIZE_DESC, DURATION_DESC }
 data class AppSettings(
     val sortOrder: SortOrder = SortOrder.DATE_DESC,
     val hardwareDecoding: Boolean = true,
+    val disableDirectRendering: Boolean = false,
     val preferredSubtitleLanguages: List<String> = defaultSubtitleLanguages(),
     val preferredAudioLanguages: List<String> = defaultAudioLanguages(),
     val autoLoadExternalSubtitles: Boolean = true,
@@ -62,6 +63,7 @@ class PreferencesRepository(
     private object Keys {
         val SORT_ORDER = stringPreferencesKey("sort_order")
         val HARDWARE_DECODING = booleanPreferencesKey("hardware_decoding")
+        val DISABLE_DIRECT_RENDERING = booleanPreferencesKey("disable_direct_rendering")
         val PREFERRED_SUBTITLE_LANGUAGES = stringSetPreferencesKey("preferred_subtitle_languages")
         val PREFERRED_AUDIO_LANGUAGES = stringSetPreferencesKey("preferred_audio_languages")
         val AUTO_LOAD_EXTERNAL_SUBTITLES = booleanPreferencesKey("auto_load_external_subtitles")
@@ -85,6 +87,7 @@ class PreferencesRepository(
                     ?.let { runCatching { SortOrder.valueOf(it) }.getOrNull() }
                     ?: SortOrder.DATE_DESC,
                 hardwareDecoding = preferences[Keys.HARDWARE_DECODING] ?: true,
+                disableDirectRendering = preferences[Keys.DISABLE_DIRECT_RENDERING] ?: false,
                 preferredSubtitleLanguages = preferences[Keys.PREFERRED_SUBTITLE_LANGUAGES]?.toList()
                     ?: defaultSubtitleLanguages(),
                 preferredAudioLanguages = preferences[Keys.PREFERRED_AUDIO_LANGUAGES]?.toList()
@@ -107,6 +110,10 @@ class PreferencesRepository(
 
     suspend fun setHardwareDecoding(enabled: Boolean) {
         context.dataStore.edit { it[Keys.HARDWARE_DECODING] = enabled }
+    }
+
+    suspend fun setDisableDirectRendering(enabled: Boolean) {
+        context.dataStore.edit { it[Keys.DISABLE_DIRECT_RENDERING] = enabled }
     }
 
     suspend fun setPreferredSubtitleLanguages(languages: List<String>) {

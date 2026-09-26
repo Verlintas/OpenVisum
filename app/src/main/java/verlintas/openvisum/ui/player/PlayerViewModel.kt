@@ -57,6 +57,9 @@ class PlayerViewModel(
 
     private var openedUri: Uri? = null
     private var lastSavedAt = 0L
+    private var lastPosition = -1L
+    private var lastPositionChangedAt = 0L
+    private var lastRecoveryAt = 0L
 
     init {
         viewModelScope.launch {
@@ -76,6 +79,30 @@ class PlayerViewModel(
                 }
             }
         }
+        viewModelScope.launch {
+            while (true) {
+                delay(STALL_CHECK_INTERVAL_MS)
+                val playbackState = engine.state.value
+                if (!playbackState.isPlaying || playbackState.isBuffering || playbackState.durationMs <= 0L) {
+                    lastPosition = -1L
+                    lastPositionChangedAt = SystemClock.elapsedRealtime()
+                    continue
+                }
+                val now = SystemClock.elapsedRealtime()
+                if (playbackState.positionMs != lastPosition) {
+                    lastPosition = playbackState.positionMs
+                    lastPositionChangedAt = now
+                    continue
+                }
+                val stalledFor = now - lastPositionChangedAt
+                if (stalledFor >= STALL_TIMEOUT_MS && now - lastRecoveryAt >= RECOVERY_COOLDOWN_MS) {
+                    lastRecoveryAt = now
+                    lastPositionChangedAt = now
+                    Log.w(TAG, "Playback stalled for ${stalledFor}ms, attempting recovery")
+                    runCatching { engine.recoverPlayback() }
+                }
+            }
+        }
     }
 
     fun openIfNeeded(uri: Uri, title: String?) {
@@ -92,8 +119,15 @@ class PlayerViewModel(
             )
             val item = runCatching { repository.find(uri.toString()) }.getOrNull()
             val resolvedTitle = title ?: item?.displayName ?: repository.resolveDisplayName(uri)
-            val options = runCatching { networkRepository.playbackOptionsForUri(uri.toString()) }
-                .getOrDefault(emptyList())
+            val options = buildList {
+                addAll(
+                    runCatching { networkRepository.playbackOptionsForUri(uri.toString()) }
+                        .getOrDefault(emptyList()),
+                )
+                if (settings.disableDirectRendering) {
+                    add(":mediacodec-dr=0")
+                }
+            }
             engine.setMedia(uri, resolvedTitle, options)
             val resumePosition = item?.resumePositionMs ?: 0L
             if (resumePosition > 0L) {
@@ -323,6 +357,9 @@ class PlayerViewModel(
         private const val SUBTITLE_TRACK_WAIT_MS = 10_000L
         private const val ONLINE_EMPTY_MESSAGE = "No subtitles found"
         private const val ONLINE_ERROR_MESSAGE = "Subtitle search failed"
+        private const val STALL_CHECK_INTERVAL_MS = 1_500L
+        private const val STALL_TIMEOUT_MS = 6_000L
+        private const val RECOVERY_COOLDOWN_MS = 15_000L
 
         fun factory(
             engine: PlaybackEngine,

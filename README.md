@@ -5,9 +5,10 @@
 An open-source Android video player powered by libVLC. Plays virtually any format, with automatic audio-track and subtitle detection.
 
 <p align="center">
-  <img src="docs/screenshots/library.png" width="30%" alt="Library" />
-  <img src="docs/screenshots/player.png" width="30%" alt="Player with subtitles" />
-  <img src="docs/screenshots/network.png" width="30%" alt="Network" />
+  <img src="docs/screenshots/library.png" width="24%" alt="Library" />
+  <img src="docs/screenshots/player.png" width="24%" alt="Player with subtitles" />
+  <img src="docs/screenshots/settings.png" width="24%" alt="Settings" />
+  <img src="docs/screenshots/network.png" width="24%" alt="Network" />
 </p>
 
 ## 特性 Features

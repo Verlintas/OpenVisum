@@ -4,8 +4,11 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
@@ -110,8 +113,8 @@ fun PlayerScreen(
 
         AnimatedVisibility(
             visible = controlsVisible,
-            enter = fadeIn(),
-            exit = fadeOut(),
+            enter = fadeIn(tween(220)) + scaleIn(initialScale = 0.97f, animationSpec = tween(220)),
+            exit = fadeOut(tween(180)) + scaleOut(targetScale = 0.97f, animationSpec = tween(180)),
         ) {
             PlayerControls(
                 state = state,

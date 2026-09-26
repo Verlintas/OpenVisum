@@ -54,6 +54,8 @@ interface PlaybackEngine {
 
     fun seekTo(positionMs: Long)
 
+    fun recoverPlayback()
+
     fun setRate(rate: Float)
 
     fun selectVideoTrack(trackId: Int)

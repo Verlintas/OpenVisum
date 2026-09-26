@@ -3,6 +3,7 @@ package verlintas.openvisum.core.player
 import android.content.Context
 import android.net.Uri
 import android.os.ParcelFileDescriptor
+import android.os.SystemClock
 import android.util.Log
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -54,6 +55,9 @@ class VlcPlaybackEngine(context: Context) : PlaybackEngine {
     private var abLoopEndMs: Long? = null
     private var restoring = false
     private var released = false
+    private var lastSeekTargetMs = -1L
+    private var lastSeekAtMs = 0L
+    private var lastTimeLogAt = 0L
 
     private var preferredAudioLanguages: List<String> = emptyList()
     private var preferredSubtitleLanguages: List<String> = emptyList()
@@ -69,13 +73,16 @@ class VlcPlaybackEngine(context: Context) : PlaybackEngine {
         mediaPlayer.setEventListener { event ->
             when (event.type) {
                 MediaPlayer.Event.Opening -> _state.update { it.copy(isBuffering = true, isEnded = false) }
-                MediaPlayer.Event.Playing -> _state.update {
-                    it.copy(
-                        isPlaying = true,
-                        isBuffering = false,
-                        isEnded = false,
-                        passthroughAvailable = mediaPlayer.canDoPassthrough(),
-                    )
+                MediaPlayer.Event.Playing -> {
+                    _state.update {
+                        it.copy(
+                            isPlaying = true,
+                            isBuffering = false,
+                            isEnded = false,
+                            passthroughAvailable = mediaPlayer.canDoPassthrough(),
+                        )
+                    }
+                    applyPendingSeekIfNeeded()
                 }
 
                 MediaPlayer.Event.Paused -> _state.update { it.copy(isPlaying = false) }
@@ -87,7 +94,10 @@ class VlcPlaybackEngine(context: Context) : PlaybackEngine {
                 }
 
                 MediaPlayer.Event.TimeChanged -> onTimeChanged(event.timeChanged)
-                MediaPlayer.Event.LengthChanged -> _state.update { it.copy(durationMs = event.lengthChanged) }
+                MediaPlayer.Event.LengthChanged -> {
+                    _state.update { it.copy(durationMs = event.lengthChanged) }
+                    applyPendingSeekIfNeeded()
+                }
                 MediaPlayer.Event.SeekableChanged -> _state.update { it.copy(seekable = event.seekable) }
                 MediaPlayer.Event.ESAdded, MediaPlayer.Event.ESDeleted, MediaPlayer.Event.ESSelected -> {
                     refreshTracks()
@@ -157,6 +167,7 @@ class VlcPlaybackEngine(context: Context) : PlaybackEngine {
     }
 
     private fun openMedia(uri: Uri, title: String?, options: List<String>, positionMs: Long) {
+        Log.d(TAG, "openMedia uri=$uri position=$positionMs options=$options")
         releaseMedia()
         val media = runCatching { createMedia(uri, options) }.getOrElse { throwable ->
             Log.e(TAG, "Failed to open media: $uri", throwable)
@@ -187,6 +198,7 @@ class VlcPlaybackEngine(context: Context) : PlaybackEngine {
         }
         if (positionMs > 0L) {
             pendingSeekMs = positionMs
+            pendingSeekAttempts = 0
         }
     }
 
@@ -223,6 +235,7 @@ class VlcPlaybackEngine(context: Context) : PlaybackEngine {
     }
 
     private var pendingSeekMs: Long? = null
+    private var pendingSeekAttempts = 0
 
     override fun play() {
         if (_state.value.isEnded) {
@@ -247,17 +260,48 @@ class VlcPlaybackEngine(context: Context) : PlaybackEngine {
     }
 
     override fun seekTo(positionMs: Long) {
-        if (_state.value.durationMs <= 0L) {
-            pendingSeekMs = positionMs
+        val current = _state.value
+        Log.d(
+            TAG,
+            "seekTo request=$positionMs duration=${current.durationMs} seekable=${current.seekable}",
+        )
+        if (!current.seekable) return
+        val target = positionMs.coerceAtLeast(0L)
+        if (current.durationMs <= 0L) {
+            pendingSeekMs = target
+            pendingSeekAttempts = 0
+            _state.update { it.copy(positionMs = target, isEnded = false) }
             return
         }
-        mediaPlayer.setTime(positionMs.coerceAtLeast(0L))
-        _state.update { it.copy(positionMs = positionMs.coerceAtLeast(0L), isEnded = false) }
+        val now = SystemClock.elapsedRealtime()
+        val isDuplicate = target == lastSeekTargetMs && now - lastSeekAtMs < SEEK_DEBOUNCE_MS
+        if (isDuplicate) return
+        lastSeekTargetMs = target
+        lastSeekAtMs = now
+        mediaPlayer.setTime(target)
+        _state.update { it.copy(positionMs = target, isEnded = false) }
+    }
+
+    override fun recoverPlayback() {
+        if (released) return
+        val uri = _state.value.mediaUri ?: return
+        val position = _state.value.positionMs
+        Log.w(TAG, "Recovering stalled playback at $position ms (software decoding)")
+        hwDecodingEnabled = false
+        openMedia(uri, _state.value.title, lastMediaOptions, position)
+        mediaPlayer.play()
     }
 
     private fun applyPendingSeekIfNeeded() {
         val pending = pendingSeekMs ?: return
-        pendingSeekMs = null
+        if (pendingSeekAttempts >= MAX_PENDING_SEEK_ATTEMPTS) {
+            Log.w(TAG, "Giving up pending seek to $pending ms")
+            pendingSeekMs = null
+            pendingSeekAttempts = 0
+            return
+        }
+        pendingSeekAttempts++
+        Log.d(TAG, "Applying pending seek to $pending ms (attempt $pendingSeekAttempts)")
         mediaPlayer.setTime(pending)
     }
 
@@ -470,6 +514,22 @@ class VlcPlaybackEngine(context: Context) : PlaybackEngine {
     }
 
     private fun onTimeChanged(positionMs: Long) {
+        val now = SystemClock.elapsedRealtime()
+        if (now - lastTimeLogAt >= TIME_LOG_INTERVAL_MS) {
+            lastTimeLogAt = now
+            Log.d(TAG, "timeChanged=$positionMs (target=$lastSeekTargetMs)")
+        }
+        val seekInFlight = now - lastSeekAtMs < SEEK_STALE_WINDOW_MS &&
+            lastSeekTargetMs >= 0L &&
+            kotlin.math.abs(positionMs - lastSeekTargetMs) > SEEK_STALE_TOLERANCE_MS
+        if (seekInFlight) return
+
+        val pending = pendingSeekMs
+        if (pending != null && kotlin.math.abs(positionMs - pending) <= SEEK_STALE_TOLERANCE_MS) {
+            pendingSeekMs = null
+            pendingSeekAttempts = 0
+        }
+
         val loopStart = abLoopStartMs
         val loopEnd = abLoopEndMs
         if (loopStart != null && loopEnd != null && loopEnd > loopStart && positionMs >= loopEnd) {
@@ -630,7 +690,7 @@ class VlcPlaybackEngine(context: Context) : PlaybackEngine {
             val uri = _state.value.mediaUri
             if (uri != null) {
                 val position = _state.value.positionMs
-                openMedia(uri, _state.value.title, emptyList(), position)
+                openMedia(uri, _state.value.title, lastMediaOptions, position)
                 restoring = true
                 play()
                 restoring = false
@@ -664,6 +724,7 @@ class VlcPlaybackEngine(context: Context) : PlaybackEngine {
     }
 
     private fun releaseMedia() {
+        Log.d(TAG, "releaseMedia current=${currentMedia != null}")
         mediaPlayer.stop()
         currentMedia?.let {
             mediaPlayer.media = null
@@ -689,6 +750,11 @@ class VlcPlaybackEngine(context: Context) : PlaybackEngine {
 
     companion object {
         private const val TAG = "VlcPlaybackEngine"
+        private const val SEEK_DEBOUNCE_MS = 250L
+        private const val SEEK_STALE_WINDOW_MS = 1_500L
+        private const val SEEK_STALE_TOLERANCE_MS = 4_000L
+        private const val MAX_PENDING_SEEK_ATTEMPTS = 5
+        private const val TIME_LOG_INTERVAL_MS = 2_000L
 
         private val DEFAULT_OPTIONS = listOf(
             "--audio-time-stretch",

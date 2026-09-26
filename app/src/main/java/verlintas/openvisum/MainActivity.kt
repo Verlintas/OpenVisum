@@ -6,6 +6,12 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
@@ -30,8 +36,13 @@ import verlintas.openvisum.ui.network.NetworkBrowserViewModel
 import verlintas.openvisum.ui.network.NetworkScreen
 import verlintas.openvisum.ui.network.NetworkViewModel
 import verlintas.openvisum.ui.player.PlayerScreen
+import verlintas.openvisum.ui.settings.AboutSettingsScreen
+import verlintas.openvisum.ui.settings.AppearanceSettingsScreen
+import verlintas.openvisum.ui.settings.OnlineSubtitleSettingsScreen
+import verlintas.openvisum.ui.settings.PlaybackSettingsScreen
 import verlintas.openvisum.ui.settings.SettingsScreen
 import verlintas.openvisum.ui.settings.SettingsViewModel
+import verlintas.openvisum.ui.settings.SubtitleSettingsScreen
 import verlintas.openvisum.ui.theme.OpenVisumTheme
 
 class MainActivity : ComponentActivity() {
@@ -59,6 +70,20 @@ class MainActivity : ComponentActivity() {
                 NavHost(
                     navController = navController,
                     startDestination = Routes.LIBRARY,
+                    enterTransition = {
+                        slideInHorizontally(
+                            animationSpec = tween(260),
+                            initialOffsetX = { fullWidth -> fullWidth / 5 },
+                        ) + fadeIn(tween(260))
+                    },
+                    exitTransition = { fadeOut(tween(180)) },
+                    popEnterTransition = { fadeIn(tween(200)) },
+                    popExitTransition = {
+                        slideOutHorizontally(
+                            animationSpec = tween(220),
+                            targetOffsetX = { fullWidth -> fullWidth / 5 },
+                        ) + fadeOut(tween(200))
+                    },
                 ) {
                     composable(Routes.LIBRARY) {
                         val libraryViewModel: LibraryViewModel = viewModel(
@@ -94,6 +119,46 @@ class MainActivity : ComponentActivity() {
                         )
                         SettingsScreen(
                             viewModel = settingsViewModel,
+                            onBack = { navController.popBackStack() },
+                            onOpenPlayback = { navController.navigate(Routes.SETTINGS_PLAYBACK) },
+                            onOpenSubtitles = { navController.navigate(Routes.SETTINGS_SUBTITLES) },
+                            onOpenOnline = { navController.navigate(Routes.SETTINGS_ONLINE) },
+                            onOpenAppearance = { navController.navigate(Routes.SETTINGS_APPEARANCE) },
+                            onOpenAbout = { navController.navigate(Routes.SETTINGS_ABOUT) },
+                        )
+                    }
+
+                    composable(Routes.SETTINGS_PLAYBACK) {
+                        PlaybackSettingsScreen(
+                            viewModel = settingsViewModel(app),
+                            onBack = { navController.popBackStack() },
+                        )
+                    }
+
+                    composable(Routes.SETTINGS_SUBTITLES) {
+                        SubtitleSettingsScreen(
+                            viewModel = settingsViewModel(app),
+                            onBack = { navController.popBackStack() },
+                        )
+                    }
+
+                    composable(Routes.SETTINGS_ONLINE) {
+                        OnlineSubtitleSettingsScreen(
+                            viewModel = settingsViewModel(app),
+                            onBack = { navController.popBackStack() },
+                        )
+                    }
+
+                    composable(Routes.SETTINGS_APPEARANCE) {
+                        AppearanceSettingsScreen(
+                            viewModel = settingsViewModel(app),
+                            onBack = { navController.popBackStack() },
+                        )
+                    }
+
+                    composable(Routes.SETTINGS_ABOUT) {
+                        AboutSettingsScreen(
+                            viewModel = settingsViewModel(app),
                             onBack = { navController.popBackStack() },
                         )
                     }
@@ -209,6 +274,10 @@ class MainActivity : ComponentActivity() {
                                 defaultValue = ""
                             },
                         ),
+                        enterTransition = { fadeIn(tween(250)) },
+                        exitTransition = { fadeOut(tween(200)) },
+                        popEnterTransition = { fadeIn(tween(200)) },
+                        popExitTransition = { fadeOut(tween(200)) },
                     ) { entry ->
                         val uri = entry.arguments?.getString("uri").orEmpty()
                         val title = entry.arguments?.getString("title").orEmpty()
@@ -229,3 +298,11 @@ class MainActivity : ComponentActivity() {
         pendingMediaUri.value = intent.data
     }
 }
+
+@Composable
+private fun settingsViewModel(app: OpenVisumApp): SettingsViewModel = viewModel(
+    factory = SettingsViewModel.factory(
+        preferences = app.container.preferencesRepository,
+        versionName = BuildConfig.VERSION_NAME,
+    ),
+)

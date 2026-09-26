@@ -146,4 +146,18 @@
     <string name="player_cast">投屏</string>
     <string name="player_cast_disconnect">停止投屏到 %1$s</string>
     <string name="player_cast_searching">正在搜索设备…</string>
+    <string name="library_date_today">今天</string>
+    <string name="library_date_yesterday">昨天</string>
+    <string name="library_date_this_week">本周</string>
+    <string name="library_date_this_month">本月</string>
+    <string name="library_date_earlier">更早</string>
+    <string name="settings_summary_hardware_on">硬件解码已开启</string>
+    <string name="settings_summary_hardware_off">软件解码</string>
+    <string name="settings_summary_autosub_on">自动加载外挂字幕</string>
+    <string name="settings_summary_autosub_off">未开启自动加载</string>
+    <string name="settings_summary_online_unconfigured">未配置 API Key</string>
+    <string name="settings_summary_online_configured">已配置</string>
+    <string name="settings_disable_direct_rendering">兼容模式（禁用直通渲染）</string>
+    <string name="settings_disable_direct_rendering_hint">如果拖动进度条出现黑屏/花屏，请开启此项</string>
+    <string name="settings_about_github">GitHub 项目主页</string>
 </resources>

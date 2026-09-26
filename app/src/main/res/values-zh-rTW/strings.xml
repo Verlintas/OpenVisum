@@ -146,4 +146,18 @@
     <string name="player_cast">投放</string>
     <string name="player_cast_disconnect">停止投放到 %1$s</string>
     <string name="player_cast_searching">正在搜尋裝置…</string>
+    <string name="library_date_today">今天</string>
+    <string name="library_date_yesterday">昨天</string>
+    <string name="library_date_this_week">本週</string>
+    <string name="library_date_this_month">本月</string>
+    <string name="library_date_earlier">更早</string>
+    <string name="settings_summary_hardware_on">硬體解碼已開啟</string>
+    <string name="settings_summary_hardware_off">軟體解碼</string>
+    <string name="settings_summary_autosub_on">自動載入外掛字幕</string>
+    <string name="settings_summary_autosub_off">未開啟自動載入</string>
+    <string name="settings_summary_online_unconfigured">未設定 API Key</string>
+    <string name="settings_summary_online_configured">已設定</string>
+    <string name="settings_disable_direct_rendering">相容模式（停用直通渲染）</string>
+    <string name="settings_disable_direct_rendering_hint">如果拖動進度條出現黑屏/花屏，請開啟此項</string>
+    <string name="settings_about_github">GitHub 專案首頁</string>
 </resources>

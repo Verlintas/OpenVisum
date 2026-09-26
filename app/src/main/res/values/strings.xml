@@ -148,4 +148,18 @@
     <string name="player_cast">Cast</string>
     <string name="player_cast_disconnect">Stop casting to %1$s</string>
     <string name="player_cast_searching">Searching for devices…</string>
+    <string name="library_date_today">Today</string>
+    <string name="library_date_yesterday">Yesterday</string>
+    <string name="library_date_this_week">This week</string>
+    <string name="library_date_this_month">This month</string>
+    <string name="library_date_earlier">Earlier</string>
+    <string name="settings_summary_hardware_on">Hardware decoding on</string>
+    <string name="settings_summary_hardware_off">Software decoding</string>
+    <string name="settings_summary_autosub_on">Auto-load external subtitles</string>
+    <string name="settings_summary_autosub_off">Auto-load disabled</string>
+    <string name="settings_summary_online_unconfigured">Not configured</string>
+    <string name="settings_summary_online_configured">Configured</string>
+    <string name="settings_disable_direct_rendering">Compatibility mode (no direct rendering)</string>
+    <string name="settings_disable_direct_rendering_hint">Enable if seeking causes a black screen on your device</string>
+    <string name="settings_about_github">GitHub repository</string>
 </resources>
