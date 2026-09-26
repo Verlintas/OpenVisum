@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.navigation.compose.currentBackStackEntryAsState
 import verlintas.openvisum.ui.navigation.AppNavigationRail
 import androidx.compose.ui.Modifier
@@ -25,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -89,6 +91,11 @@ class MainActivity : ComponentActivity() {
                     pendingMediaUri.update { null }
                 }
 
+                val appSnackbar = remember { androidx.compose.material3.SnackbarHostState() }
+                androidx.compose.runtime.CompositionLocalProvider(
+                    verlintas.openvisum.ui.components.LocalAppSnackbar provides appSnackbar,
+                ) {
+                Box(modifier = Modifier.fillMaxSize()) {
                 BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
                     val wideLayout = maxWidth >= 840.dp
                     val backStackEntry by navController.currentBackStackEntryAsState()
@@ -130,6 +137,14 @@ class MainActivity : ComponentActivity() {
                     } else {
                         AppNavGraph(navController = navController, app = app)
                     }
+                }
+                androidx.compose.material3.SnackbarHost(
+                    hostState = appSnackbar,
+                    modifier = Modifier
+                        .align(androidx.compose.ui.Alignment.BottomCenter)
+                        .padding(bottom = 24.dp),
+                )
+                }
                 }
             }
         }

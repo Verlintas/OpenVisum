@@ -246,4 +246,8 @@
     <string name="home_resume_button">Resume · %1$s</string>
     <string name="home_from_folder">From %1$s</string>
     <string name="home_now_playing">Featured</string>
+    <string name="snack_favorite_added">Added to favorites</string>
+    <string name="snack_favorite_removed">Removed from favorites</string>
+    <string name="library_badge_watched">Watched</string>
+    <string name="home_remaining">%1$s left</string>
 </resources>

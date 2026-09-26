@@ -216,7 +216,7 @@ fun LibraryScreen(
                 LargeTopAppBar(
                     title = {
                         Text(
-                            text = stringResource(R.string.app_name),
+                            text = stringResource(R.string.library_tab_library),
                             fontWeight = FontWeight.Bold,
                         )
                     },

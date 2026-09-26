@@ -117,6 +117,12 @@ class HomeViewModel(
         }
     }
 
+    fun toggleFavorite(item: MediaItem) {
+        viewModelScope.launch {
+            mediaRepository.toggleFavorite(item.uri, !item.isFavorite)
+        }
+    }
+
     companion object {
         fun factory(
             mediaRepository: MediaRepository,

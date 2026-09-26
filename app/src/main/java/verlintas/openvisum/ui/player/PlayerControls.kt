@@ -15,6 +15,17 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
+import androidx.compose.runtime.collectAsState
+import coil3.compose.rememberAsyncImagePainter
+import coil3.compose.AsyncImagePainter
+import androidx.compose.foundation.Image
+import androidx.compose.ui.layout.ContentScale
+import coil3.video.videoFrameMillis
+import coil3.compose.SubcomposeAsyncImage
+import androidx.compose.material3.Surface
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -65,6 +76,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -280,32 +292,62 @@ fun PlayerControls(
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 8.dp),
             ) {
-                Slider(
-                    value = displayedPosition.toFloat().coerceIn(0f, duration.toFloat()),
-                    onValueChange = { value ->
-                        isDragging = true
-                        sliderPosition = value
-                    },
-                    onValueChangeFinished = {
-                        if (sliderPosition >= 0f) onSeek(sliderPosition.toLong())
-                        isDragging = false
-                        sliderPosition = -1f
-                    },
-                    valueRange = 0f..duration.toFloat(),
-                    colors = SliderDefaults.colors(
-                        thumbColor = Color.White,
-                        activeTrackColor = Color.White,
-                        inactiveTrackColor = Color.White.copy(alpha = 0.24f),
-                    ),
-                    thumb = {
+                BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+                    val fullWidth = maxWidth
+                    val previewFraction = (displayedPosition.toFloat() / duration)
+                        .coerceIn(0f, 1f)
+                    val previewWidth = 168.dp
+                    val previewOffset = (fullWidth * previewFraction - previewWidth / 2)
+                        .coerceIn(0.dp, (fullWidth - previewWidth).coerceAtLeast(0.dp))
+                    Slider(
+                        value = displayedPosition.toFloat().coerceIn(0f, duration.toFloat()),
+                        onValueChange = { value ->
+                            isDragging = true
+                            sliderPosition = value
+                        },
+                        onValueChangeFinished = {
+                            if (sliderPosition >= 0f) onSeek(sliderPosition.toLong())
+                            isDragging = false
+                            sliderPosition = -1f
+                        },
+                        valueRange = 0f..duration.toFloat(),
+                        colors = SliderDefaults.colors(
+                            thumbColor = Color.White,
+                            activeTrackColor = Color.White,
+                            inactiveTrackColor = Color.White.copy(alpha = 0.24f),
+                        ),
+                        thumb = {
+                            Box(
+                                modifier = Modifier
+                                    .size(thumbSize)
+                                    .clip(CircleShape)
+                                    .background(Color.White),
+                            )
+                        },
+                    )
+                    if (isDragging && state.mediaUri != null) {
+                        val previewAlpha by animateFloatAsState(
+                            targetValue = 1f,
+                            animationSpec = tween(120),
+                            label = "previewAlpha",
+                        )
                         Box(
                             modifier = Modifier
-                                .size(thumbSize)
-                                .clip(CircleShape)
-                                .background(Color.White),
-                        )
-                    },
-                )
+                                .align(Alignment.TopStart)
+                                .offset(x = previewOffset, y = (-118).dp)
+                                .graphicsLayer {
+                                    alpha = previewAlpha
+                                    scaleX = 0.97f + 0.03f * previewAlpha
+                                    scaleY = 0.97f + 0.03f * previewAlpha
+                                },
+                        ) {
+                            SeekPreview(
+                                uri = state.mediaUri.toString(),
+                                positionMs = displayedPosition,
+                            )
+                        }
+                    }
+                }
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -507,3 +549,86 @@ private fun ControlButton(
         )
     }
 }
+
+
+@Composable
+private fun SeekPreview(
+    uri: String,
+    positionMs: Long,
+) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val bucket = (positionMs / PREVIEW_BUCKET_MS) * PREVIEW_BUCKET_MS
+    val request = remember(uri, bucket) {
+        coil3.request.ImageRequest.Builder(context)
+            .data(uri)
+            .videoFrameMillis(bucket)
+            .size(336, 188)
+            .memoryCacheKey("seek-preview-" + uri + "-" + bucket)
+            .build()
+    }
+    val painter = coil3.compose.rememberAsyncImagePainter(model = request)
+    val painterState by painter.state.collectAsState()
+    val lastFrame = remember { androidx.compose.runtime.mutableStateOf<androidx.compose.ui.graphics.painter.Painter?>(null) }
+    androidx.compose.runtime.LaunchedEffect(painterState) {
+        if (painterState is coil3.compose.AsyncImagePainter.State.Success) {
+            lastFrame.value = painter
+        }
+    }
+    val displayPainter = if (painterState is coil3.compose.AsyncImagePainter.State.Success) {
+        painter
+    } else {
+        lastFrame.value
+    }
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Surface(
+            shape = RoundedCornerShape(12.dp),
+            color = Color.Black.copy(alpha = 0.85f),
+            border = androidx.compose.foundation.BorderStroke(
+                1.dp,
+                Color.White.copy(alpha = 0.18f),
+            ),
+        ) {
+            Box(
+                modifier = Modifier
+                    .width(168.dp)
+                    .height(94.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                if (displayPainter != null) {
+                    Image(
+                        painter = displayPainter,
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .matchParentSize()
+                            .clip(RoundedCornerShape(12.dp)),
+                    )
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .matchParentSize()
+                            .background(Color(0xFF15161A)),
+                    )
+                    CircularProgressIndicator(
+                        strokeWidth = 2.dp,
+                        color = Color.White.copy(alpha = 0.75f),
+                        modifier = Modifier.size(18.dp),
+                    )
+                }
+            }
+        }
+        Spacer(Modifier.size(4.dp))
+        Text(
+            text = TimeUtils.formatDuration(positionMs),
+            color = Color.White,
+            style = MaterialTheme.typography.labelMedium.copy(fontFeatureSettings = "tnum"),
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier
+                .clip(RoundedCornerShape(8.dp))
+                .background(Color.Black.copy(alpha = 0.75f))
+                .padding(horizontal = 8.dp, vertical = 2.dp),
+        )
+    }
+}
+
+private const val PREVIEW_BUCKET_MS = 10_000L

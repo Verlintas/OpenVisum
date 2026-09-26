@@ -2,8 +2,11 @@ package verlintas.openvisum.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import verlintas.openvisum.R
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -27,10 +30,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -70,6 +75,7 @@ fun MediaGridCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .aspectRatio(16f / 9f)
+                .shadow(6.dp, RoundedCornerShape(18.dp))
                 .clip(RoundedCornerShape(18.dp))
                 .background(MaterialTheme.colorScheme.surfaceContainerHighest),
         ) {
@@ -103,7 +109,22 @@ fun MediaGridCard(
                     ),
             )
 
-            if (item.playbackPositionMs > 0L && item.playbackDurationMs > 0L) {
+            val watched = item.playbackDurationMs > 0L &&
+                item.playbackPositionMs.toFloat() / item.playbackDurationMs >= 0.95f
+            if (watched) {
+                Text(
+                    text = stringResource(R.string.library_badge_watched),
+                    color = Color.White,
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier
+                        .align(Alignment.BottomStart)
+                        .padding(8.dp)
+                        .clip(RoundedCornerShape(6.dp))
+                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.85f))
+                        .padding(horizontal = 6.dp, vertical = 1.dp),
+                )
+            } else if (item.playbackPositionMs > 0L && item.playbackDurationMs > 0L) {
                 LinearProgressIndicator(
                     progress = { progress },
                     color = MaterialTheme.colorScheme.primary,
@@ -113,6 +134,16 @@ fun MediaGridCard(
                         .fillMaxWidth()
                         .height(3.dp),
                 )
+            }
+
+            Row(
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(6.dp),
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                resolutionBadge(item)?.let { CardBadge(it) }
+                containerBadge(item)?.let { CardBadge(it, subtle = true) }
             }
 
             if (item.durationMs > 0L) {
@@ -198,5 +229,50 @@ private fun ThumbnailPlaceholder() {
             contentDescription = null,
             tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
         )
+    }
+}
+
+
+@Composable
+private fun CardBadge(text: String, subtle: Boolean = false) {
+    Text(
+        text = text,
+        color = Color.White,
+        style = MaterialTheme.typography.labelSmall,
+        fontWeight = FontWeight.SemiBold,
+        modifier = Modifier
+            .clip(RoundedCornerShape(5.dp))
+            .background(
+                if (subtle) {
+                    Color.Black.copy(alpha = 0.45f)
+                } else {
+                    Color.Black.copy(alpha = 0.65f)
+                },
+            )
+            .padding(horizontal = 5.dp, vertical = 1.dp),
+    )
+}
+
+internal fun resolutionBadge(item: MediaItem): String? = when {
+    item.height >= 2000 -> "4K"
+    item.height >= 1000 -> "1080P"
+    item.height >= 700 -> "720P"
+    item.height > 0 -> "${item.height}P"
+    else -> null
+}
+
+internal fun containerBadge(item: MediaItem): String? {
+    val mime = item.mimeType.orEmpty()
+    return when {
+        mime.contains("matroska") -> "MKV"
+        mime.contains("mp4") -> "MP4"
+        mime.contains("webm") -> "WEBM"
+        mime.contains("x-msvideo") || mime.contains("avi") -> "AVI"
+        mime.contains("quicktime") -> "MOV"
+        mime.contains("mpeg") -> "MPEG"
+        else -> item.displayName
+            ?.substringAfterLast('.', "")
+            ?.uppercase()
+            ?.takeIf { it.length in 2..4 }
     }
 }

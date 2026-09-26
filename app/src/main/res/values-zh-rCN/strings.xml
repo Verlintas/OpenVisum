@@ -244,4 +244,8 @@
     <string name="home_resume_button">继续观看 · %1$s</string>
     <string name="home_from_folder">来自 %1$s</string>
     <string name="home_now_playing">为你推荐</string>
+    <string name="snack_favorite_added">已加入收藏</string>
+    <string name="snack_favorite_removed">已取消收藏</string>
+    <string name="library_badge_watched">已看完</string>
+    <string name="home_remaining">剩 %1$s</string>
 </resources>
