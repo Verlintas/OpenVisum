@@ -248,4 +248,18 @@
     <string name="snack_favorite_removed">已取消收藏</string>
     <string name="library_badge_watched">已看完</string>
     <string name="home_remaining">剩餘 %1$s</string>
+    <string name="settings_hide_content_title">開屏隱藏媒體內容</string>
+    <string name="settings_hide_content_summary">啟動後先顯示工作區，不直接展示影片封面，輕觸後再顯示</string>
+    <string name="home_privacy_title">媒體內容已隱藏</string>
+    <string name="home_privacy_message">為保護隱私，啟動時不直接展示影片與封面；輕觸下方按鈕查看本次工作階段的內容。</string>
+    <string name="home_privacy_reveal">顯示內容</string>
+    <string name="sidebar_nav">導覽</string>
+    <string name="sidebar_shortcuts">快捷入口</string>
+    <string name="sidebar_locations">位置</string>
+    <string name="sidebar_status">媒體庫狀態</string>
+    <string name="sidebar_open_file">開啟檔案</string>
+    <string name="sidebar_search">搜尋媒體庫</string>
+    <string name="sidebar_stats">%1$d 個影片 · %2$s</string>
+    <string name="sidebar_ready">已就緒</string>
+    <string name="sidebar_quick_actions">快捷操作</string>
 </resources>

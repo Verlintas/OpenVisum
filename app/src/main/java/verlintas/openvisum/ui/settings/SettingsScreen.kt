@@ -12,6 +12,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CloudDownload
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Subtitles
@@ -26,6 +27,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import verlintas.openvisum.R
 import verlintas.openvisum.core.data.prefs.AppSettings
 import verlintas.openvisum.ui.components.SettingsGroup
+import verlintas.openvisum.ui.components.SettingsToggleRow
 import verlintas.openvisum.ui.components.SettingsGroupDivider
 import verlintas.openvisum.ui.components.SettingsNavRow
 import verlintas.openvisum.ui.components.staggeredEntrance
@@ -128,6 +130,14 @@ fun SettingsScreen(
                         )
                     },
                     onClick = onOpenAppearance,
+                )
+                SettingsGroupDivider()
+                SettingsToggleRow(
+                    icon = Icons.Filled.VisibilityOff,
+                    title = stringResource(R.string.settings_hide_content_title),
+                    subtitle = stringResource(R.string.settings_hide_content_summary),
+                    checked = settings.hideContentOnLaunch,
+                    onCheckedChange = viewModel::setHideContentOnLaunch,
                 )
                 SettingsGroupDivider()
                 SettingsNavRow(

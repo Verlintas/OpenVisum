@@ -27,6 +27,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -37,6 +38,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import verlintas.openvisum.core.data.prefs.AppSettings
 import verlintas.openvisum.navigation.Routes
 import verlintas.openvisum.ui.library.BrowseFolderScreen
@@ -85,6 +87,78 @@ class MainActivity : ComponentActivity() {
                 val context = LocalContext.current
                 val pendingUri by pendingMediaUri.collectAsStateWithLifecycle()
 
+                val homeViewModel: HomeViewModel = viewModel(
+                    factory = HomeViewModel.factory(
+                        mediaRepository = app.container.mediaRepository,
+                        networkRepository = app.container.networkRepository,
+                        preferences = app.container.preferencesRepository,
+                    ),
+                )
+                val homeState by homeViewModel.uiState.collectAsStateWithLifecycle()
+                val sidebarData = remember(
+                    homeState.folders,
+                    homeState.safFolders,
+                    homeState.networkSources,
+                    homeState.totalCount,
+                    homeState.totalSizeBytes,
+                ) {
+                    verlintas.openvisum.ui.navigation.SidebarData(
+                        folders = homeState.folders.map {
+                            verlintas.openvisum.ui.navigation.SidebarFolder(
+                                title = it.folderName,
+                                itemCount = it.itemCount,
+                                key = it.folderKey,
+                            )
+                        },
+                        safFolders = homeState.safFolders.map {
+                            verlintas.openvisum.ui.navigation.SidebarFolder(
+                                title = it.name,
+                                itemCount = 0,
+                                key = it.treeUri,
+                            )
+                        },
+                        networkSourceCount = homeState.networkSources.size,
+                        totalCount = homeState.totalCount,
+                        totalSizeBytes = homeState.totalSizeBytes,
+                    )
+                }
+
+                val drawerState = androidx.compose.material3.rememberDrawerState(
+                    androidx.compose.material3.DrawerValue.Closed,
+                )
+                val scope = rememberCoroutineScope()
+                val filePicker = androidx.activity.compose.rememberLauncherForActivityResult(
+                    androidx.activity.result.contract.ActivityResultContracts.OpenMultipleDocuments(),
+                ) { uris ->
+                    val uri = uris.firstOrNull() ?: return@rememberLauncherForActivityResult
+                    runCatching {
+                        context.contentResolver.takePersistableUriPermission(
+                            uri,
+                            Intent.FLAG_GRANT_READ_URI_PERMISSION,
+                        )
+                    }
+                    navController.navigate(Routes.player(uri.toString()))
+                }
+
+                val openWebsite = {
+                    runCatching {
+                        context.startActivity(
+                            Intent(
+                                Intent.ACTION_VIEW,
+                                Uri.parse("https://verlintas.github.io/OpenVisum/"),
+                            ),
+                        )
+                    }
+                    Unit
+                }
+                val navigateTopLevel: (String) -> Unit = { route ->
+                    navController.navigate(route) {
+                        popUpTo(Routes.HOME) { saveState = true }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                }
+
                 LaunchedEffect(pendingUri) {
                     val uri = pendingUri ?: return@LaunchedEffect
                     navController.navigate(Routes.player(uri.toString()))
@@ -94,57 +168,119 @@ class MainActivity : ComponentActivity() {
                 val appSnackbar = remember { androidx.compose.material3.SnackbarHostState() }
                 androidx.compose.runtime.CompositionLocalProvider(
                     verlintas.openvisum.ui.components.LocalAppSnackbar provides appSnackbar,
+                    verlintas.openvisum.ui.navigation.LocalSidebarController provides
+                        verlintas.openvisum.ui.navigation.SidebarController(
+                            enabled = true,
+                            open = { scope.launch { drawerState.open() } },
+                        ),
                 ) {
-                Box(modifier = Modifier.fillMaxSize()) {
-                BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
-                    val wideLayout = maxWidth >= 840.dp
-                    val backStackEntry by navController.currentBackStackEntryAsState()
-                    val currentRoute = backStackEntry?.destination?.route
-                    val selectedRailIndex = when (currentRoute) {
-                        Routes.HOME -> 0
-                        Routes.LIBRARY_PATTERN, Routes.LIBRARY -> 1
-                        Routes.NETWORK -> 2
-                        Routes.SETTINGS -> 3
-                        else -> -1
-                    }
-                    if (wideLayout) {
-                        Row(modifier = Modifier.fillMaxSize()) {
-                            AppNavigationRail(
-                                selectedIndex = selectedRailIndex,
-                                onNavigate = { _, route ->
-                                    navController.navigate(route) {
-                                        popUpTo(Routes.HOME) { saveState = true }
-                                        launchSingleTop = true
-                                        restoreState = true
-                                    }
-                                },
-                                onOpenWebsite = {
-                                    runCatching {
-                                        context.startActivity(
-                                            android.content.Intent(
-                                                android.content.Intent.ACTION_VIEW,
-                                                android.net.Uri.parse("https://verlintas.github.io/OpenVisum/"),
-                                            ),
+                    Box(modifier = Modifier.fillMaxSize()) {
+                        BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+                            val wideLayout = maxWidth >= 840.dp
+                            val backStackEntry by navController.currentBackStackEntryAsState()
+                            val currentRoute = backStackEntry?.destination?.route
+                            if (wideLayout) {
+                                Row(modifier = Modifier.fillMaxSize()) {
+                                    AppNavigationRail(
+                                        selectedRoute = currentRoute,
+                                        data = sidebarData,
+                                        versionName = BuildConfig.VERSION_NAME,
+                                        onNavigate = navigateTopLevel,
+                                        onOpenFile = {
+                                            filePicker.launch(arrayOf("video/*", "audio/*"))
+                                        },
+                                        onOpenSearch = {
+                                            navController.navigate(Routes.library(search = true))
+                                        },
+                                        onContinueWatching = {
+                                            navigateTopLevel(Routes.LIBRARY)
+                                        },
+                                        onOpenSafFolder = { folder ->
+                                            navController.navigate(
+                                                Routes.safBrowser(folder.key, folder.title),
+                                            )
+                                        },
+                                        onOpenFolder = { folder ->
+                                            navController.navigate(
+                                                Routes.browseFolder(folder.key, folder.title),
+                                            )
+                                        },
+                                        onOpenNetwork = { navigateTopLevel(Routes.NETWORK) },
+                                        onOpenWebsite = openWebsite,
+                                    )
+                                    Box(modifier = Modifier.weight(1f)) {
+                                        AppNavGraph(
+                                            navController = navController,
+                                            app = app,
+                                            homeViewModel = homeViewModel,
                                         )
                                     }
-                                },
-                                versionName = BuildConfig.VERSION_NAME,
-                            )
-                            Box(modifier = Modifier.weight(1f)) {
-                                AppNavGraph(navController = navController, app = app)
+                                }
+                            } else {
+                                val gesturesEnabled = currentRoute == Routes.HOME ||
+                                    currentRoute == Routes.LIBRARY ||
+                                    currentRoute == Routes.LIBRARY_PATTERN
+                                androidx.compose.material3.ModalNavigationDrawer(
+                                    drawerState = drawerState,
+                                    gesturesEnabled = gesturesEnabled,
+                                    drawerContent = {
+                                        verlintas.openvisum.ui.navigation.AppSidebar(
+                                            selectedRoute = currentRoute,
+                                            data = sidebarData,
+                                            versionName = BuildConfig.VERSION_NAME,
+                                            onNavigate = { route ->
+                                                scope.launch { drawerState.close() }
+                                                navigateTopLevel(route)
+                                            },
+                                            onOpenFile = {
+                                                scope.launch { drawerState.close() }
+                                                filePicker.launch(
+                                                    arrayOf("video/*", "audio/*"),
+                                                )
+                                            },
+                                            onOpenSearch = {
+                                                scope.launch { drawerState.close() }
+                                                navController.navigate(Routes.library(search = true))
+                                            },
+                                            onContinueWatching = {
+                                                scope.launch { drawerState.close() }
+                                                navigateTopLevel(Routes.LIBRARY)
+                                            },
+                                            onOpenSafFolder = { folder ->
+                                                scope.launch { drawerState.close() }
+                                                navController.navigate(
+                                                    Routes.safBrowser(folder.key, folder.title),
+                                                )
+                                            },
+                                            onOpenFolder = { folder ->
+                                                scope.launch { drawerState.close() }
+                                                navController.navigate(
+                                                    Routes.browseFolder(folder.key, folder.title),
+                                                )
+                                            },
+                                            onOpenNetwork = {
+                                                scope.launch { drawerState.close() }
+                                                navigateTopLevel(Routes.NETWORK)
+                                            },
+                                            onOpenWebsite = openWebsite,
+                                        )
+                                    },
+                                ) {
+                                    AppNavGraph(
+                                        navController = navController,
+                                        app = app,
+                                        homeViewModel = homeViewModel,
+                                    )
+                                }
                             }
                         }
-                    } else {
-                        AppNavGraph(navController = navController, app = app)
+                        androidx.compose.material3.SnackbarHost(
+                            hostState = appSnackbar,
+                            modifier = Modifier
+                                .align(androidx.compose.ui.Alignment.BottomCenter)
+                                .padding(bottom = 24.dp),
+                        )
                     }
-                }
-                androidx.compose.material3.SnackbarHost(
-                    hostState = appSnackbar,
-                    modifier = Modifier
-                        .align(androidx.compose.ui.Alignment.BottomCenter)
-                        .padding(bottom = 24.dp),
-                )
-                }
                 }
             }
         }

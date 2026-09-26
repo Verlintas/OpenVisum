@@ -41,6 +41,7 @@ data class AppSettings(
     val appLanguage: String = "system",
     val defaultPlaybackRate: Float = 1.0f,
     val rememberPlaybackPosition: Boolean = true,
+    val hideContentOnLaunch: Boolean = true,
 ) {
     companion object {
         const val THEME_SYSTEM = 0
@@ -83,6 +84,7 @@ class PreferencesRepository(
         val APP_LANGUAGE = stringPreferencesKey("app_language")
         val DEFAULT_PLAYBACK_RATE = floatPreferencesKey("default_playback_rate")
         val REMEMBER_PLAYBACK_POSITION = booleanPreferencesKey("remember_playback_position")
+        val HIDE_CONTENT_ON_LAUNCH = booleanPreferencesKey("hide_content_on_launch")
     }
 
     val settings: Flow<AppSettings> = context.dataStore.data
@@ -113,6 +115,7 @@ class PreferencesRepository(
                 appLanguage = preferences[Keys.APP_LANGUAGE] ?: "system",
                 defaultPlaybackRate = preferences[Keys.DEFAULT_PLAYBACK_RATE] ?: 1.0f,
                 rememberPlaybackPosition = preferences[Keys.REMEMBER_PLAYBACK_POSITION] ?: true,
+                hideContentOnLaunch = preferences[Keys.HIDE_CONTENT_ON_LAUNCH] ?: true,
             )
         }
 
@@ -181,5 +184,9 @@ class PreferencesRepository(
 
     suspend fun setRememberPlaybackPosition(enabled: Boolean) {
         context.dataStore.edit { it[Keys.REMEMBER_PLAYBACK_POSITION] = enabled }
+    }
+
+    suspend fun setHideContentOnLaunch(enabled: Boolean) {
+        context.dataStore.edit { it[Keys.HIDE_CONTENT_ON_LAUNCH] = enabled }
     }
 }

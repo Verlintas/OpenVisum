@@ -48,6 +48,7 @@ import verlintas.openvisum.ui.settings.SubtitleSettingsScreen
 fun AppNavGraph(
     navController: NavHostController,
     app: OpenVisumApp,
+    homeViewModel: HomeViewModel,
 ) {
     val context = LocalContext.current
                 NavHost(
@@ -69,12 +70,6 @@ fun AppNavGraph(
                     },
                 ) {
                     composable(Routes.HOME) {
-                        val homeViewModel: HomeViewModel = viewModel(
-                            factory = HomeViewModel.factory(
-                                mediaRepository = app.container.mediaRepository,
-                                networkRepository = app.container.networkRepository,
-                            ),
-                        )
                         HomeScreen(
                             viewModel = homeViewModel,
                             onPlayUri = { uri, title, restart ->

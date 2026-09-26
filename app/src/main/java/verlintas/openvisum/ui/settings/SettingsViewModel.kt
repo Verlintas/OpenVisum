@@ -56,6 +56,10 @@ class SettingsViewModel(
         runCatching { AppLocale.apply(context, tag) }
     }
 
+    fun setHideContentOnLaunch(enabled: Boolean) {
+        viewModelScope.launch { preferences.setHideContentOnLaunch(enabled) }
+    }
+
     fun setDefaultPlaybackRate(rate: Float) {
         viewModelScope.launch { preferences.setDefaultPlaybackRate(rate) }
     }

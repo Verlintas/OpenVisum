@@ -250,4 +250,18 @@
     <string name="snack_favorite_removed">Removed from favorites</string>
     <string name="library_badge_watched">Watched</string>
     <string name="home_remaining">%1$s left</string>
+    <string name="settings_hide_content_title">Hide media on launch</string>
+    <string name="settings_hide_content_summary">Workspace opens without posters; tap to reveal</string>
+    <string name="home_privacy_title">Content hidden</string>
+    <string name="home_privacy_message">For privacy, videos and posters stay hidden until you choose to view them.</string>
+    <string name="home_privacy_reveal">Show content</string>
+    <string name="sidebar_nav">Navigation</string>
+    <string name="sidebar_shortcuts">Shortcuts</string>
+    <string name="sidebar_locations">Locations</string>
+    <string name="sidebar_status">Library status</string>
+    <string name="sidebar_open_file">Open file</string>
+    <string name="sidebar_search">Search library</string>
+    <string name="sidebar_stats">%1$d videos · %2$s</string>
+    <string name="sidebar_ready">Ready</string>
+    <string name="sidebar_quick_actions">Quick actions</string>
 </resources>

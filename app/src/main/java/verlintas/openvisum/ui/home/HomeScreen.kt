@@ -56,6 +56,8 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Replay
+import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.VideoLibrary
@@ -117,13 +119,6 @@ import verlintas.openvisum.ui.components.staggeredEntrance
 private const val TAB_LIBRARY = 0
 private const val TAB_FOLDERS = 1
 
-private data class DrawerDestination(
-    val icon: ImageVector,
-    val labelRes: Int,
-    val onClick: () -> Unit,
-    val selected: Boolean = false,
-)
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
@@ -138,12 +133,8 @@ fun HomeScreen(
     onOpenWebsite: () -> Unit,
 ) {
     val context = LocalContext.current
+    val sidebarController = verlintas.openvisum.ui.navigation.LocalSidebarController.current
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    val drawerState = androidx.compose.material3.rememberDrawerState(
-        androidx.compose.material3.DrawerValue.Closed,
-    )
-    val scope = rememberCoroutineScope()
-
     var hasPermission by remember { mutableStateOf(hasMediaPermission(context)) }
 
     val permissionLauncher = rememberLauncherForActivityResult(
@@ -167,236 +158,25 @@ fun HomeScreen(
         }
     }
 
-    val destinations = listOf(
-        DrawerDestination(
-            icon = Icons.Filled.Home,
-            labelRes = R.string.nav_home,
-            onClick = {},
-            selected = true,
-        ),
-        DrawerDestination(
-            icon = Icons.Filled.VideoLibrary,
-            labelRes = R.string.library_tab_library,
-            onClick = { onOpenLibrary(TAB_LIBRARY) },
-        ),
-        DrawerDestination(
-            icon = Icons.Filled.Folder,
-            labelRes = R.string.library_tab_folders,
-            onClick = { onOpenLibrary(TAB_FOLDERS) },
-        ),
-        DrawerDestination(
-            icon = Icons.Filled.Cloud,
-            labelRes = R.string.network_title,
-            onClick = onOpenNetwork,
-        ),
-        DrawerDestination(
-            icon = Icons.Filled.Settings,
-            labelRes = R.string.settings_title,
-            onClick = onOpenSettings,
-        ),
-    )
-
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
-        val wideLayout = maxWidth >= 840.dp
-        if (wideLayout) {
-            Box(modifier = Modifier.fillMaxSize()) {
-                Box(modifier = Modifier.fillMaxSize()) {
-                    HomeContent(
-                        state = state,
-                        hasPermission = hasPermission,
-                        viewModel = viewModel,
-                        showMenuButton = false,
-                        onOpenDrawer = {},
-                        onPlayUri = onPlayUri,
-                        onOpenLibrary = onOpenLibrary,
-                        onOpenSearch = onOpenSearch,
-                        onOpenFile = { filePicker.launch(arrayOf("video/*", "audio/*")) },
-                        onRequestPermission = {
-                            permissionLauncher.launch(Manifest.permission.READ_MEDIA_VIDEO)
-                        },
-                        onOpenFolder = onOpenFolder,
-                        onOpenSafFolder = onOpenSafFolder,
-                        onOpenNetwork = onOpenNetwork,
-                        onOpenSettings = onOpenSettings,
-                    )
-                }
-            }
-        } else {
-            ModalNavigationDrawer(
-                drawerState = drawerState,
-                drawerContent = {
-                    HomeDrawerContent(
-                        destinations = destinations,
-                        state = state,
-                        versionName = BuildConfig.VERSION_NAME,
-                        onContinueWatching = { onOpenLibrary(TAB_LIBRARY) },
-                        onOpenFolder = onOpenFolder,
-                        onOpenSafFolder = onOpenSafFolder,
-                        onOpenNetwork = onOpenNetwork,
-                        onOpenWebsite = onOpenWebsite,
-                        onNavigate = { action ->
-                            scope.launch { drawerState.close() }
-                            action()
-                        },
-                    )
-                },
-            ) {
-                HomeContent(
-                    state = state,
-                    hasPermission = hasPermission,
-                    viewModel = viewModel,
-                    showMenuButton = true,
-                    onOpenDrawer = { scope.launch { drawerState.open() } },
-                    onPlayUri = onPlayUri,
-                    onOpenLibrary = onOpenLibrary,
-                    onOpenSearch = onOpenSearch,
-                    onOpenFile = { filePicker.launch(arrayOf("video/*", "audio/*")) },
-                    onRequestPermission = {
-                        permissionLauncher.launch(Manifest.permission.READ_MEDIA_VIDEO)
-                    },
-                    onOpenFolder = onOpenFolder,
-                    onOpenSafFolder = onOpenSafFolder,
-                    onOpenNetwork = onOpenNetwork,
-                    onOpenSettings = onOpenSettings,
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun HomeDrawerContent(
-    destinations: List<DrawerDestination>,
-    state: HomeUiState,
-    versionName: String,
-    onContinueWatching: () -> Unit,
-    onOpenFolder: (FolderSummary) -> Unit,
-    onOpenSafFolder: (SafFolderEntity) -> Unit,
-    onOpenNetwork: () -> Unit,
-    onOpenWebsite: () -> Unit,
-    onNavigate: (() -> Unit) -> Unit,
-) {
-    ModalDrawerSheet(
-        drawerContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-    ) {
-        Column(modifier = Modifier.fillMaxHeight()) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp, vertical = 22.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(44.dp)
-                        .clip(CircleShape)
-                        .background(
-                            Brush.linearGradient(
-                                listOf(
-                                    MaterialTheme.colorScheme.primary,
-                                    MaterialTheme.colorScheme.tertiary,
-                                ),
-                            ),
-                        ),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.PlayArrow,
-                        contentDescription = null,
-                        tint = Color.White,
-                    )
-                }
-                Spacer(Modifier.width(12.dp))
-                Column {
-                    Text(
-                        text = stringResource(R.string.app_name),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                    )
-                    Text(
-                        text = stringResource(R.string.settings_version, versionName),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-            }
-
-            destinations.forEach { destination ->
-                NavigationDrawerItem(
-                    label = { Text(stringResource(destination.labelRes)) },
-                    icon = { Icon(destination.icon, contentDescription = null) },
-                    selected = destination.selected,
-                    onClick = { onNavigate(destination.onClick) },
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 2.dp),
-                )
-            }
-
-            HorizontalDivider(modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp))
-            DrawerSectionLabel(stringResource(R.string.drawer_shortcuts))
-            NavigationDrawerItem(
-                label = { Text(stringResource(R.string.library_continue_watching)) },
-                icon = { Icon(Icons.Filled.History, contentDescription = null) },
-                selected = false,
-                onClick = { onNavigate(onContinueWatching) },
-                modifier = Modifier.padding(horizontal = 12.dp, vertical = 2.dp),
-            )
-
-            if (state.safFolders.isNotEmpty() || state.folders.isNotEmpty()) {
-                HorizontalDivider(modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp))
-                DrawerSectionLabel(stringResource(R.string.home_locations))
-                state.safFolders.take(4).forEach { folder ->
-                    NavigationDrawerItem(
-                        label = {
-                            Text(
-                                text = folder.name,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                            )
-                        },
-                        icon = { Icon(Icons.Filled.Folder, contentDescription = null) },
-                        selected = false,
-                        onClick = { onNavigate { onOpenSafFolder(folder) } },
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 2.dp),
-                    )
-                }
-                state.folders.take(4).forEach { folder ->
-                    NavigationDrawerItem(
-                        label = {
-                            Text(
-                                text = folder.folderName,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                            )
-                        },
-                        icon = { Icon(Icons.Filled.FolderOpen, contentDescription = null) },
-                        selected = false,
-                        onClick = { onNavigate { onOpenFolder(folder) } },
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 2.dp),
-                    )
-                }
-                if (state.networkSources.isNotEmpty()) {
-                    NavigationDrawerItem(
-                        label = { Text(stringResource(R.string.network_title)) },
-                        icon = { Icon(Icons.Filled.Cloud, contentDescription = null) },
-                        selected = false,
-                        badge = { Text("${state.networkSources.size}") },
-                        onClick = { onNavigate(onOpenNetwork) },
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 2.dp),
-                    )
-                }
-            }
-
-            Spacer(Modifier.weight(1f))
-            HorizontalDivider(modifier = Modifier.padding(horizontal = 24.dp))
-            NavigationDrawerItem(
-                label = { Text(stringResource(R.string.about_link_website)) },
-                icon = { Icon(Icons.Filled.Public, contentDescription = null) },
-                selected = false,
-                onClick = { onNavigate(onOpenWebsite) },
-                modifier = Modifier.padding(horizontal = 12.dp, vertical = 2.dp),
-            )
-            Spacer(Modifier.height(12.dp))
-        }
+        HomeContent(
+            state = state,
+            hasPermission = hasPermission,
+            viewModel = viewModel,
+            showMenuButton = maxWidth < 840.dp,
+            onOpenDrawer = { sidebarController.open() },
+            onPlayUri = onPlayUri,
+            onOpenLibrary = onOpenLibrary,
+            onOpenSearch = onOpenSearch,
+            onOpenFile = { filePicker.launch(arrayOf("video/*", "audio/*")) },
+            onRequestPermission = {
+                permissionLauncher.launch(Manifest.permission.READ_MEDIA_VIDEO)
+            },
+            onOpenFolder = onOpenFolder,
+            onOpenSafFolder = onOpenSafFolder,
+            onOpenNetwork = onOpenNetwork,
+            onOpenSettings = onOpenSettings,
+        )
     }
 }
 
@@ -438,27 +218,7 @@ private fun HomeContent(
             androidx.compose.material3.TopAppBar(
                 title = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            modifier = Modifier
-                                .size(30.dp)
-                                .clip(RoundedCornerShape(9.dp))
-                                .background(
-                                    Brush.linearGradient(
-                                        listOf(
-                                            MaterialTheme.colorScheme.primary,
-                                            MaterialTheme.colorScheme.tertiary,
-                                        ),
-                                    ),
-                                ),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.PlayArrow,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onPrimary,
-                                modifier = Modifier.size(18.dp),
-                            )
-                        }
+                        verlintas.openvisum.ui.components.BrandMark(size = 30.dp)
                         Spacer(Modifier.width(9.dp))
                         Text(
                             text = stringResource(R.string.app_name),
@@ -529,6 +289,29 @@ private fun HomeContent(
                     contentPadding = PaddingValues(bottom = 32.dp),
                     verticalArrangement = Arrangement.spacedBy(2.dp),
                 ) {
+                    val showMedia = !(state.hideContentOnLaunch && !state.contentRevealed)
+
+                    item(key = "quick") {
+                        QuickActionsRow(
+                            onOpenFile = onOpenFile,
+                            onOpenLibrary = { onOpenLibrary(TAB_LIBRARY) },
+                            onOpenNetwork = onOpenNetwork,
+                            onOpenSettings = onOpenSettings,
+                            modifier = Modifier.staggeredEntrance(index = 0),
+                        )
+                    }
+
+                    if (!showMedia && (state.hasAnyContent || state.heroItem != null)) {
+                        item(key = "privacy") {
+                            PrivacyGate(
+                                onReveal = viewModel::revealContent,
+                                onOpenFile = onOpenFile,
+                                modifier = Modifier.staggeredEntrance(index = 1),
+                            )
+                        }
+                    }
+
+                    if (showMedia) {
                     state.heroItem?.let { hero ->
                         item(key = "hero") {
                             val snackbar = verlintas.openvisum.ui.components.LocalAppSnackbar.current
@@ -632,6 +415,7 @@ private fun HomeContent(
                         }
                     }
 
+                    }
                     if (!hasPermission) {
                         item(key = "permission") {
                             PermissionCard(
@@ -651,22 +435,6 @@ private fun HomeContent(
                                 modifier = Modifier.staggeredEntrance(index = 12),
                             )
                         }
-                    }
-
-                    item(key = "utility-title") {
-                        SectionHeader(
-                            title = stringResource(R.string.drawer_shortcuts),
-                            modifier = Modifier.staggeredEntrance(index = 13),
-                        )
-                    }
-                    item(key = "quick") {
-                        QuickActionsRow(
-                            onOpenFile = onOpenFile,
-                            onOpenLibrary = { onOpenLibrary(TAB_LIBRARY) },
-                            onOpenNetwork = onOpenNetwork,
-                            onOpenSettings = onOpenSettings,
-                            modifier = Modifier.staggeredEntrance(index = 14),
-                        )
                     }
 
                     if (state.folders.isNotEmpty() || state.safFolders.isNotEmpty() || state.networkSources.isNotEmpty()) {
@@ -1097,6 +865,74 @@ private fun QuickAction(
 }
 
 @Composable
+private fun PrivacyGate(
+    onReveal: () -> Unit,
+    onOpenFile: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Surface(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        shape = RoundedCornerShape(24.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        border = BorderStroke(
+            1.dp,
+            MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f),
+        ),
+    ) {
+        Column(modifier = Modifier.padding(20.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier = Modifier
+                        .size(42.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primaryContainer),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.VisibilityOff,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                        modifier = Modifier.size(21.dp),
+                    )
+                }
+                Spacer(Modifier.width(12.dp))
+                Text(
+                    text = stringResource(R.string.home_privacy_title),
+                    style = MaterialTheme.typography.titleMedium,
+                )
+            }
+            Spacer(Modifier.height(10.dp))
+            Text(
+                text = stringResource(R.string.home_privacy_message),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Spacer(Modifier.height(16.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                Button(
+                    onClick = onReveal,
+                    shape = RoundedCornerShape(14.dp),
+                ) {
+                    Icon(Icons.Filled.Visibility, contentDescription = null)
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(R.string.home_privacy_reveal))
+                }
+                FilledTonalButton(
+                    onClick = onOpenFile,
+                    shape = RoundedCornerShape(14.dp),
+                ) {
+                    Icon(Icons.Filled.FolderOpen, contentDescription = null)
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(R.string.sidebar_open_file))
+                }
+            }
+        }
+    }
+}
+
+@Composable
 private fun SectionHeader(
     title: String,
     action: String? = null,
@@ -1191,20 +1027,7 @@ private fun PosterCard(
                 .clip(shape),
         ) {
             MediaThumbnail(item = item, modifier = Modifier.matchParentSize())
-            if (watched) {
-                Text(
-                    text = stringResource(R.string.library_badge_watched),
-                    color = Color.White,
-                    style = MaterialTheme.typography.labelSmall,
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier
-                        .align(Alignment.BottomStart)
-                        .padding(6.dp)
-                        .clip(RoundedCornerShape(5.dp))
-                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.85f))
-                        .padding(horizontal = 5.dp, vertical = 1.dp),
-                )
-            } else if (item.playbackPositionMs > 0L && item.playbackDurationMs > 0L) {
+            if (!watched && item.playbackPositionMs > 0L && item.playbackDurationMs > 0L) {
                 LinearProgressIndicator(
                     progress = {
                         (item.playbackPositionMs.toFloat() / item.playbackDurationMs)
@@ -1217,15 +1040,6 @@ private fun PosterCard(
                         .fillMaxWidth()
                         .height(3.dp),
                 )
-            }
-            Row(
-                modifier = Modifier
-                    .align(Alignment.TopStart)
-                    .padding(6.dp),
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
-            ) {
-                resolutionBadge(item)?.let { MiniBadge(it) }
-                containerBadge(item)?.let { MiniBadge(it) }
             }
             if (item.durationMs > 0L) {
                 Text(
@@ -1265,20 +1079,6 @@ private fun PosterCard(
             )
         }
     }
-}
-
-@Composable
-private fun MiniBadge(text: String) {
-    Text(
-        text = text,
-        color = Color.White,
-        style = MaterialTheme.typography.labelSmall,
-        fontWeight = FontWeight.SemiBold,
-        modifier = Modifier
-            .clip(RoundedCornerShape(5.dp))
-            .background(Color.Black.copy(alpha = 0.55f))
-            .padding(horizontal = 5.dp, vertical = 1.dp),
-    )
 }
 
 @Composable

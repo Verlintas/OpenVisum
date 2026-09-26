@@ -13,6 +13,7 @@ import verlintas.openvisum.core.data.MediaRepository
 import verlintas.openvisum.core.data.NetworkRepository
 import verlintas.openvisum.core.data.NetworkSource
 import verlintas.openvisum.core.data.db.SafFolderEntity
+import verlintas.openvisum.core.data.prefs.PreferencesRepository
 import verlintas.openvisum.core.data.model.MediaItem
 
 data class FolderSection(
@@ -34,6 +35,8 @@ data class HomeUiState(
     val heroIsResume: Boolean = false,
     val totalCount: Int = 0,
     val totalSizeBytes: Long = 0,
+    val hideContentOnLaunch: Boolean = true,
+    val contentRevealed: Boolean = false,
 ) {
     val hasAnyContent: Boolean
         get() = continueWatching.isNotEmpty() || recent.isNotEmpty() || favorites.isNotEmpty()
@@ -42,7 +45,10 @@ data class HomeUiState(
 class HomeViewModel(
     private val mediaRepository: MediaRepository,
     private val networkRepository: NetworkRepository,
+    private val preferences: PreferencesRepository,
 ) : ViewModel() {
+
+    private val contentRevealed = kotlinx.coroutines.flow.MutableStateFlow(false)
 
     private data class MediaData(
         val continueWatching: List<MediaItem>,
@@ -105,6 +111,10 @@ class HomeViewModel(
             totalCount = data.all.size,
             totalSizeBytes = data.all.sumOf { it.sizeBytes },
         )
+    }.combine(contentRevealed) { data, revealed ->
+        data.copy(contentRevealed = revealed)
+    }.combine(preferences.settings) { data, settings ->
+        data.copy(hideContentOnLaunch = settings.hideContentOnLaunch)
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
@@ -117,6 +127,10 @@ class HomeViewModel(
         }
     }
 
+    fun revealContent() {
+        contentRevealed.value = true
+    }
+
     fun toggleFavorite(item: MediaItem) {
         viewModelScope.launch {
             mediaRepository.toggleFavorite(item.uri, !item.isFavorite)
@@ -127,10 +141,11 @@ class HomeViewModel(
         fun factory(
             mediaRepository: MediaRepository,
             networkRepository: NetworkRepository,
+            preferences: PreferencesRepository,
         ): ViewModelProvider.Factory = object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                return HomeViewModel(mediaRepository, networkRepository) as T
+                return HomeViewModel(mediaRepository, networkRepository, preferences) as T
             }
         }
     }

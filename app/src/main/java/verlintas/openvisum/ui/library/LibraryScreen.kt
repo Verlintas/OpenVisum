@@ -45,6 +45,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Cloud
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Folder
@@ -213,12 +214,25 @@ fun LibraryScreen(
                     },
                 )
             } else {
+                val sidebarController = verlintas.openvisum.ui.navigation.LocalSidebarController.current
                 LargeTopAppBar(
                     title = {
                         Text(
                             text = stringResource(R.string.library_tab_library),
                             fontWeight = FontWeight.Bold,
                         )
+                    },
+                    navigationIcon = {
+                        if (sidebarController.enabled) {
+                            androidx.compose.material3.IconButton(
+                                onClick = sidebarController.open,
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Filled.Menu,
+                                    contentDescription = stringResource(R.string.drawer_open),
+                                )
+                            }
+                        }
                     },
                     colors = TopAppBarDefaults.largeTopAppBarColors(
                         containerColor = topBarColor,
