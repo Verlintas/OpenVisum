@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -102,7 +103,13 @@ fun NetworkScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
+                .padding(padding),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+        Column(
+            modifier = Modifier
+                .widthIn(max = 720.dp)
+                .fillMaxWidth()
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 16.dp),
         ) {
@@ -261,6 +268,7 @@ fun NetworkScreen(
             }
             Spacer(Modifier.height(24.dp))
         }
+        }
     }
 
     if (showAddDialog) {
@@ -396,7 +404,11 @@ fun NetworkBrowserScreen(
                 }
 
                 else -> {
-                    LazyColumn(modifier = Modifier.fillMaxSize()) {
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .widthIn(max = 840.dp),
+                    ) {
                         itemsIndexed(state.entries, key = { _, entry -> entry.path }) { index, entry ->
                             val extension = entry.name.substringAfterLast('.', "").lowercase()
                             val playable = !entry.isDirectory &&

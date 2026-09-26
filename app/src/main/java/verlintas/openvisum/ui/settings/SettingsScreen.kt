@@ -3,8 +3,10 @@ package verlintas.openvisum.ui.settings
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -54,10 +56,16 @@ fun SettingsScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp),
+                .padding(padding),
+            horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally,
         ) {
+            Column(
+                modifier = Modifier
+                    .widthIn(max = 720.dp)
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 16.dp),
+            ) {
             Spacer(Modifier.height(8.dp))
             SettingsGroup(modifier = Modifier.staggeredEntrance(index = 0)) {
                 SettingsNavRow(
@@ -130,6 +138,7 @@ fun SettingsScreen(
                 )
             }
             Spacer(Modifier.height(24.dp))
+            }
         }
     }
 }

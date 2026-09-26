@@ -41,6 +41,7 @@ fun PlayerScreen(
     mediaUri: String,
     mediaTitle: String?,
     onBack: () -> Unit,
+    restart: Boolean = false,
 ) {
     val context = LocalContext.current
     val container = remember(context) {
@@ -61,8 +62,8 @@ fun PlayerScreen(
     val activeRenderer by viewModel.activeRenderer.collectAsStateWithLifecycle()
     val uri = remember(mediaUri) { Uri.parse(mediaUri) }
 
-    LaunchedEffect(uri, mediaTitle) {
-        viewModel.openIfNeeded(uri, mediaTitle)
+    LaunchedEffect(uri, mediaTitle, restart) {
+        viewModel.openIfNeeded(uri, mediaTitle, restart)
     }
 
     var controlsVisible by remember { mutableStateOf(true) }

@@ -32,6 +32,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -126,12 +127,14 @@ fun LibraryScreen(
     onOpenSafFolder: (SafFolderEntity) -> Unit,
     onOpenNetwork: () -> Unit,
     onOpenSettings: () -> Unit,
+    initialTab: Int = 0,
+    startSearch: Boolean = false,
 ) {
     val context = LocalContext.current
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 
-    var tab by rememberSaveable { mutableIntStateOf(0) }
-    var searchActive by rememberSaveable { mutableStateOf(false) }
+    var tab by rememberSaveable(initialTab) { mutableIntStateOf(initialTab) }
+    var searchActive by rememberSaveable(startSearch) { mutableStateOf(startSearch) }
     var showSortMenu by remember { mutableStateOf(false) }
     var showOverflow by remember { mutableStateOf(false) }
     var showUrlDialog by remember { mutableStateOf(false) }
@@ -454,43 +457,19 @@ private fun LibraryContent(
                 val sections = remember(state.items, state.sortOrder) {
                     buildSections(state.items, state.sortOrder)
                 }
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(2),
+                Box(
                     modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.TopCenter,
+                ) {
+                LazyVerticalGrid(
+                    columns = GridCells.Adaptive(minSize = 176.dp),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .widthIn(max = 1040.dp),
                     contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 24.dp),
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    if (state.query.isBlank() && state.continueWatching.isNotEmpty()) {
-                        item(
-                            key = "continue-title",
-                            span = { GridItemSpan(maxLineSpan) },
-                        ) {
-                            AnimatedVisibility(
-                                visible = true,
-                                enter = fadeIn() + expandVertically(),
-                            ) {
-                                SectionTitle(stringResource(R.string.library_continue_watching))
-                            }
-                        }
-                        item(
-                            key = "continue-row",
-                            span = { GridItemSpan(maxLineSpan) },
-                        ) {
-                            LazyRow(
-                                contentPadding = PaddingValues(bottom = 4.dp),
-                                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                            ) {
-                                items(state.continueWatching, key = { it.uri }) { item ->
-                                    ContinueWatchingCard(
-                                        item = item,
-                                        onClick = { onPlay(item) },
-                                    )
-                                }
-                            }
-                        }
-                    }
-
                     item(
                         key = "filters",
                         span = { GridItemSpan(maxLineSpan) },
@@ -562,6 +541,7 @@ private fun LibraryContent(
                         }
                     }
                 }
+                }
             }
         }
     }
@@ -607,56 +587,6 @@ private fun EmptyLibraryHint() {
 }
 
 @Composable
-private fun ContinueWatchingCard(
-    item: MediaItem,
-    onClick: () -> Unit,
-) {
-    val progress by animateFloatAsState(
-        targetValue = (item.playbackPositionMs.toFloat() / item.playbackDurationMs.coerceAtLeast(1L))
-            .coerceIn(0f, 1f),
-        animationSpec = tween(durationMillis = 650),
-        label = "continueProgress",
-    )
-    Card(
-        modifier = Modifier
-            .width(220.dp)
-            .pressScaleClickable(onClick = onClick),
-    ) {
-        Column {
-            MediaThumbnail(
-                item = item,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(124.dp),
-            )
-            Column(modifier = Modifier.padding(10.dp)) {
-                Text(
-                    text = item.title,
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Medium,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                Spacer(Modifier.height(6.dp))
-                LinearProgressIndicator(
-                    progress = { progress },
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                Spacer(Modifier.height(6.dp))
-                Text(
-                    text = stringResource(
-                        R.string.library_resume_at,
-                        TimeUtils.formatDuration(item.playbackPositionMs),
-                    ),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-        }
-    }
-}
-
-@Composable
 private fun FoldersContent(
     state: LibraryUiState,
     onAddFolder: () -> Unit,
@@ -664,7 +594,15 @@ private fun FoldersContent(
     onOpenSafFolder: (SafFolderEntity) -> Unit,
     onRemoveSafFolder: (SafFolderEntity) -> Unit,
 ) {
-    LazyColumn(modifier = Modifier.fillMaxSize()) {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.TopCenter,
+    ) {
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .widthIn(max = 840.dp),
+    ) {
         item {
             Button(
                 onClick = onAddFolder,
@@ -729,6 +667,7 @@ private fun FoldersContent(
                     )
                 }
             }
+        }
         }
     }
 }

@@ -14,6 +14,14 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.navigation.compose.currentBackStackEntryAsState
+import verlintas.openvisum.ui.navigation.AppNavigationRail
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -35,6 +43,8 @@ import verlintas.openvisum.ui.library.LibraryScreen
 import verlintas.openvisum.ui.library.LibraryViewModel
 import verlintas.openvisum.ui.library.SafBrowserScreen
 import verlintas.openvisum.ui.library.SafBrowserViewModel
+import verlintas.openvisum.ui.home.HomeScreen
+import verlintas.openvisum.ui.home.HomeViewModel
 import verlintas.openvisum.ui.network.NetworkBrowserScreen
 import verlintas.openvisum.ui.network.NetworkBrowserViewModel
 import verlintas.openvisum.ui.network.NetworkScreen
@@ -79,247 +89,46 @@ class MainActivity : ComponentActivity() {
                     pendingMediaUri.update { null }
                 }
 
-                NavHost(
-                    navController = navController,
-                    startDestination = Routes.LIBRARY,
-                    enterTransition = {
-                        slideInHorizontally(
-                            animationSpec = tween(340, easing = FastOutSlowInEasing),
-                            initialOffsetX = { fullWidth -> fullWidth },
-                        )
-                    },
-                    exitTransition = { androidx.compose.animation.ExitTransition.None },
-                    popEnterTransition = { androidx.compose.animation.EnterTransition.None },
-                    popExitTransition = {
-                        slideOutHorizontally(
-                            animationSpec = tween(300, easing = FastOutSlowInEasing),
-                            targetOffsetX = { fullWidth -> fullWidth },
-                        )
-                    },
-                ) {
-                    composable(Routes.LIBRARY) {
-                        val libraryViewModel: LibraryViewModel = viewModel(
-                            factory = LibraryViewModel.factory(
-                                repository = app.container.mediaRepository,
-                                preferences = app.container.preferencesRepository,
-                            ),
-                        )
-                        LibraryScreen(
-                            viewModel = libraryViewModel,
-                            onPlayUri = { uri, title ->
-                                navController.navigate(Routes.player(uri, title))
-                            },
-                            onOpenFolder = { folder ->
-                                navController.navigate(
-                                    Routes.browseFolder(folder.folderKey, folder.folderName),
-                                )
-                            },
-                            onOpenSafFolder = { folder ->
-                                navController.navigate(Routes.safBrowser(folder.treeUri, folder.name))
-                            },
-                            onOpenNetwork = { navController.navigate(Routes.NETWORK) },
-                            onOpenSettings = { navController.navigate(Routes.SETTINGS) },
-                        )
+                BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+                    val wideLayout = maxWidth >= 840.dp
+                    val backStackEntry by navController.currentBackStackEntryAsState()
+                    val currentRoute = backStackEntry?.destination?.route
+                    val selectedRailIndex = when (currentRoute) {
+                        Routes.HOME -> 0
+                        Routes.LIBRARY_PATTERN, Routes.LIBRARY -> 1
+                        Routes.NETWORK -> 2
+                        Routes.SETTINGS -> 3
+                        else -> -1
                     }
-
-                    composable(Routes.SETTINGS) {
-                        val settingsViewModel: SettingsViewModel = viewModel(
-                            factory = SettingsViewModel.factory(
-                                context = context.applicationContext,
-                                preferences = app.container.preferencesRepository,
+                    if (wideLayout) {
+                        Row(modifier = Modifier.fillMaxSize()) {
+                            AppNavigationRail(
+                                selectedIndex = selectedRailIndex,
+                                onNavigate = { _, route ->
+                                    navController.navigate(route) {
+                                        popUpTo(Routes.HOME) { saveState = true }
+                                        launchSingleTop = true
+                                        restoreState = true
+                                    }
+                                },
+                                onOpenWebsite = {
+                                    runCatching {
+                                        context.startActivity(
+                                            android.content.Intent(
+                                                android.content.Intent.ACTION_VIEW,
+                                                android.net.Uri.parse("https://verlintas.github.io/OpenVisum/"),
+                                            ),
+                                        )
+                                    }
+                                },
                                 versionName = BuildConfig.VERSION_NAME,
-                            ),
-                        )
-                        SettingsScreen(
-                            viewModel = settingsViewModel,
-                            onBack = { navController.popBackStack() },
-                            onOpenPlayback = { navController.navigate(Routes.SETTINGS_PLAYBACK) },
-                            onOpenSubtitles = { navController.navigate(Routes.SETTINGS_SUBTITLES) },
-                            onOpenOnline = { navController.navigate(Routes.SETTINGS_ONLINE) },
-                            onOpenAppearance = { navController.navigate(Routes.SETTINGS_APPEARANCE) },
-                            onOpenAbout = { navController.navigate(Routes.SETTINGS_ABOUT) },
-                        )
-                    }
-
-                    composable(Routes.SETTINGS_PLAYBACK) {
-                        PlaybackSettingsScreen(
-                            viewModel = settingsViewModel(app),
-                            onBack = { navController.popBackStack() },
-                        )
-                    }
-
-                    composable(Routes.SETTINGS_SUBTITLES) {
-                        SubtitleSettingsScreen(
-                            viewModel = settingsViewModel(app),
-                            onBack = { navController.popBackStack() },
-                        )
-                    }
-
-                    composable(Routes.SETTINGS_ONLINE) {
-                        OnlineSubtitleSettingsScreen(
-                            viewModel = settingsViewModel(app),
-                            onBack = { navController.popBackStack() },
-                        )
-                    }
-
-                    composable(Routes.SETTINGS_APPEARANCE) {
-                        AppearanceSettingsScreen(
-                            viewModel = settingsViewModel(app),
-                            onBack = { navController.popBackStack() },
-                        )
-                    }
-
-                    composable(Routes.SETTINGS_ABOUT) {
-                        AboutSettingsScreen(
-                            viewModel = settingsViewModel(app),
-                            onBack = { navController.popBackStack() },
-                            onOpenLicenses = { navController.navigate(Routes.SETTINGS_LICENSES) },
-                            onOpenChangelog = { navController.navigate(Routes.SETTINGS_CHANGELOG) },
-                            onOpenFeedback = { navController.navigate(Routes.SETTINGS_FEEDBACK) },
-                        )
-                    }
-
-                    composable(Routes.SETTINGS_LICENSES) {
-                        LicensesScreen(
-                            onBack = { navController.popBackStack() },
-                        )
-                    }
-
-                    composable(Routes.SETTINGS_CHANGELOG) {
-                        ChangelogScreen(
-                            onBack = { navController.popBackStack() },
-                        )
-                    }
-
-                    composable(Routes.SETTINGS_FEEDBACK) {
-                        FeedbackScreen(
-                            onBack = { navController.popBackStack() },
-                        )
-                    }
-
-                    composable(Routes.NETWORK) {
-                        val networkViewModel: NetworkViewModel = viewModel(
-                            factory = NetworkViewModel.factory(app.container.networkRepository),
-                        )
-                        NetworkScreen(
-                            viewModel = networkViewModel,
-                            onPlayUri = { uri, title ->
-                                navController.navigate(Routes.player(uri, title))
-                            },
-                            onBrowseSource = { source ->
-                                navController.navigate(
-                                    Routes.networkBrowser(source.id, source.name),
-                                )
-                            },
-                            onBack = { navController.popBackStack() },
-                        )
-                    }
-
-                    composable(
-                        route = Routes.NETWORK_BROWSER_PATTERN,
-                        arguments = listOf(
-                            navArgument("sourceId") { type = NavType.LongType },
-                            navArgument("name") {
-                                type = NavType.StringType
-                                defaultValue = ""
-                            },
-                        ),
-                    ) { entry ->
-                        val sourceId = entry.arguments?.getLong("sourceId") ?: 0L
-                        val name = entry.arguments?.getString("name").orEmpty()
-                        val browserViewModel: NetworkBrowserViewModel = viewModel(
-                            factory = NetworkBrowserViewModel.factory(
-                                repository = app.container.networkRepository,
-                                sourceId = sourceId,
-                                sourceName = name,
-                            ),
-                        )
-                        NetworkBrowserScreen(
-                            viewModel = browserViewModel,
-                            onPlayUri = { uri, title ->
-                                navController.navigate(Routes.player(uri, title))
-                            },
-                            onBack = { navController.popBackStack() },
-                        )
-                    }
-
-                    composable(
-                        route = Routes.BROWSE_FOLDER_PATTERN,
-                        arguments = listOf(
-                            navArgument("folderKey") { type = NavType.StringType },
-                            navArgument("name") {
-                                type = NavType.StringType
-                                defaultValue = ""
-                            },
-                        ),
-                    ) { entry ->
-                        val folderKey = entry.arguments?.getString("folderKey").orEmpty()
-                        val name = entry.arguments?.getString("name").orEmpty()
-                        val browseViewModel: FolderBrowseViewModel = viewModel(
-                            factory = FolderBrowseViewModel.factory(
-                                repository = app.container.mediaRepository,
-                                folderKey = folderKey,
-                            ),
-                        )
-                        BrowseFolderScreen(
-                            folderName = name,
-                            viewModel = browseViewModel,
-                            onPlayUri = { uri, title ->
-                                navController.navigate(Routes.player(uri, title))
-                            },
-                            onBack = { navController.popBackStack() },
-                        )
-                    }
-
-                    composable(
-                        route = Routes.SAF_BROWSER_PATTERN,
-                        arguments = listOf(
-                            navArgument("uri") { type = NavType.StringType },
-                            navArgument("name") {
-                                type = NavType.StringType
-                                defaultValue = ""
-                            },
-                        ),
-                    ) { entry ->
-                        val treeUri = Uri.parse(entry.arguments?.getString("uri").orEmpty())
-                        val name = entry.arguments?.getString("name").orEmpty()
-                        val safViewModel: SafBrowserViewModel = viewModel(
-                            factory = SafBrowserViewModel.factory(
-                                repository = app.container.mediaRepository,
-                                rootUri = treeUri,
-                                rootName = name,
-                            ),
-                        )
-                        SafBrowserScreen(
-                            viewModel = safViewModel,
-                            onPlayUri = { uri, title ->
-                                navController.navigate(Routes.player(uri, title))
-                            },
-                            onBack = { navController.popBackStack() },
-                        )
-                    }
-
-                    composable(
-                        route = Routes.PLAYER_PATTERN,
-                        arguments = listOf(
-                            navArgument("uri") { type = NavType.StringType },
-                            navArgument("title") {
-                                type = NavType.StringType
-                                defaultValue = ""
-                            },
-                        ),
-                        enterTransition = { fadeIn(tween(250)) + scaleIn(tween(300), initialScale = 0.94f) },
-                        exitTransition = { fadeOut(tween(200)) },
-                        popEnterTransition = { fadeIn(tween(200)) },
-                        popExitTransition = { fadeOut(tween(200)) + scaleOut(tween(220), targetScale = 0.96f) },
-                    ) { entry ->
-                        val uri = entry.arguments?.getString("uri").orEmpty()
-                        val title = entry.arguments?.getString("title").orEmpty()
-                        PlayerScreen(
-                            mediaUri = uri,
-                            mediaTitle = title.ifBlank { null },
-                            onBack = { navController.popBackStack() },
-                        )
+                            )
+                            Box(modifier = Modifier.weight(1f)) {
+                                AppNavGraph(navController = navController, app = app)
+                            }
+                        }
+                    } else {
+                        AppNavGraph(navController = navController, app = app)
                     }
                 }
             }

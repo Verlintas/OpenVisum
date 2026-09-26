@@ -225,4 +225,23 @@
     <string name="feedback_open_issue">在 GitHub 提交 Issue</string>
     <string name="feedback_issue_hint">GitHub Issue 需要登录账号；邮件无需登录即可发送。</string>
     <string name="feedback_no_email_app">未找到可用的邮件应用</string>
+    <string name="nav_home">首页</string>
+    <string name="drawer_open">打开菜单</string>
+    <string name="drawer_shortcuts">快捷入口</string>
+    <string name="home_recent">最近添加</string>
+    <string name="home_favorites">我的收藏</string>
+    <string name="home_see_all">查看全部</string>
+    <string name="home_locations">位置</string>
+    <string name="home_saf_folder">已授权文件夹</string>
+    <string name="home_network_count">%1$d 个网络位置</string>
+    <string name="home_overview">媒体库概览</string>
+    <string name="home_stats_videos">视频</string>
+    <string name="home_stats_size">占用存储</string>
+    <string name="home_stats_folders">文件夹</string>
+    <string name="home_open_library">打开媒体库</string>
+    <string name="home_empty">这里还什么都没有，先添加一些视频吧。</string>
+    <string name="home_restart">从头播放</string>
+    <string name="home_resume_button">继续观看 · %1$s</string>
+    <string name="home_from_folder">来自 %1$s</string>
+    <string name="home_now_playing">为你推荐</string>
 </resources>

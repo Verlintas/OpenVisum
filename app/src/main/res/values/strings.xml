@@ -227,4 +227,23 @@
     <string name="feedback_open_issue">Open GitHub issue</string>
     <string name="feedback_issue_hint">GitHub issue requires an account; email works without signing in.</string>
     <string name="feedback_no_email_app">No email app found on this device</string>
+    <string name="nav_home">Home</string>
+    <string name="drawer_open">Open menu</string>
+    <string name="drawer_shortcuts">Shortcuts</string>
+    <string name="home_recent">Recently added</string>
+    <string name="home_favorites">Favorites</string>
+    <string name="home_see_all">See all</string>
+    <string name="home_locations">Places</string>
+    <string name="home_saf_folder">Authorized folder</string>
+    <string name="home_network_count">%1$d location(s)</string>
+    <string name="home_overview">Library overview</string>
+    <string name="home_stats_videos">Videos</string>
+    <string name="home_stats_size">Storage</string>
+    <string name="home_stats_folders">Folders</string>
+    <string name="home_open_library">Open library</string>
+    <string name="home_empty">Nothing here yet — add some videos to get started.</string>
+    <string name="home_restart">Restart</string>
+    <string name="home_resume_button">Resume · %1$s</string>
+    <string name="home_from_folder">From %1$s</string>
+    <string name="home_now_playing">Featured</string>
 </resources>

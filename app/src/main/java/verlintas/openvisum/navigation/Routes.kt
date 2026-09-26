@@ -4,11 +4,15 @@ import android.net.Uri
 
 object Routes {
 
+    const val HOME = "home"
+
     const val LIBRARY = "library"
 
-    const val HOME = LIBRARY
+    const val LIBRARY_PATTERN = "library?tab={tab}&search={search}"
 
-    const val PLAYER_PATTERN = "player?uri={uri}&title={title}"
+    const val HOME_LEGACY = "home_legacy"
+
+    const val PLAYER_PATTERN = "player?uri={uri}&title={title}&restart={restart}"
 
     const val BROWSE_FOLDER_PATTERN = "browse?folderKey={folderKey}&name={name}"
 
@@ -36,11 +40,14 @@ object Routes {
 
     const val NETWORK_BROWSER_PATTERN = "network_browser?sourceId={sourceId}&name={name}"
 
-    fun player(uri: String, title: String? = null): String {
+    fun player(uri: String, title: String? = null, restart: Boolean = false): String {
         val encodedUri = Uri.encode(uri)
         val encodedTitle = Uri.encode(title.orEmpty())
-        return "player?uri=$encodedUri&title=$encodedTitle"
+        return "player?uri=$encodedUri&title=$encodedTitle&restart=$restart"
     }
+
+    fun library(tab: Int = 0, search: Boolean = false): String =
+        "library?tab=$tab&search=$search"
 
     fun browseFolder(folderKey: String, name: String): String =
         "browse?folderKey=${Uri.encode(folderKey)}&name=${Uri.encode(name)}"

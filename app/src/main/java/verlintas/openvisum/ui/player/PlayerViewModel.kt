@@ -111,8 +111,8 @@ class PlayerViewModel(
         }
     }
 
-    fun openIfNeeded(uri: Uri, title: String?) {
-        if (openedUri == uri) return
+    fun openIfNeeded(uri: Uri, title: String?, restart: Boolean = false) {
+        if (openedUri == uri && !restart) return
         openedUri = uri
         viewModelScope.launch {
             val settings = preferences.settings.first()
@@ -135,7 +135,7 @@ class PlayerViewModel(
                 }
             }
             engine.setMedia(uri, resolvedTitle, options)
-            val resumePosition = if (settings.rememberPlaybackPosition) {
+            val resumePosition = if (settings.rememberPlaybackPosition && !restart) {
                 item?.resumePositionMs ?: 0L
             } else {
                 0L

@@ -73,10 +73,15 @@ fun MediaGridCard(
                 .clip(RoundedCornerShape(18.dp))
                 .background(MaterialTheme.colorScheme.surfaceContainerHighest),
         ) {
+            val frame = if (item.durationMs > 0L) {
+                (item.durationMs / 4).coerceIn(5_000L, 120_000L)
+            } else {
+                5_000L
+            }
             SubcomposeAsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
                     .data(item.uri)
-                    .videoFrameMillis(3_000)
+                    .videoFrameMillis(frame)
                     .crossfade(true)
                     .build(),
                 contentDescription = null,

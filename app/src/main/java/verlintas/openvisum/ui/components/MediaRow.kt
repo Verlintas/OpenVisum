@@ -129,11 +129,17 @@ fun MediaRow(
 fun MediaThumbnail(
     item: MediaItem,
     modifier: Modifier = Modifier,
+    frameMillis: Long? = null,
 ) {
+    val frame = frameMillis ?: if (item.durationMs > 0L) {
+        (item.durationMs / 4).coerceIn(5_000L, 120_000L)
+    } else {
+        5_000L
+    }
     SubcomposeAsyncImage(
         model = ImageRequest.Builder(LocalContext.current)
             .data(item.uri)
-            .videoFrameMillis(3_000)
+            .videoFrameMillis(frame)
             .crossfade(true)
             .build(),
         contentDescription = null,
