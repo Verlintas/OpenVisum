@@ -60,12 +60,18 @@ class PlayerViewModel(
     private var lastPosition = -1L
     private var lastPositionChangedAt = 0L
     private var lastRecoveryAt = 0L
+    private var rememberPosition = true
 
     init {
         viewModelScope.launch {
+            preferences.settings.collect { settings ->
+                rememberPosition = settings.rememberPlaybackPosition
+            }
+        }
+        viewModelScope.launch {
             engine.state.collect { playbackState ->
                 val uri = playbackState.mediaUri ?: return@collect
-                if (playbackState.positionMs <= 0L) return@collect
+                if (playbackState.positionMs <= 0L || !rememberPosition) return@collect
                 val now = SystemClock.elapsedRealtime()
                 val shouldSave = now - lastSavedAt >= SAVE_INTERVAL_MS ||
                     (!playbackState.isPlaying && playbackState.positionMs != playbackState.durationMs)
@@ -129,11 +135,18 @@ class PlayerViewModel(
                 }
             }
             engine.setMedia(uri, resolvedTitle, options)
-            val resumePosition = item?.resumePositionMs ?: 0L
+            val resumePosition = if (settings.rememberPlaybackPosition) {
+                item?.resumePositionMs ?: 0L
+            } else {
+                0L
+            }
             if (resumePosition > 0L) {
                 engine.seekTo(resumePosition)
             }
             engine.play()
+            if (settings.defaultPlaybackRate != 1.0f) {
+                engine.setRate(settings.defaultPlaybackRate)
+            }
             if (uri.scheme == "http" || uri.scheme == "https" || uri.scheme == "smb") {
                 runCatching { networkRepository.rememberStream(uri.toString(), resolvedTitle) }
             }
@@ -262,6 +275,7 @@ class PlayerViewModel(
         }.distinct().joinToString(",").ifBlank { "en" }
 
     fun saveProgressNow() {
+        if (!rememberPosition) return
         val playbackState = engine.state.value
         val uri = playbackState.mediaUri ?: return
         if (playbackState.positionMs <= 0L) return

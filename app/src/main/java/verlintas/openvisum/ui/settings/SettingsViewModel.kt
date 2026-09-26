@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import verlintas.openvisum.AppLocale
 import verlintas.openvisum.core.data.prefs.AppSettings
 import verlintas.openvisum.core.data.prefs.PreferencesRepository
 
@@ -17,6 +18,7 @@ data class SettingsUiState(
 )
 
 class SettingsViewModel(
+    private val context: android.content.Context,
     private val preferences: PreferencesRepository,
     private val versionName: String,
 ) : ViewModel() {
@@ -49,6 +51,23 @@ class SettingsViewModel(
         viewModelScope.launch { preferences.setThemeColor(id) }
     }
 
+    fun setAppLanguage(tag: String) {
+        viewModelScope.launch { preferences.setAppLanguage(tag) }
+        runCatching { AppLocale.apply(context, tag) }
+    }
+
+    fun setDefaultPlaybackRate(rate: Float) {
+        viewModelScope.launch { preferences.setDefaultPlaybackRate(rate) }
+    }
+
+    fun setRememberPlaybackPosition(enabled: Boolean) {
+        viewModelScope.launch { preferences.setRememberPlaybackPosition(enabled) }
+    }
+
+    fun setSubtitleStyleDefaults(scale: Float, bold: Boolean, color: Int?) {
+        viewModelScope.launch { preferences.setSubtitleStyle(scale, bold, color) }
+    }
+
     fun setPreferredSubtitleLanguages(raw: String) {
         viewModelScope.launch {
             preferences.setPreferredSubtitleLanguages(parseLanguages(raw))
@@ -75,12 +94,13 @@ class SettingsViewModel(
 
     companion object {
         fun factory(
+            context: android.content.Context,
             preferences: PreferencesRepository,
             versionName: String,
         ): ViewModelProvider.Factory = object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                return SettingsViewModel(preferences, versionName) as T
+                return SettingsViewModel(context, preferences, versionName) as T
             }
         }
     }

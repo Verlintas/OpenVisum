@@ -197,4 +197,13 @@
     <string name="licenses_title">Open-source licenses</string>
     <string name="licenses_intro">OpenVisum is built on the following open-source projects:</string>
     <string name="licenses_footer">Tap an entry to open the project page.</string>
+    <string name="settings_group_language">Language</string>
+    <string name="settings_language_system">System default</string>
+    <string name="settings_language_zh_cn">简体中文</string>
+    <string name="settings_language_zh_tw">繁體中文</string>
+    <string name="settings_language_en">English</string>
+    <string name="settings_default_speed">Default playback speed</string>
+    <string name="settings_remember_position">Remember playback position</string>
+    <string name="settings_remember_position_hint">Resume where you left off next time</string>
+    <string name="settings_group_subtitle_style">Default subtitle style</string>
 </resources>

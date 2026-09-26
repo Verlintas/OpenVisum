@@ -31,6 +31,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.ClosedCaption
 import androidx.compose.material.icons.filled.Memory
 import androidx.compose.material.icons.filled.Subtitles
@@ -41,6 +43,9 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Slider
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -132,6 +137,7 @@ fun PlaybackSettingsScreen(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val settings = state.settings
+    var showSpeedDialog by remember { mutableStateOf(false) }
 
     SettingsPage(
         title = stringResource(R.string.settings_section_playback),
@@ -153,7 +159,60 @@ fun PlaybackSettingsScreen(
                 checked = settings.disableDirectRendering,
                 onCheckedChange = viewModel::setDisableDirectRendering,
             )
+            SettingsGroupDivider()
+            SettingsValueRow(
+                icon = Icons.Filled.Speed,
+                title = stringResource(R.string.settings_default_speed),
+                value = "%.2fx".format(settings.defaultPlaybackRate),
+                onClick = { showSpeedDialog = true },
+            )
+            SettingsGroupDivider()
+            SettingsToggleRow(
+                icon = Icons.Filled.History,
+                title = stringResource(R.string.settings_remember_position),
+                subtitle = stringResource(R.string.settings_remember_position_hint),
+                checked = settings.rememberPlaybackPosition,
+                onCheckedChange = viewModel::setRememberPlaybackPosition,
+            )
         }
+    }
+
+    if (showSpeedDialog) {
+        val rates = listOf(0.5f, 0.75f, 1.0f, 1.25f, 1.5f, 2.0f)
+        AlertDialog(
+            onDismissRequest = { showSpeedDialog = false },
+            title = { Text(stringResource(R.string.settings_default_speed)) },
+            text = {
+                Column {
+                    rates.forEach { rate ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    viewModel.setDefaultPlaybackRate(rate)
+                                    showSpeedDialog = false
+                                }
+                                .padding(vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                text = "%.2fx".format(rate),
+                                style = MaterialTheme.typography.bodyLarge,
+                                modifier = Modifier.weight(1f),
+                            )
+                            if (rate == settings.defaultPlaybackRate) {
+                                Icon(Icons.Filled.Check, contentDescription = null)
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showSpeedDialog = false }) {
+                    Text(stringResource(R.string.common_cancel))
+                }
+            },
+        )
     }
 }
 
@@ -197,6 +256,15 @@ fun SubtitleSettingsScreen(
             )
         }
         SettingsHintText(stringResource(R.string.settings_language_hint))
+        SettingsGroupLabel(stringResource(R.string.settings_group_subtitle_style))
+        SettingsGroup(modifier = Modifier.staggeredEntrance(index = 2)) {
+            SubtitleStyleDefaults(
+                scale = settings.subtitleScale,
+                bold = settings.subtitleBold,
+                color = settings.subtitleColor,
+                onStyleChange = viewModel::setSubtitleStyleDefaults,
+            )
+        }
     }
 
     if (editingSubtitleLanguages) {
@@ -331,6 +399,83 @@ fun AppearanceSettingsScreen(
                 onSelect = viewModel::setThemeColor,
             )
         }
+
+        SettingsGroupLabel(stringResource(R.string.settings_group_language))
+        SettingsGroup(modifier = Modifier.staggeredEntrance(index = 2)) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    LanguageChip(
+                        label = stringResource(R.string.settings_language_system),
+                        tag = "system",
+                        current = settings.appLanguage,
+                        onSelect = viewModel::setAppLanguage,
+                        modifier = Modifier.weight(1f),
+                    )
+                    LanguageChip(
+                        label = stringResource(R.string.settings_language_zh_cn),
+                        tag = "zh-CN",
+                        current = settings.appLanguage,
+                        onSelect = viewModel::setAppLanguage,
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    LanguageChip(
+                        label = stringResource(R.string.settings_language_zh_tw),
+                        tag = "zh-TW",
+                        current = settings.appLanguage,
+                        onSelect = viewModel::setAppLanguage,
+                        modifier = Modifier.weight(1f),
+                    )
+                    LanguageChip(
+                        label = stringResource(R.string.settings_language_en),
+                        tag = "en",
+                        current = settings.appLanguage,
+                        onSelect = viewModel::setAppLanguage,
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun LanguageChip(
+    label: String,
+    tag: String,
+    current: String,
+    onSelect: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val selected = current == tag
+    Surface(
+        modifier = modifier
+            .clip(MaterialTheme.shapes.medium)
+            .pressScaleClickable { onSelect(tag) },
+        shape = MaterialTheme.shapes.medium,
+        color = if (selected) {
+            MaterialTheme.colorScheme.primaryContainer
+        } else {
+            MaterialTheme.colorScheme.surfaceContainerHighest
+        },
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelLarge,
+            color = if (selected) {
+                MaterialTheme.colorScheme.onPrimaryContainer
+            } else {
+                MaterialTheme.colorScheme.onSurfaceVariant
+            },
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 10.dp),
+        )
     }
 }
 
@@ -493,4 +638,79 @@ private fun LanguageDialog(
             }
         },
     )
+}
+
+@Composable
+private fun SubtitleStyleDefaults(
+    scale: Float,
+    bold: Boolean,
+    color: Int?,
+    onStyleChange: (Float, Boolean, Int?) -> Unit,
+) {
+    var localScale by remember(scale) { mutableStateOf(scale) }
+
+    Column(modifier = Modifier.padding(16.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Text(
+                text = stringResource(R.string.player_subtitle_scale),
+                style = MaterialTheme.typography.bodyLarge,
+            )
+            Text(
+                text = "%.1fx".format(localScale),
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.primary,
+            )
+        }
+        Slider(
+            value = localScale,
+            onValueChange = { localScale = it },
+            onValueChangeFinished = { onStyleChange(localScale, bold, color) },
+            valueRange = 0.5f..2.5f,
+        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = stringResource(R.string.player_subtitle_bold),
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.weight(1f),
+            )
+            Switch(
+                checked = bold,
+                onCheckedChange = { onStyleChange(localScale, it, color) },
+            )
+        }
+        Spacer(Modifier.height(8.dp))
+        Text(
+            text = stringResource(R.string.player_subtitle_color),
+            style = MaterialTheme.typography.bodyLarge,
+        )
+        Spacer(Modifier.height(6.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FilterChip(
+                selected = color == null,
+                onClick = { onStyleChange(localScale, bold, null) },
+                label = { Text(stringResource(R.string.subtitle_color_default)) },
+            )
+            FilterChip(
+                selected = color == 0xFFFF00,
+                onClick = { onStyleChange(localScale, bold, 0xFFFF00) },
+                label = { Text(stringResource(R.string.subtitle_color_yellow)) },
+            )
+            FilterChip(
+                selected = color == 0x00FFFF,
+                onClick = { onStyleChange(localScale, bold, 0x00FFFF) },
+                label = { Text(stringResource(R.string.subtitle_color_cyan)) },
+            )
+            FilterChip(
+                selected = color == 0x00FF00,
+                onClick = { onStyleChange(localScale, bold, 0x00FF00) },
+                label = { Text(stringResource(R.string.subtitle_color_green)) },
+            )
+        }
+    }
 }

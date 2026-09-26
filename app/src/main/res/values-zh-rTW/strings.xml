@@ -195,4 +195,13 @@
     <string name="licenses_title">開源授權</string>
     <string name="licenses_intro">OpenVisum 建構於以下開源專案之上：</string>
     <string name="licenses_footer">點擊項目可開啟專案首頁。</string>
+    <string name="settings_group_language">語言</string>
+    <string name="settings_language_system">跟隨系統</string>
+    <string name="settings_language_zh_cn">简体中文</string>
+    <string name="settings_language_zh_tw">繁體中文</string>
+    <string name="settings_language_en">English</string>
+    <string name="settings_default_speed">預設播放倍速</string>
+    <string name="settings_remember_position">記憶播放位置</string>
+    <string name="settings_remember_position_hint">下次開啟時接續上次進度</string>
+    <string name="settings_group_subtitle_style">預設字幕樣式</string>
 </resources>

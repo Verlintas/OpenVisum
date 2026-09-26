@@ -123,6 +123,7 @@ class MainActivity : ComponentActivity() {
                     composable(Routes.SETTINGS) {
                         val settingsViewModel: SettingsViewModel = viewModel(
                             factory = SettingsViewModel.factory(
+                                context = context.applicationContext,
                                 preferences = app.container.preferencesRepository,
                                 versionName = BuildConfig.VERSION_NAME,
                             ),
@@ -319,6 +320,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 private fun settingsViewModel(app: OpenVisumApp): SettingsViewModel = viewModel(
     factory = SettingsViewModel.factory(
+        context = LocalContext.current.applicationContext,
         preferences = app.container.preferencesRepository,
         versionName = BuildConfig.VERSION_NAME,
     ),
