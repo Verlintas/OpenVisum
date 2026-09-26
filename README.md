@@ -7,8 +7,8 @@ An open-source Android video player powered by libVLC. Plays virtually any forma
 <p align="center">
   <img src="docs/screenshots/library.png" width="24%" alt="Library" />
   <img src="docs/screenshots/player.png" width="24%" alt="Player with subtitles" />
+  <img src="docs/screenshots/appearance.png" width="24%" alt="Theme colors" />
   <img src="docs/screenshots/settings.png" width="24%" alt="Settings" />
-  <img src="docs/screenshots/network.png" width="24%" alt="Network" />
 </p>
 
 ## 特性 Features
@@ -41,7 +41,8 @@ An open-source Android video player powered by libVLC. Plays virtually any forma
 - HTTP / HTTPS / HLS (m3u8) 直链播放与历史记录
 
 **界面**
-- Material 3，动态取色，深色模式
+- Material 3 + 官方色彩算法生成的 **9 种主题色**（品牌蓝/青碧/松绿/琥珀/玫瑰/紫罗兰/绯红/石墨 + 跟随系统动态取色），明暗双色板
+- 大标题折叠主页、双列网格、分组式设置、播放器玻璃质感控件、全套过渡动画
 - 简体中文 / 繁體中文 / English
 - 无 GMS 依赖，适配各大厂商定制 Android 系统
 

@@ -29,6 +29,7 @@ import androidx.compose.material.icons.filled.Subtitles
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -39,6 +40,7 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -100,7 +102,13 @@ fun NetworkScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 16.dp),
         ) {
-            Card(modifier = Modifier.fillMaxWidth()) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = MaterialTheme.shapes.large,
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                ),
+            ) {
                 Column(modifier = Modifier.padding(12.dp)) {
                     OutlinedTextField(
                         value = url,
@@ -152,8 +160,14 @@ fun NetworkScreen(
                     modifier = Modifier.padding(vertical = 8.dp),
                 )
             } else {
-                state.sources.forEach { source ->
-                    ListItem(
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = MaterialTheme.shapes.large,
+                    color = MaterialTheme.colorScheme.surfaceContainerLow,
+                ) {
+                    Column {
+                        state.sources.forEach { source ->
+                            ListItem(
                         headlineContent = { Text(source.name) },
                         supportingContent = {
                             Text(
@@ -176,8 +190,10 @@ fun NetworkScreen(
                                 )
                             }
                         },
-                        modifier = Modifier.clickableItem { onBrowseSource(source) },
-                    )
+                                modifier = Modifier.clickableItem { onBrowseSource(source) },
+                            )
+                        }
+                    }
                 }
             }
 
@@ -188,8 +204,14 @@ fun NetworkScreen(
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
                 )
-                state.history.forEach { item ->
-                    ListItem(
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = MaterialTheme.shapes.large,
+                    color = MaterialTheme.colorScheme.surfaceContainerLow,
+                ) {
+                    Column {
+                        state.history.forEach { item ->
+                            ListItem(
                         headlineContent = {
                             Text(
                                 text = item.title ?: item.url,
@@ -217,8 +239,10 @@ fun NetworkScreen(
                                 )
                             }
                         },
-                        modifier = Modifier.clickableItem { onPlayUri(item.url, item.title) },
-                    )
+                                modifier = Modifier.clickableItem { onPlayUri(item.url, item.title) },
+                            )
+                        }
+                    }
                 }
             }
             Spacer(Modifier.height(24.dp))

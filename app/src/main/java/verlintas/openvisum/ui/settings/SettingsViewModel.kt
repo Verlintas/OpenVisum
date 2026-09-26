@@ -45,6 +45,10 @@ class SettingsViewModel(
         viewModelScope.launch { preferences.setThemeMode(mode) }
     }
 
+    fun setThemeColor(id: String) {
+        viewModelScope.launch { preferences.setThemeColor(id) }
+    }
+
     fun setPreferredSubtitleLanguages(raw: String) {
         viewModelScope.launch {
             preferences.setPreferredSubtitleLanguages(parseLanguages(raw))

@@ -58,6 +58,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -71,6 +72,8 @@ import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -81,6 +84,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -121,6 +125,9 @@ fun LibraryScreen(
     var showUrlDialog by remember { mutableStateOf(false) }
     var folderToRemove by remember { mutableStateOf<SafFolderEntity?>(null) }
     var hasPermission by remember { mutableStateOf(hasMediaPermission(context)) }
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(
+        rememberTopAppBarState(),
+    )
 
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
@@ -150,41 +157,38 @@ fun LibraryScreen(
     }
 
     Scaffold(
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            TopAppBar(
-                title = {
-                    AnimatedContent(
-                        targetState = searchActive,
-                        transitionSpec = {
-                            (fadeIn() + expandVertically()).togetherWith(fadeOut())
-                        },
-                        label = "libraryTitle",
-                    ) { searching ->
-                        if (searching) {
-                            OutlinedTextField(
-                                value = state.query,
-                                onValueChange = viewModel::setQuery,
-                                singleLine = true,
-                                placeholder = { Text(stringResource(R.string.library_search_hint)) },
-                                modifier = Modifier.fillMaxWidth(),
-                            )
-                        } else {
-                            Text(
-                                text = stringResource(R.string.app_name),
-                                fontWeight = FontWeight.SemiBold,
-                            )
-                        }
-                    }
-                },
-                actions = {
-                    if (searchActive) {
+            if (searchActive) {
+                TopAppBar(
+                    title = {
+                        OutlinedTextField(
+                            value = state.query,
+                            onValueChange = viewModel::setQuery,
+                            singleLine = true,
+                            placeholder = { Text(stringResource(R.string.library_search_hint)) },
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                    },
+                    navigationIcon = {
                         IconButton(onClick = {
                             searchActive = false
                             viewModel.setQuery("")
                         }) {
                             Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.common_cancel))
                         }
-                    } else {
+                    },
+                )
+            } else {
+                LargeTopAppBar(
+                    title = {
+                        Text(
+                            text = stringResource(R.string.app_name),
+                            fontWeight = FontWeight.Bold,
+                        )
+                    },
+                    scrollBehavior = scrollBehavior,
+                    actions = {
                         IconButton(onClick = onOpenNetwork) {
                             Icon(Icons.Filled.Cloud, contentDescription = stringResource(R.string.network_title))
                         }
@@ -259,9 +263,9 @@ fun LibraryScreen(
                                 )
                             }
                         }
-                    }
-                },
-            )
+                    },
+                )
+            }
         },
     ) { padding ->
         Column(

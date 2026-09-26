@@ -37,6 +37,7 @@ data class AppSettings(
     val openSubtitlesUsername: String? = null,
     val openSubtitlesPassword: String? = null,
     val themeMode: Int = THEME_SYSTEM,
+    val themeColor: String = "brand",
 ) {
     companion object {
         const val THEME_SYSTEM = 0
@@ -75,6 +76,7 @@ class PreferencesRepository(
         val OPEN_SUBTITLES_USERNAME = stringPreferencesKey("opensubtitles_username")
         val OPEN_SUBTITLES_PASSWORD = stringPreferencesKey("opensubtitles_password")
         val THEME_MODE = intPreferencesKey("theme_mode")
+        val THEME_COLOR = stringPreferencesKey("theme_color")
     }
 
     val settings: Flow<AppSettings> = context.dataStore.data
@@ -101,6 +103,7 @@ class PreferencesRepository(
                 openSubtitlesUsername = preferences[Keys.OPEN_SUBTITLES_USERNAME],
                 openSubtitlesPassword = preferences[Keys.OPEN_SUBTITLES_PASSWORD]?.let(cipher::decrypt),
                 themeMode = preferences[Keys.THEME_MODE] ?: AppSettings.THEME_SYSTEM,
+                themeColor = preferences[Keys.THEME_COLOR] ?: "brand",
             )
         }
 
@@ -153,5 +156,9 @@ class PreferencesRepository(
 
     suspend fun setThemeMode(mode: Int) {
         context.dataStore.edit { it[Keys.THEME_MODE] = mode }
+    }
+
+    suspend fun setThemeColor(id: String) {
+        context.dataStore.edit { it[Keys.THEME_COLOR] = id }
     }
 }

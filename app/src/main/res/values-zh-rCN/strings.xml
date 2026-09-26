@@ -160,4 +160,16 @@
     <string name="settings_disable_direct_rendering">兼容模式（禁用直通渲染）</string>
     <string name="settings_disable_direct_rendering_hint">如果拖动进度条出现黑屏/花屏，请开启此项</string>
     <string name="settings_about_github">GitHub 项目主页</string>
+    <string name="theme_color_dynamic">跟随系统</string>
+    <string name="theme_color_brand">品牌蓝</string>
+    <string name="theme_color_teal">青碧</string>
+    <string name="theme_color_green">松绿</string>
+    <string name="theme_color_amber">琥珀</string>
+    <string name="theme_color_rose">玫瑰</string>
+    <string name="theme_color_violet">紫罗兰</string>
+    <string name="theme_color_crimson">绯红</string>
+    <string name="theme_color_slate">石墨</string>
+    <string name="settings_theme_mode">主题模式</string>
+    <string name="settings_theme_color">主题颜色</string>
+    <string name="settings_group_languages">语言</string>
 </resources>

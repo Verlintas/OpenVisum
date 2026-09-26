@@ -24,6 +24,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
+import verlintas.openvisum.core.data.prefs.AppSettings
 import verlintas.openvisum.navigation.Routes
 import verlintas.openvisum.ui.library.BrowseFolderScreen
 import verlintas.openvisum.ui.library.FolderBrowseViewModel
@@ -55,10 +56,15 @@ class MainActivity : ComponentActivity() {
         pendingMediaUri.value = intent?.data
 
         setContent {
-            OpenVisumTheme {
+            val app = LocalContext.current.applicationContext as OpenVisumApp
+            val appSettings by app.container.preferencesRepository.settings
+                .collectAsStateWithLifecycle(initialValue = AppSettings())
+            OpenVisumTheme(
+                themeMode = appSettings.themeMode,
+                themeColorId = appSettings.themeColor,
+            ) {
                 val navController = rememberNavController()
                 val context = LocalContext.current
-                val app = context.applicationContext as OpenVisumApp
                 val pendingUri by pendingMediaUri.collectAsStateWithLifecycle()
 
                 LaunchedEffect(pendingUri) {

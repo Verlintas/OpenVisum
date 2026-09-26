@@ -162,4 +162,16 @@
     <string name="settings_disable_direct_rendering">Compatibility mode (no direct rendering)</string>
     <string name="settings_disable_direct_rendering_hint">Enable if seeking causes a black screen on your device</string>
     <string name="settings_about_github">GitHub repository</string>
+    <string name="theme_color_dynamic">Dynamic</string>
+    <string name="theme_color_brand">Brand</string>
+    <string name="theme_color_teal">Teal</string>
+    <string name="theme_color_green">Green</string>
+    <string name="theme_color_amber">Amber</string>
+    <string name="theme_color_rose">Rose</string>
+    <string name="theme_color_violet">Violet</string>
+    <string name="theme_color_crimson">Crimson</string>
+    <string name="theme_color_slate">Slate</string>
+    <string name="settings_theme_mode">Theme mode</string>
+    <string name="settings_theme_color">Theme color</string>
+    <string name="settings_group_languages">Languages</string>
 </resources>

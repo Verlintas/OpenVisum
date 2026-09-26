@@ -8,6 +8,7 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,6 +20,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AspectRatio
@@ -34,9 +36,12 @@ import androidx.compose.material.icons.filled.ScreenRotation
 import androidx.compose.material.icons.filled.Subtitles
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -57,6 +62,7 @@ import verlintas.openvisum.R
 import verlintas.openvisum.core.common.util.TimeUtils
 import verlintas.openvisum.core.player.model.PlaybackState
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PlayerControls(
     state: PlaybackState,
@@ -123,30 +129,44 @@ fun PlayerControls(
             if (state.videoWidth > 0 && state.videoHeight > 0) {
                 Text(
                     text = "${state.videoWidth}×${state.videoHeight}",
-                    color = Color.White.copy(alpha = 0.8f),
-                    style = MaterialTheme.typography.labelMedium,
-                    modifier = Modifier.padding(end = 12.dp),
+                    color = Color.White.copy(alpha = 0.9f),
+                    style = MaterialTheme.typography.labelSmall,
+                    modifier = Modifier
+                        .padding(end = 12.dp)
+                        .background(Color.White.copy(alpha = 0.12f), RoundedCornerShape(8.dp))
+                        .padding(horizontal = 8.dp, vertical = 3.dp),
                 )
             }
         }
 
         Row(
             modifier = Modifier.align(Alignment.Center),
-            horizontalArrangement = Arrangement.spacedBy(28.dp),
+            horizontalArrangement = Arrangement.spacedBy(24.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            IconButton(onClick = { onSeekBy(-10_000L) }) {
+            Box(
+                modifier = Modifier
+                    .size(52.dp)
+                    .clip(CircleShape)
+                    .background(Color.White.copy(alpha = 0.1f))
+                    .clickable { onSeekBy(-10_000L) },
+                contentAlignment = Alignment.Center,
+            ) {
                 Icon(
                     imageVector = Icons.Filled.Replay10,
                     contentDescription = stringResource(R.string.player_back_10s),
                     tint = Color.White,
-                    modifier = Modifier.size(36.dp),
+                    modifier = Modifier.size(30.dp),
                 )
             }
             FilledIconButton(
                 onClick = onTogglePlayPause,
+                colors = IconButtonDefaults.filledIconButtonColors(
+                    containerColor = Color.White.copy(alpha = 0.94f),
+                    contentColor = Color(0xFF101014),
+                ),
                 modifier = Modifier
-                    .size(72.dp)
+                    .size(80.dp)
                     .clip(CircleShape),
             ) {
                 AnimatedContent(
@@ -163,16 +183,23 @@ fun PlayerControls(
                         contentDescription = stringResource(
                             if (playing) R.string.player_pause else R.string.player_play,
                         ),
-                        modifier = Modifier.size(40.dp),
+                        modifier = Modifier.size(44.dp),
                     )
                 }
             }
-            IconButton(onClick = { onSeekBy(10_000L) }) {
+            Box(
+                modifier = Modifier
+                    .size(52.dp)
+                    .clip(CircleShape)
+                    .background(Color.White.copy(alpha = 0.1f))
+                    .clickable { onSeekBy(10_000L) },
+                contentAlignment = Alignment.Center,
+            ) {
                 Icon(
                     imageVector = Icons.Filled.Forward10,
                     contentDescription = stringResource(R.string.player_forward_10s),
                     tint = Color.White,
-                    modifier = Modifier.size(36.dp),
+                    modifier = Modifier.size(30.dp),
                 )
             }
         }
@@ -195,6 +222,19 @@ fun PlayerControls(
                     sliderPosition = -1f
                 },
                 valueRange = 0f..duration.toFloat(),
+                colors = SliderDefaults.colors(
+                    thumbColor = Color.White,
+                    activeTrackColor = Color.White,
+                    inactiveTrackColor = Color.White.copy(alpha = 0.24f),
+                ),
+                thumb = {
+                    Box(
+                        modifier = Modifier
+                            .size(18.dp)
+                            .clip(CircleShape)
+                            .background(Color.White),
+                    )
+                },
             )
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -203,7 +243,9 @@ fun PlayerControls(
                 Text(
                     text = TimeUtils.formatDuration(displayedPosition),
                     color = Color.White,
-                    style = MaterialTheme.typography.labelMedium,
+                    style = MaterialTheme.typography.labelMedium.copy(
+                        fontFeatureSettings = "tnum",
+                    ),
                 )
                 if (state.isBuffering) {
                     Text(
@@ -214,8 +256,10 @@ fun PlayerControls(
                 }
                 Text(
                     text = TimeUtils.formatDuration(state.durationMs),
-                    color = Color.White,
-                    style = MaterialTheme.typography.labelMedium,
+                    color = Color.White.copy(alpha = 0.85f),
+                    style = MaterialTheme.typography.labelMedium.copy(
+                        fontFeatureSettings = "tnum",
+                    ),
                 )
             }
             Row(
@@ -284,12 +328,23 @@ private fun ControlButton(
     onClick: () -> Unit,
 ) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        IconButton(onClick = onClick) { icon() }
+        Box(
+            modifier = Modifier
+                .size(42.dp)
+                .clip(CircleShape)
+                .background(Color.White.copy(alpha = 0.1f))
+                .clickable(onClick = onClick),
+            contentAlignment = Alignment.Center,
+        ) {
+            icon()
+        }
+        Spacer(Modifier.size(4.dp))
         Text(
             text = label,
             color = Color.White.copy(alpha = 0.85f),
             style = MaterialTheme.typography.labelSmall,
             fontWeight = FontWeight.Medium,
+            maxLines = 1,
         )
     }
 }

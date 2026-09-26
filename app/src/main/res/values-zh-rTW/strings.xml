@@ -160,4 +160,16 @@
     <string name="settings_disable_direct_rendering">相容模式（停用直通渲染）</string>
     <string name="settings_disable_direct_rendering_hint">如果拖動進度條出現黑屏/花屏，請開啟此項</string>
     <string name="settings_about_github">GitHub 專案首頁</string>
+    <string name="theme_color_dynamic">跟隨系統</string>
+    <string name="theme_color_brand">品牌藍</string>
+    <string name="theme_color_teal">青碧</string>
+    <string name="theme_color_green">松綠</string>
+    <string name="theme_color_amber">琥珀</string>
+    <string name="theme_color_rose">玫瑰</string>
+    <string name="theme_color_violet">紫羅蘭</string>
+    <string name="theme_color_crimson">緋紅</string>
+    <string name="theme_color_slate">石墨</string>
+    <string name="settings_theme_mode">主題模式</string>
+    <string name="settings_theme_color">主題顏色</string>
+    <string name="settings_group_languages">語言</string>
 </resources>

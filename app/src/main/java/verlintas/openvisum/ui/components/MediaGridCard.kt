@@ -24,6 +24,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -47,16 +48,16 @@ fun MediaGridCard(
 ) {
     Column(
         modifier = modifier
-            .clip(RoundedCornerShape(12.dp))
-            .clickable(onClick = onClick)
+            .clip(RoundedCornerShape(18.dp))
+            .pressScaleClickable(onClick = onClick)
             .padding(bottom = 4.dp),
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .aspectRatio(16f / 9f)
-                .clip(RoundedCornerShape(12.dp))
-                .background(MaterialTheme.colorScheme.surfaceVariant),
+                .clip(RoundedCornerShape(18.dp))
+                .background(MaterialTheme.colorScheme.surfaceContainerHighest),
         ) {
             SubcomposeAsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
@@ -71,12 +72,26 @@ fun MediaGridCard(
                 modifier = Modifier.matchParentSize(),
             )
 
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .background(
+                        Brush.verticalGradient(
+                            0f to Color.Transparent,
+                            0.55f to Color.Transparent,
+                            1f to Color.Black.copy(alpha = 0.62f),
+                        ),
+                    ),
+            )
+
             if (item.playbackPositionMs > 0L && item.playbackDurationMs > 0L) {
                 LinearProgressIndicator(
                     progress = {
                         (item.playbackPositionMs.toFloat() / item.playbackDurationMs)
                             .coerceIn(0f, 1f)
                     },
+                    color = MaterialTheme.colorScheme.primary,
+                    trackColor = Color.White.copy(alpha = 0.3f),
                     modifier = Modifier
                         .align(Alignment.BottomStart)
                         .fillMaxWidth()
@@ -89,25 +104,26 @@ fun MediaGridCard(
                     text = TimeUtils.formatDuration(item.durationMs),
                     color = Color.White,
                     style = MaterialTheme.typography.labelSmall,
-                    fontWeight = FontWeight.Medium,
+                    fontWeight = FontWeight.SemiBold,
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
-                        .padding(6.dp)
-                        .background(
-                            color = Color.Black.copy(alpha = 0.7f),
-                            shape = RoundedCornerShape(6.dp),
-                        )
-                        .padding(horizontal = 6.dp, vertical = 2.dp),
+                        .padding(8.dp),
                 )
             }
 
             Box(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
-                    .padding(4.dp)
-                    .size(30.dp)
+                    .padding(6.dp)
+                    .size(32.dp)
                     .clip(CircleShape)
-                    .background(Color.Black.copy(alpha = if (item.isFavorite) 0.55f else 0.35f))
+                    .background(
+                        if (item.isFavorite) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            Color.Black.copy(alpha = 0.32f)
+                        },
+                    )
                     .clickable(onClick = onToggleFavorite),
                 contentAlignment = Alignment.Center,
             ) {
@@ -119,20 +135,20 @@ fun MediaGridCard(
                     },
                     contentDescription = null,
                     tint = if (item.isFavorite) {
-                        MaterialTheme.colorScheme.primary
+                        MaterialTheme.colorScheme.onPrimary
                     } else {
                         Color.White
                     },
-                    modifier = Modifier.size(18.dp),
+                    modifier = Modifier.size(17.dp),
                 )
             }
         }
 
-        Spacer(Modifier.height(6.dp))
+        Spacer(Modifier.height(8.dp))
         Text(
             text = item.title,
             style = MaterialTheme.typography.bodyMedium,
-            fontWeight = FontWeight.Medium,
+            fontWeight = FontWeight.SemiBold,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.padding(horizontal = 2.dp),
@@ -163,7 +179,7 @@ private fun ThumbnailPlaceholder() {
         Icon(
             imageVector = Icons.Filled.Movie,
             contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
         )
     }
 }

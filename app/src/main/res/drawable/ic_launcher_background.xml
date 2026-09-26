@@ -18,21 +18,4 @@
             </gradient>
         </aapt:attr>
     </path>
-    <path
-        android:pathData="M54,28 A26,26 0 1,0 54,80 A26,26 0 1,0 54,28 Z M54,33.5 A20.5,20.5 0 1,1 54,74.5 A20.5,20.5 0 1,1 54,33.5 Z">
-        <aapt:attr name="android:fillColor">
-            <gradient
-                android:startX="28"
-                android:startY="28"
-                android:endX="80"
-                android:endY="80"
-                android:type="linear">
-                <item android:offset="0" android:color="#FF7C8CFF" />
-                <item android:offset="1" android:color="#FFB388FF" />
-            </gradient>
-        </aapt:attr>
-    </path>
-    <path
-        android:pathData="M47.5,41.5 L69,54 L47.5,66.5 Z"
-        android:fillColor="#FFFFFFFF" />
 </vector>
