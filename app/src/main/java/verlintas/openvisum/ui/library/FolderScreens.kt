@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Folder
@@ -68,11 +69,12 @@ fun BrowseFolderScreen(
                 .fillMaxSize()
                 .padding(padding),
         ) {
-            items(items, key = { it.uri }) { item ->
+            itemsIndexed(items, key = { _, item -> item.uri }) { index, item ->
                 MediaRow(
                     item = item,
                     onClick = { onPlayUri(item.uri, item.title) },
                     onToggleFavorite = { viewModel.toggleFavorite(item) },
+                    entranceIndex = index,
                 )
             }
         }

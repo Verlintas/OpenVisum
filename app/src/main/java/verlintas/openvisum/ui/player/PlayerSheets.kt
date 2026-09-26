@@ -1,5 +1,9 @@
 package verlintas.openvisum.ui.player
 
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -43,6 +47,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -71,6 +76,7 @@ private fun TrackBottomSheet(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .animateContentSize()
                 .padding(horizontal = 16.dp)
                 .padding(bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp),
@@ -113,10 +119,24 @@ private fun TrackRow(
         supportingContent = if (subtitle.isBlank()) null else {
             { Text(subtitle, style = MaterialTheme.typography.bodySmall) }
         },
-        trailingContent = if (selected) {
-            { Icon(Icons.Filled.Check, contentDescription = null) }
-        } else {
-            null
+        trailingContent = {
+            val checkScale by animateFloatAsState(
+                targetValue = if (selected) 1f else 0f,
+                animationSpec = spring(
+                    dampingRatio = Spring.DampingRatioMediumBouncy,
+                    stiffness = Spring.StiffnessMedium,
+                ),
+                label = "trackCheck",
+            )
+            Icon(
+                imageVector = Icons.Filled.Check,
+                contentDescription = null,
+                modifier = Modifier.graphicsLayer {
+                    scaleX = checkScale
+                    scaleY = checkScale
+                    alpha = checkScale
+                },
+            )
         },
         modifier = Modifier.clickable(onClick = onSelect),
     )

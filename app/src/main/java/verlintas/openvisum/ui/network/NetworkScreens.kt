@@ -66,6 +66,7 @@ import verlintas.openvisum.core.common.util.FileSizeUtils
 import verlintas.openvisum.core.data.NetworkSource
 import verlintas.openvisum.core.data.NetworkSourceType
 import verlintas.openvisum.core.data.source.SafFolderRepository
+import verlintas.openvisum.ui.components.staggeredEntrance
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -103,7 +104,9 @@ fun NetworkScreen(
                 .padding(horizontal = 16.dp),
         ) {
             Card(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .staggeredEntrance(index = 0),
                 shape = MaterialTheme.shapes.large,
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
@@ -161,7 +164,9 @@ fun NetworkScreen(
                 )
             } else {
                 Surface(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .staggeredEntrance(index = 2),
                     shape = MaterialTheme.shapes.large,
                     color = MaterialTheme.colorScheme.surfaceContainerLow,
                 ) {
@@ -205,7 +210,9 @@ fun NetworkScreen(
                     fontWeight = FontWeight.SemiBold,
                 )
                 Surface(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .staggeredEntrance(index = 3),
                     shape = MaterialTheme.shapes.large,
                     color = MaterialTheme.colorScheme.surfaceContainerLow,
                 ) {

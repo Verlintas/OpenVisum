@@ -9,6 +9,8 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.Composable
@@ -280,10 +282,10 @@ class MainActivity : ComponentActivity() {
                                 defaultValue = ""
                             },
                         ),
-                        enterTransition = { fadeIn(tween(250)) },
+                        enterTransition = { fadeIn(tween(250)) + scaleIn(tween(300), initialScale = 0.94f) },
                         exitTransition = { fadeOut(tween(200)) },
                         popEnterTransition = { fadeIn(tween(200)) },
-                        popExitTransition = { fadeOut(tween(200)) },
+                        popExitTransition = { fadeOut(tween(200)) + scaleOut(tween(220), targetScale = 0.96f) },
                     ) { entry ->
                         val uri = entry.arguments?.getString("uri").orEmpty()
                         val title = entry.arguments?.getString("title").orEmpty()

@@ -26,6 +26,7 @@ import verlintas.openvisum.core.data.prefs.AppSettings
 import verlintas.openvisum.ui.components.SettingsGroup
 import verlintas.openvisum.ui.components.SettingsGroupDivider
 import verlintas.openvisum.ui.components.SettingsNavRow
+import verlintas.openvisum.ui.components.staggeredEntrance
 import verlintas.openvisum.ui.theme.ThemeColor
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -58,7 +59,7 @@ fun SettingsScreen(
                 .padding(horizontal = 16.dp),
         ) {
             Spacer(Modifier.height(8.dp))
-            SettingsGroup {
+            SettingsGroup(modifier = Modifier.staggeredEntrance(index = 0)) {
                 SettingsNavRow(
                     icon = Icons.Filled.PlayArrow,
                     title = stringResource(R.string.settings_section_playback),

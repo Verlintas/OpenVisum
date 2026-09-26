@@ -16,11 +16,14 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Movie
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -45,9 +48,20 @@ fun MediaGridCard(
     onClick: () -> Unit,
     onToggleFavorite: () -> Unit,
     modifier: Modifier = Modifier,
+    entranceIndex: Int = 0,
 ) {
+    val progress by animateFloatAsState(
+        targetValue = if (item.playbackDurationMs > 0L) {
+            (item.playbackPositionMs.toFloat() / item.playbackDurationMs).coerceIn(0f, 1f)
+        } else {
+            0f
+        },
+        animationSpec = tween(durationMillis = 650),
+        label = "cardProgress",
+    )
     Column(
         modifier = modifier
+            .staggeredEntrance(entranceIndex)
             .clip(RoundedCornerShape(18.dp))
             .pressScaleClickable(onClick = onClick)
             .padding(bottom = 4.dp),
@@ -86,10 +100,7 @@ fun MediaGridCard(
 
             if (item.playbackPositionMs > 0L && item.playbackDurationMs > 0L) {
                 LinearProgressIndicator(
-                    progress = {
-                        (item.playbackPositionMs.toFloat() / item.playbackDurationMs)
-                            .coerceIn(0f, 1f)
-                    },
+                    progress = { progress },
                     color = MaterialTheme.colorScheme.primary,
                     trackColor = Color.White.copy(alpha = 0.3f),
                     modifier = Modifier
@@ -124,7 +135,8 @@ fun MediaGridCard(
                             Color.Black.copy(alpha = 0.32f)
                         },
                     )
-                    .clickable(onClick = onToggleFavorite),
+                    .clickable(onClick = onToggleFavorite)
+                    .popOnChange(trigger = item.isFavorite),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(

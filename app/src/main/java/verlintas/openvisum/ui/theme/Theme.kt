@@ -21,7 +21,7 @@ fun OpenVisumTheme(
         else -> isSystemInDarkTheme()
     }
     val themeColor = ThemeColor.fromId(themeColorId)
-    val colorScheme = when {
+    val targetScheme = when {
         themeColor == ThemeColor.DYNAMIC && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
             val context = LocalContext.current
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
@@ -30,6 +30,7 @@ fun OpenVisumTheme(
         darkTheme -> themeColor.darkScheme()
         else -> themeColor.lightScheme()
     }
+    val colorScheme = animatedColorScheme(targetScheme)
 
     MaterialTheme(
         colorScheme = colorScheme,

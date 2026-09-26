@@ -111,22 +111,17 @@ fun PlayerScreen(
             modifier = Modifier.fillMaxSize(),
         )
 
-        AnimatedVisibility(
+        PlayerControls(
+            state = state,
             visible = controlsVisible,
-            enter = fadeIn(tween(220)) + scaleIn(initialScale = 0.97f, animationSpec = tween(220)),
-            exit = fadeOut(tween(180)) + scaleOut(targetScale = 0.97f, animationSpec = tween(180)),
-        ) {
-            PlayerControls(
-                state = state,
-                isCasting = activeRenderer != null,
-                onBack = onBack,
-                onTogglePlayPause = viewModel::togglePlayPause,
-                onSeek = viewModel::seekTo,
-                onSeekBy = viewModel::seekBy,
-                onOpenSheet = { activeSheet = it },
-                onOpenCast = { activeSheet = PlayerSheet.CAST },
-            )
-        }
+            isCasting = activeRenderer != null,
+            onBack = onBack,
+            onTogglePlayPause = viewModel::togglePlayPause,
+            onSeek = viewModel::seekTo,
+            onSeekBy = viewModel::seekBy,
+            onOpenSheet = { activeSheet = it },
+            onOpenCast = { activeSheet = PlayerSheet.CAST },
+        )
 
         state.errorMessage?.let { message ->
             Text(

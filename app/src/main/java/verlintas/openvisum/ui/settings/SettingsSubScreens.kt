@@ -1,5 +1,15 @@
 package verlintas.openvisum.ui.settings
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -38,6 +48,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -45,6 +56,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
@@ -62,6 +74,8 @@ import verlintas.openvisum.ui.components.SettingsGroupLabel
 import verlintas.openvisum.ui.components.SettingsHintText
 import verlintas.openvisum.ui.components.SettingsToggleRow
 import verlintas.openvisum.ui.components.SettingsValueRow
+import verlintas.openvisum.ui.components.pressScaleClickable
+import verlintas.openvisum.ui.components.staggeredEntrance
 import verlintas.openvisum.ui.theme.ThemeColor
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -121,7 +135,7 @@ fun PlaybackSettingsScreen(
         title = stringResource(R.string.settings_section_playback),
         onBack = onBack,
     ) {
-        SettingsGroup {
+        SettingsGroup(modifier = Modifier.staggeredEntrance(index = 0)) {
             SettingsToggleRow(
                 icon = Icons.Filled.Memory,
                 title = stringResource(R.string.settings_hardware_decoding),
@@ -155,7 +169,7 @@ fun SubtitleSettingsScreen(
         title = stringResource(R.string.settings_section_subtitles),
         onBack = onBack,
     ) {
-        SettingsGroup {
+        SettingsGroup(modifier = Modifier.staggeredEntrance(index = 0)) {
             SettingsToggleRow(
                 icon = Icons.Filled.ClosedCaption,
                 title = stringResource(R.string.settings_auto_subtitles),
@@ -165,7 +179,7 @@ fun SubtitleSettingsScreen(
             )
         }
         SettingsGroupLabel(stringResource(R.string.settings_group_languages))
-        SettingsGroup {
+        SettingsGroup(modifier = Modifier.staggeredEntrance(index = 1)) {
             SettingsValueRow(
                 icon = Icons.Filled.Subtitles,
                 title = stringResource(R.string.settings_preferred_subtitle_languages),
@@ -231,7 +245,7 @@ fun OnlineSubtitleSettingsScreen(
     ) {
         SettingsHintText(stringResource(R.string.settings_opensubtitles_hint))
         Spacer(Modifier.height(8.dp))
-        SettingsGroup {
+        SettingsGroup(modifier = Modifier.staggeredEntrance(index = 0)) {
             Column(modifier = Modifier.padding(16.dp)) {
                 OutlinedTextField(
                     value = apiKey,
@@ -282,7 +296,7 @@ fun AppearanceSettingsScreen(
         onBack = onBack,
     ) {
         SettingsGroupLabel(stringResource(R.string.settings_theme_mode))
-        SettingsGroup {
+        SettingsGroup(modifier = Modifier.staggeredEntrance(index = 0)) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     FilterChip(
@@ -305,7 +319,7 @@ fun AppearanceSettingsScreen(
         }
 
         SettingsGroupLabel(stringResource(R.string.settings_theme_color))
-        SettingsGroup {
+        SettingsGroup(modifier = Modifier.staggeredEntrance(index = 1)) {
             ThemeColorPicker(
                 selectedId = settings.themeColor,
                 onSelect = viewModel::setThemeColor,
@@ -367,11 +381,25 @@ private fun ColorSwatch(
     }
     val useDarkCheck = preview.luminance() > 0.45f && color != ThemeColor.DYNAMIC
 
+    val borderColor by animateColorAsState(
+        targetValue = if (selected) {
+            MaterialTheme.colorScheme.primary
+        } else {
+            MaterialTheme.colorScheme.outlineVariant
+        },
+        animationSpec = tween(250),
+        label = "swatchBorder",
+    )
+    val borderWidth by animateDpAsState(
+        targetValue = if (selected) 2.dp else 1.dp,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
+        label = "swatchBorderWidth",
+    )
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier
             .clip(MaterialTheme.shapes.medium)
-            .clickable(onClick = onClick)
+            .pressScaleClickable(onClick = onClick)
             .padding(vertical = 6.dp),
     ) {
         Box(
@@ -380,24 +408,32 @@ private fun ColorSwatch(
                 .clip(CircleShape)
                 .background(brush)
                 .border(
-                    width = if (selected) 2.dp else 1.dp,
-                    color = if (selected) {
-                        MaterialTheme.colorScheme.primary
-                    } else {
-                        MaterialTheme.colorScheme.outlineVariant
-                    },
+                    width = borderWidth,
+                    color = borderColor,
                     shape = CircleShape,
                 ),
             contentAlignment = Alignment.Center,
         ) {
-            if (selected) {
-                Icon(
-                    imageVector = Icons.Filled.Check,
-                    contentDescription = null,
-                    tint = if (useDarkCheck) Color.Black.copy(alpha = 0.75f) else Color.White,
-                    modifier = Modifier.size(20.dp),
-                )
-            }
+            val checkScale by animateFloatAsState(
+                targetValue = if (selected) 1f else 0f,
+                animationSpec = spring(
+                    dampingRatio = Spring.DampingRatioMediumBouncy,
+                    stiffness = Spring.StiffnessMedium,
+                ),
+                label = "swatchCheck",
+            )
+            Icon(
+                imageVector = Icons.Filled.Check,
+                contentDescription = null,
+                tint = if (useDarkCheck) Color.Black.copy(alpha = 0.75f) else Color.White,
+                modifier = Modifier
+                    .size(20.dp)
+                    .graphicsLayer {
+                        scaleX = checkScale
+                        scaleY = checkScale
+                        alpha = checkScale
+                    },
+            )
         }
         Spacer(Modifier.height(6.dp))
         Text(
@@ -425,7 +461,7 @@ fun AboutSettingsScreen(
         title = stringResource(R.string.settings_section_about),
         onBack = onBack,
     ) {
-        SettingsGroup {
+        SettingsGroup(modifier = Modifier.staggeredEntrance(index = 0)) {
             Column(modifier = Modifier.padding(20.dp)) {
                 Text(
                     text = stringResource(R.string.app_name),

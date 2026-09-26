@@ -6,6 +6,11 @@ import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.expandVertically
@@ -77,6 +82,7 @@ import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -98,7 +104,10 @@ import verlintas.openvisum.core.data.FolderSummary
 import verlintas.openvisum.core.data.db.SafFolderEntity
 import verlintas.openvisum.core.data.model.MediaItem
 import verlintas.openvisum.core.data.prefs.SortOrder
+import verlintas.openvisum.ui.components.LibrarySkeletonGrid
 import verlintas.openvisum.ui.components.MediaGridCard
+import verlintas.openvisum.ui.components.pressScaleClickable
+import verlintas.openvisum.ui.components.staggeredEntrance
 import verlintas.openvisum.ui.components.MediaRow
 import verlintas.openvisum.ui.components.MediaThumbnail
 import java.time.Instant
@@ -159,7 +168,15 @@ fun LibraryScreen(
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            if (searchActive) {
+            Box(modifier = Modifier.animateContentSize()) {
+            AnimatedContent(
+                targetState = searchActive,
+                transitionSpec = {
+                    fadeIn(tween(220)).togetherWith(fadeOut(tween(140)))
+                },
+                label = "libraryTopBar",
+            ) { searching ->
+            if (searching) {
                 TopAppBar(
                     title = {
                         OutlinedTextField(
@@ -265,6 +282,8 @@ fun LibraryScreen(
                         }
                     },
                 )
+            }
+            }
             }
         },
     ) { padding ->
@@ -408,10 +427,11 @@ private fun LibraryContent(
             LibraryStage.PERMISSION -> PermissionCard(onRequestPermission)
 
             LibraryStage.LOADING -> Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(top = 12.dp),
             ) {
-                CircularProgressIndicator()
+                LibrarySkeletonGrid()
             }
 
             LibraryStage.CONTENT -> {
@@ -477,11 +497,20 @@ private fun LibraryContent(
                                 label = { Text(stringResource(R.string.library_filter_favorites)) },
                             )
                             Spacer(Modifier.weight(1f))
-                            Text(
-                                text = stringResource(R.string.library_items_count, state.items.size),
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
+                            AnimatedContent(
+                                targetState = state.items.size,
+                                transitionSpec = {
+                                    (fadeIn(tween(200)) + slideInVertically { it / 2 })
+                                        .togetherWith(fadeOut(tween(120)) + slideOutVertically { -it / 2 })
+                                },
+                                label = "itemCount",
+                            ) { count ->
+                                Text(
+                                    text = stringResource(R.string.library_items_count, count),
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
                         }
                     }
 
@@ -511,6 +540,7 @@ private fun LibraryContent(
                                     onClick = { onPlay(item) },
                                     onToggleFavorite = { onToggleFavorite(item) },
                                     modifier = Modifier.animateItem(),
+                                    entranceIndex = section.items.indexOf(item),
                                 )
                             }
                         }
@@ -539,6 +569,7 @@ private fun EmptyLibraryHint() {
     Column(
         modifier = Modifier
             .fillMaxWidth()
+            .staggeredEntrance(index = 0)
             .padding(vertical = 64.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -562,10 +593,16 @@ private fun ContinueWatchingCard(
     item: MediaItem,
     onClick: () -> Unit,
 ) {
+    val progress by animateFloatAsState(
+        targetValue = (item.playbackPositionMs.toFloat() / item.playbackDurationMs.coerceAtLeast(1L))
+            .coerceIn(0f, 1f),
+        animationSpec = tween(durationMillis = 650),
+        label = "continueProgress",
+    )
     Card(
         modifier = Modifier
             .width(220.dp)
-            .clickable(onClick = onClick),
+            .pressScaleClickable(onClick = onClick),
     ) {
         Column {
             MediaThumbnail(
@@ -584,10 +621,7 @@ private fun ContinueWatchingCard(
                 )
                 Spacer(Modifier.height(6.dp))
                 LinearProgressIndicator(
-                    progress = {
-                        (item.playbackPositionMs.toFloat() / item.playbackDurationMs.coerceAtLeast(1L))
-                            .coerceIn(0f, 1f)
-                    },
+                    progress = { progress },
                     modifier = Modifier.fillMaxWidth(),
                 )
                 Spacer(Modifier.height(6.dp))
