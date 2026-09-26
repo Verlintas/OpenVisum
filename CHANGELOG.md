@@ -2,6 +2,19 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.0.7] - 2026-09-26
+
+### 新增 Added
+
+- **应用内更新日志**：关于 → 更新日志，直接在 App 内按版本浏览变更（随 CHANGELOG.md 自动同步构建）
+- **应用内问题反馈**：关于 → 问题反馈，选择类型、填写内容，自动附带设备信息（型号/系统/应用版本/ABI），支持邮件发送、复制报告、或带预填内容提交 GitHub Issue
+- **项目官网**：https://verlintas.github.io/OpenVisum/ —— 项目介绍、特性、截图与最新版 APK 镜像下载（GitHub Pages 自动部署，跟随每次发版更新）
+- 关于页“版本发布”跳转官网下载区，“更新日志/问题反馈”改为应用内页面
+
+### 修复 Fixed
+
+- 窗口背景实时跟随 App 主题背景色，消除设置页转场时的底色闪烁
+
 ## [1.0.6] - 2026-09-26
 
 ### 修复 Fixed

@@ -6,6 +6,15 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
 }
 
+val syncChangelog = tasks.register<Copy>("syncChangelog") {
+    from(rootProject.file("CHANGELOG.md"))
+    into(layout.buildDirectory.dir("generated/openvisum-assets"))
+}
+
+tasks.matching { it.name == "preBuild" }.configureEach {
+    dependsOn(syncChangelog)
+}
+
 val keystoreProperties = Properties().apply {
     val propertiesFile = rootProject.file("keystore.properties")
     if (propertiesFile.exists()) {
@@ -24,8 +33,8 @@ android {
         applicationId = "verlintas.openvisum"
         minSdk = 34
         targetSdk = 36
-        versionCode = 7
-        versionName = "1.0.6"
+        versionCode = 8
+        versionName = "1.0.7"
     }
 
     signingConfigs {
@@ -90,6 +99,12 @@ android {
     lint {
         abortOnError = false
         checkReleaseBuilds = false
+    }
+
+    sourceSets {
+        getByName("main") {
+            assets.srcDir(layout.buildDirectory.dir("generated/openvisum-assets").get().asFile)
+        }
     }
 }
 

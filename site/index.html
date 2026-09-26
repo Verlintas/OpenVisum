@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>OpenVisum — 开源 Android 视频播放器</title>
+<meta name="description" content="OpenVisum: 开源 Android 视频播放器，由 libVLC 驱动。全格式、自动识别音轨与字幕、9 套主题色。" />
+<link rel="icon" href="favicon.svg" type="image/svg+xml" />
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<div class="bg-glow"></div>
+
+<header class="nav">
+  <div class="container nav-inner">
+    <a class="brand" href="#top">
+      <span class="brand-mark"></span>
+      <span class="brand-name">OpenVisum</span>
+    </a>
+    <nav class="nav-links">
+      <a href="#features" class="i18n" data-zh="功能" data-en="Features">功能</a>
+      <a href="#screens" class="i18n" data-zh="截图" data-en="Screenshots">截图</a>
+      <a href="#download" class="i18n" data-zh="下载" data-en="Download">下载</a>
+      <a href="https://github.com/Verlintas/OpenVisum" target="_blank" rel="noopener">GitHub</a>
+      <button id="langToggle" class="lang-toggle">EN</button>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+  <section class="hero container">
+    <div class="version-badge"><span id="versionTag">v1.0.6</span><span class="dot"></span><span id="versionDate" class="i18n" data-zh="最新版本" data-en="latest release">最新版本</span></div>
+    <h1>OpenVisum</h1>
+    <p class="tagline i18n" data-zh="开源 Android 视频播放器，由 libVLC 驱动。什么格式都能播，自动识别音轨与字幕。" data-en="Open-source Android video player powered by libVLC. Plays virtually any format, with automatic audio-track and subtitle detection.">开源 Android 视频播放器，由 libVLC 驱动。什么格式都能播，自动识别音轨与字幕。</p>
+    <div class="hero-actions">
+      <a class="btn primary" href="#download"><span class="i18n" data-zh="下载 APK" data-en="Download APK">下载 APK</span></a>
+      <a class="btn ghost" href="https://github.com/Verlintas/OpenVisum" target="_blank" rel="noopener"><span class="i18n" data-zh="查看源码" data-en="View source">查看源码</span></a>
+    </div>
+    <p class="hero-meta i18n" data-zh="Android 14+ · arm64 / armv7 / x86_64 · GPL-3.0 · 无 GMS 依赖" data-en="Android 14+ · arm64 / armv7 / x86_64 · GPL-3.0 · No GMS required">Android 14+ · arm64 / armv7 / x86_64 · GPL-3.0 · 无 GMS 依赖</p>
+  </section>
+
+  <section id="features" class="container section">
+    <h2 class="i18n" data-zh="功能特性" data-en="Features">功能特性</h2>
+    <p class="section-sub i18n" data-zh="为“什么都能播”而设计，细节到位。" data-en="Built to play everything, with the details done right.">为“什么都能播”而设计，细节到位。</p>
+    <div class="grid">
+      <article class="card">
+        <div class="card-icon">01</div>
+        <h3 class="i18n" data-zh="全格式解码" data-en="Every format">全格式解码</h3>
+        <p class="i18n" data-zh="libVLC 3.7 内核：DivX、HEVC、AV1、DTS、AC3/EAC3、TrueHD、FLAC 等；硬解优先，出错自动回退软解。" data-en="libVLC 3.7 core: DivX, HEVC, AV1, DTS, AC3/EAC3, TrueHD, FLAC and more. Hardware decoding first, automatic software fallback.">libVLC 3.7 内核：DivX、HEVC、AV1、DTS、AC3/EAC3、TrueHD、FLAC 等；硬解优先，出错自动回退软解。</p>
+      </article>
+      <article class="card">
+        <div class="card-icon">02</div>
+        <h3 class="i18n" data-zh="字幕全链路" data-en="Subtitles done right">字幕全链路</h3>
+        <p class="i18n" data-zh="内嵌字幕轨识别与语言自动选中；同目录外挂字幕自动匹配；ASS 特效渲染；样式与延迟调节；OpenSubtitles 在线搜索。" data-en="Embedded track detection with language auto-select; sibling subtitle auto-matching; ASS/SSA effects; style and delay controls; OpenSubtitles search.">内嵌字幕轨识别与语言自动选中；同目录外挂字幕自动匹配；ASS 特效渲染；样式与延迟调节；OpenSubtitles 在线搜索。</p>
+      </article>
+      <article class="card">
+        <div class="card-icon">03</div>
+        <h3 class="i18n" data-zh="音频控制台" data-en="Audio controls">音频控制台</h3>
+        <p class="i18n" data-zh="多音轨切换、音轨延迟对齐、10 段均衡器、声道模式、HDMI 源码输出（实验性）。" data-en="Multi-track switching, audio delay alignment, 10-band equalizer, stereo modes, HDMI passthrough (experimental).">多音轨切换、音轨延迟对齐、10 段均衡器、声道模式、HDMI 源码输出（实验性）。</p>
+      </article>
+      <article class="card">
+        <div class="card-icon">04</div>
+        <h3 class="i18n" data-zh="媒体库双模式" data-en="Dual-mode library">媒体库双模式</h3>
+        <p class="i18n" data-zh="媒体库（按日期分组网格）+ 文件夹浏览；继续观看、收藏、搜索、排序；扫描稳定不丢进度。" data-en="Date-grouped grid plus folder browsing; continue watching, favorites, search and sorting; scans never lose your progress.">媒体库（按日期分组网格）+ 文件夹浏览；继续观看、收藏、搜索、排序；扫描稳定不丢进度。</p>
+      </article>
+      <article class="card">
+        <div class="card-icon">05</div>
+        <h3 class="i18n" data-zh="网络播放" data-en="Network playback">网络播放</h3>
+        <p class="i18n" data-zh="SMB（SMB2/3）与 WebDAV 局域网浏览；HTTP / HLS(m3u8) 直链；密码经 Android Keystore 加密。" data-en="SMB (SMB2/3) and WebDAV browsing; HTTP / HLS(m3u8) streams; passwords encrypted with Android Keystore.">SMB（SMB2/3）与 WebDAV 局域网浏览；HTTP / HLS(m3u8) 直链；密码经 Android Keystore 加密。</p>
+      </article>
+      <article class="card">
+        <div class="card-icon">06</div>
+        <h3 class="i18n" data-zh="播放控制" data-en="Playback control">播放控制</h3>
+        <p class="i18n" data-zh="0.25x–4x 变速、A-B 循环、画面比例与旋转、快进快退、投屏到 Chromecast / DLNA。" data-en="0.25x–4x speed, A-B loop, aspect and rotation, seek controls, cast to Chromecast / DLNA.">0.25x–4x 变速、A-B 循环、画面比例与旋转、快进快退、投屏到 Chromecast / DLNA。</p>
+      </article>
+      <article class="card">
+        <div class="card-icon">07</div>
+        <h3 class="i18n" data-zh="9 套主题色" data-en="9 theme colors">9 套主题色</h3>
+        <p class="i18n" data-zh="基于 Material 官方色彩算法生成完整色板，明暗双色板，实时换肤；支持系统动态取色。" data-en="Full palettes generated with Material color utilities, light and dark, live switching; system dynamic color supported.">基于 Material 官方色彩算法生成完整色板，明暗双色板，实时换肤；支持系统动态取色。</p>
+      </article>
+      <article class="card">
+        <div class="card-icon">08</div>
+        <h3 class="i18n" data-zh="OEM 友好" data-en="OEM friendly">OEM 友好</h3>
+        <p class="i18n" data-zh="无 GMS 依赖，适配小米 / OPPO / vivo / 荣耀 / 三星等定制系统；应用内切换简中、繁中、英文。" data-en="No GMS dependency; works on Xiaomi, OPPO, vivo, Honor, Samsung custom ROMs; in-app language switch.">无 GMS 依赖，适配小米 / OPPO / vivo / 荣耀 / 三星等定制系统；应用内切换简中、繁中、英文。</p>
+      </article>
+    </div>
+  </section>
+
+  <section id="screens" class="container section">
+    <h2 class="i18n" data-zh="界面预览" data-en="Screenshots">界面预览</h2>
+    <p class="section-sub i18n" data-zh="Material 3 设计，大标题折叠、网格海报墙、玻璃质感播放器。" data-en="Material 3 design with collapsing headers, poster grid and glassy player controls.">Material 3 设计，大标题折叠、网格海报墙、玻璃质感播放器。</p>
+    <div class="shots">
+      <figure><img src="screenshots/library.png" alt="Library" loading="lazy" /><figcaption class="i18n" data-zh="媒体库" data-en="Library">媒体库</figcaption></figure>
+      <figure><img src="screenshots/player.png" alt="Player" loading="lazy" /><figcaption class="i18n" data-zh="播放与字幕" data-en="Player">播放与字幕</figcaption></figure>
+      <figure><img src="screenshots/appearance.png" alt="Theme colors" loading="lazy" /><figcaption class="i18n" data-zh="主题色" data-en="Themes">主题色</figcaption></figure>
+      <figure><img src="screenshots/about.png" alt="About" loading="lazy" /><figcaption class="i18n" data-zh="关于" data-en="About">关于</figcaption></figure>
+    </div>
+  </section>
+
+  <section id="download" class="container section">
+    <h2 class="i18n" data-zh="下载" data-en="Download">下载</h2>
+    <p class="section-sub i18n" data-zh="本站镜像最新版本 APK；历史版本见 GitHub Releases。" data-en="This site mirrors the latest APKs; older versions live on GitHub Releases.">本站镜像最新版本 APK；历史版本见 GitHub Releases。</p>
+    <div class="downloads" id="downloads">
+      <div class="dl-card"><h4>arm64-v8a</h4><p class="i18n" data-zh="绝大多数现代手机（推荐）" data-en="Most modern phones (recommended)">绝大多数现代手机（推荐）</p><a class="btn primary" data-asset="app-arm64-v8a-release.apk" href="#"><span class="i18n" data-zh="下载" data-en="Download">下载</span><span class="size" data-size="app-arm64-v8a-release.apk"></span></a></div>
+      <div class="dl-card"><h4>armeabi-v7a</h4><p class="i18n" data-zh="老旧 32 位设备" data-en="Older 32-bit devices">老旧 32 位设备</p><a class="btn primary" data-asset="app-armeabi-v7a-release.apk" href="#"><span class="i18n" data-zh="下载" data-en="Download">下载</span><span class="size" data-size="app-armeabi-v7a-release.apk"></span></a></div>
+      <div class="dl-card"><h4>x86_64</h4><p class="i18n" data-zh="模拟器 / x86 平板" data-en="Emulators / x86 tablets">模拟器 / x86 平板</p><a class="btn primary" data-asset="app-x86_64-release.apk" href="#"><span class="i18n" data-zh="下载" data-en="Download">下载</span><span class="size" data-size="app-x86_64-release.apk"></span></a></div>
+    </div>
+    <p class="download-note i18n" data-zh="不确定架构？下载 arm64-v8a 即可。安装时需允许“安装未知应用”。所有版本均为 GPL-3.0 开源，可用 SHA-256 校验（见 releases.json）。" data-en="Not sure? Get arm64-v8a. You will need to allow installing unknown apps. All builds are GPL-3.0 open source; SHA-256 checksums in releases.json.">不确定架构？下载 arm64-v8a 即可。安装时需允许“安装未知应用”。所有版本均为 GPL-3.0 开源，可用 SHA-256 校验（见 releases.json）。</p>
+    <p class="download-note"><a href="https://github.com/Verlintas/OpenVisum/releases" target="_blank" rel="noopener">GitHub Releases ↗</a></p>
+  </section>
+</main>
+
+<footer class="footer">
+  <div class="container footer-inner">
+    <div>
+      <strong>OpenVisum</strong> · GPL-3.0 · <span class="i18n" data-zh="由 libVLC 驱动" data-en="Powered by libVLC">由 libVLC 驱动</span>
+    </div>
+    <div class="footer-links">
+      <a href="https://github.com/Verlintas/OpenVisum" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://github.com/Verlintas/OpenVisum/blob/main/CHANGELOG.md" target="_blank" rel="noopener" class="i18n" data-zh="更新日志" data-en="Changelog">更新日志</a>
+      <a href="https://github.com/Verlintas/OpenVisum/issues" target="_blank" rel="noopener" class="i18n" data-zh="反馈" data-en="Feedback">反馈</a>
+    </div>
+  </div>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>

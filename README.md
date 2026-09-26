@@ -11,6 +11,10 @@ An open-source Android video player powered by libVLC. Plays virtually any forma
   <img src="docs/screenshots/about.png" width="24%" alt="About" />
 </p>
 
+## 官网 Website
+
+项目介绍、截图与最新版 APK 镜像：[https://verlintas.github.io/OpenVisum/](https://verlintas.github.io/OpenVisum/)
+
 ## 特性 Features
 
 **格式与解码**

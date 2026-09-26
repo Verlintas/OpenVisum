@@ -204,4 +204,25 @@
     <string name="settings_remember_position">記憶播放位置</string>
     <string name="settings_remember_position_hint">下次開啟時接續上次進度</string>
     <string name="settings_group_subtitle_style">預設字幕樣式</string>
+    <string name="about_link_website">專案官網</string>
+    <string name="about_link_website_summary">專案介紹與下載</string>
+    <string name="about_link_feedback">問題回饋</string>
+    <string name="about_link_feedback_summary">在應用內提交問題與建議</string>
+    <string name="changelog_title">更新日誌</string>
+    <string name="changelog_empty">暫無更新日誌</string>
+    <string name="feedback_title">問題回饋</string>
+    <string name="feedback_intro">告訴我們遇到的問題或想法，會自動附上裝置資訊。</string>
+    <string name="feedback_category">回饋類型</string>
+    <string name="feedback_category_bug">問題</string>
+    <string name="feedback_category_feature">建議</string>
+    <string name="feedback_category_other">其他</string>
+    <string name="feedback_content">回饋內容</string>
+    <string name="feedback_content_hint">請描述發生了什麼、如何重現、期望的結果…</string>
+    <string name="feedback_device_info">裝置資訊</string>
+    <string name="feedback_send_email">透過郵件寄送</string>
+    <string name="feedback_copy">複製回饋內容</string>
+    <string name="feedback_copied">已複製到剪貼簿</string>
+    <string name="feedback_open_issue">在 GitHub 提交 Issue</string>
+    <string name="feedback_issue_hint">GitHub Issue 需要登入帳號；郵件無需登入即可寄送。</string>
+    <string name="feedback_no_email_app">找不到可用的郵件應用</string>
 </resources>

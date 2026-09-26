@@ -204,4 +204,25 @@
     <string name="settings_remember_position">记忆播放位置</string>
     <string name="settings_remember_position_hint">下次打开时从上次进度继续</string>
     <string name="settings_group_subtitle_style">默认字幕样式</string>
+    <string name="about_link_website">项目官网</string>
+    <string name="about_link_website_summary">项目介绍与下载</string>
+    <string name="about_link_feedback">问题反馈</string>
+    <string name="about_link_feedback_summary">在应用内提交问题与建议</string>
+    <string name="changelog_title">更新日志</string>
+    <string name="changelog_empty">暂无更新日志</string>
+    <string name="feedback_title">问题反馈</string>
+    <string name="feedback_intro">告诉我们遇到的问题或想法，会自动附上设备信息。</string>
+    <string name="feedback_category">反馈类型</string>
+    <string name="feedback_category_bug">问题</string>
+    <string name="feedback_category_feature">建议</string>
+    <string name="feedback_category_other">其他</string>
+    <string name="feedback_content">反馈内容</string>
+    <string name="feedback_content_hint">请描述发生了什么、如何复现、期望的结果…</string>
+    <string name="feedback_device_info">设备信息</string>
+    <string name="feedback_send_email">通过邮件发送</string>
+    <string name="feedback_copy">复制反馈内容</string>
+    <string name="feedback_copied">已复制到剪贴板</string>
+    <string name="feedback_open_issue">在 GitHub 提交 Issue</string>
+    <string name="feedback_issue_hint">GitHub Issue 需要登录账号；邮件无需登录即可发送。</string>
+    <string name="feedback_no_email_app">未找到可用的邮件应用</string>
 </resources>

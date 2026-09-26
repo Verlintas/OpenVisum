@@ -42,6 +42,8 @@ import verlintas.openvisum.ui.network.NetworkViewModel
 import verlintas.openvisum.ui.player.PlayerScreen
 import verlintas.openvisum.ui.settings.AboutSettingsScreen
 import verlintas.openvisum.ui.settings.AppearanceSettingsScreen
+import verlintas.openvisum.ui.settings.ChangelogScreen
+import verlintas.openvisum.ui.settings.FeedbackScreen
 import verlintas.openvisum.ui.settings.LicensesScreen
 import verlintas.openvisum.ui.settings.OnlineSubtitleSettingsScreen
 import verlintas.openvisum.ui.settings.PlaybackSettingsScreen
@@ -172,11 +174,25 @@ class MainActivity : ComponentActivity() {
                             viewModel = settingsViewModel(app),
                             onBack = { navController.popBackStack() },
                             onOpenLicenses = { navController.navigate(Routes.SETTINGS_LICENSES) },
+                            onOpenChangelog = { navController.navigate(Routes.SETTINGS_CHANGELOG) },
+                            onOpenFeedback = { navController.navigate(Routes.SETTINGS_FEEDBACK) },
                         )
                     }
 
                     composable(Routes.SETTINGS_LICENSES) {
                         LicensesScreen(
+                            onBack = { navController.popBackStack() },
+                        )
+                    }
+
+                    composable(Routes.SETTINGS_CHANGELOG) {
+                        ChangelogScreen(
+                            onBack = { navController.popBackStack() },
+                        )
+                    }
+
+                    composable(Routes.SETTINGS_FEEDBACK) {
+                        FeedbackScreen(
                             onBack = { navController.popBackStack() },
                         )
                     }

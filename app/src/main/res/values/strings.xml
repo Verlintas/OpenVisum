@@ -206,4 +206,25 @@
     <string name="settings_remember_position">Remember playback position</string>
     <string name="settings_remember_position_hint">Resume where you left off next time</string>
     <string name="settings_group_subtitle_style">Default subtitle style</string>
+    <string name="about_link_website">Website</string>
+    <string name="about_link_website_summary">Project introduction and downloads</string>
+    <string name="about_link_feedback">Feedback</string>
+    <string name="about_link_feedback_summary">Report issues and suggestions in-app</string>
+    <string name="changelog_title">Changelog</string>
+    <string name="changelog_empty">No changelog entries yet</string>
+    <string name="feedback_title">Feedback</string>
+    <string name="feedback_intro">Tell us about bugs or ideas. Device info is attached automatically.</string>
+    <string name="feedback_category">Category</string>
+    <string name="feedback_category_bug">Bug</string>
+    <string name="feedback_category_feature">Suggestion</string>
+    <string name="feedback_category_other">Other</string>
+    <string name="feedback_content">Details</string>
+    <string name="feedback_content_hint">Describe what happened, how to reproduce it, and what you expected…</string>
+    <string name="feedback_device_info">Device info</string>
+    <string name="feedback_send_email">Send via email</string>
+    <string name="feedback_copy">Copy report</string>
+    <string name="feedback_copied">Copied to clipboard</string>
+    <string name="feedback_open_issue">Open GitHub issue</string>
+    <string name="feedback_issue_hint">GitHub issue requires an account; email works without signing in.</string>
+    <string name="feedback_no_email_app">No email app found on this device</string>
 </resources>

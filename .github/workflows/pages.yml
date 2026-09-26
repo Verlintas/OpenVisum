@@ -1,0 +1,106 @@
+name: Pages
+
+on:
+  push:
+    branches: [ main ]
+    tags: [ 'v*' ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Prepare site
+        run: |
+          mkdir -p _site/downloads _site/screenshots
+          cp -r site/. _site/
+          cp docs/screenshots/*.png _site/screenshots/
+
+      - name: Mirror latest release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if ! gh release view --repo "$GITHUB_REPOSITORY" \
+              --json tagName,name,publishedAt,body,assets,url > /tmp/release.json; then
+            echo '{}' > /tmp/release.json
+          fi
+          python3 - <<'PY'
+          import json, os, subprocess, hashlib, pathlib
+
+          repo = os.environ["GITHUB_REPOSITORY"]
+          try:
+              data = json.load(open("/tmp/release.json"))
+          except Exception:
+              data = {}
+
+          tag = data.get("tagName")
+          out_dir = pathlib.Path("_site/downloads")
+          if not tag:
+              json.dump({"tag": None}, open("_site/releases.json", "w"))
+              raise SystemExit
+
+          mirror = [
+              "app-arm64-v8a-release.apk",
+              "app-armeabi-v7a-release.apk",
+              "app-x86_64-release.apk",
+          ]
+          checksums = {}
+          mirrored = []
+          for name in mirror:
+              try:
+                  subprocess.run(
+                      ["gh", "release", "download", tag,
+                       "--repo", repo, "--pattern", name,
+                       "--dir", str(out_dir), "--clobber"],
+                      check=True,
+                  )
+                  mirrored.append(name)
+                  checksums[name] = hashlib.sha256((out_dir / name).read_bytes()).hexdigest()
+              except Exception as exc:  # noqa: BLE001
+                  print("mirror failed:", name, exc)
+
+          release = {
+              "tag": tag,
+              "name": data.get("name"),
+              "publishedAt": data.get("publishedAt"),
+              "notes": (data.get("body") or "")[:4000],
+              "htmlBase": f"https://github.com/{repo}",
+              "htmlUrl": data.get("url"),
+              "mirrored": mirrored,
+              "checksums": checksums,
+              "assets": [
+                  {"name": a.get("name"), "size": a.get("size"), "url": a.get("url")}
+                  for a in data.get("assets", [])
+              ],
+          }
+          json.dump(release, open("_site/releases.json", "w"), ensure_ascii=False, indent=2)
+          print("mirrored:", mirrored)
+          PY
+
+      - name: Upload pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

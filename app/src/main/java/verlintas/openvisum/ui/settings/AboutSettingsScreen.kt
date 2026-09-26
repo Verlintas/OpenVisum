@@ -22,6 +22,7 @@ import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.NewReleases
+import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.BugReport
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -70,10 +71,9 @@ import verlintas.openvisum.ui.components.SettingsNavRow
 import verlintas.openvisum.ui.components.ShimmerRowPlaceholder
 import verlintas.openvisum.ui.components.staggeredEntrance
 
+private const val WEBSITE_URL = "https://verlintas.github.io/OpenVisum/"
+private const val WEBSITE_DOWNLOAD_URL = "${WEBSITE_URL}#download"
 private const val REPO_URL = "https://github.com/Verlintas/OpenVisum"
-private const val RELEASES_URL = "$REPO_URL/releases"
-private const val ISSUES_URL = "$REPO_URL/issues"
-private const val CHANGELOG_URL = "$REPO_URL/blob/main/CHANGELOG.md"
 private const val LICENSE_URL = "$REPO_URL/blob/main/LICENSE"
 
 @Composable
@@ -81,6 +81,8 @@ fun AboutSettingsScreen(
     viewModel: SettingsViewModel,
     onBack: () -> Unit,
     onOpenLicenses: () -> Unit,
+    onOpenChangelog: () -> Unit,
+    onOpenFeedback: () -> Unit,
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val uriHandler = LocalUriHandler.current
@@ -119,6 +121,13 @@ fun AboutSettingsScreen(
             SettingsGroupLabel(stringResource(R.string.about_section_links))
             SettingsGroup(modifier = Modifier.staggeredEntrance(index = 1)) {
                 SettingsNavRow(
+                    icon = Icons.Filled.Public,
+                    title = stringResource(R.string.about_link_website),
+                    summary = stringResource(R.string.about_link_website_summary),
+                    onClick = { uriHandler.openUri(WEBSITE_URL) },
+                )
+                SettingsGroupDivider()
+                SettingsNavRow(
                     icon = Icons.Filled.Code,
                     title = stringResource(R.string.about_link_repo),
                     summary = "Verlintas/OpenVisum",
@@ -130,21 +139,21 @@ fun AboutSettingsScreen(
                     title = stringResource(R.string.about_link_releases),
                     summary = remoteInfo?.release?.tagName
                         ?: stringResource(R.string.about_link_releases_summary),
-                    onClick = { uriHandler.openUri(RELEASES_URL) },
-                )
-                SettingsGroupDivider()
-                SettingsNavRow(
-                    icon = Icons.Filled.BugReport,
-                    title = stringResource(R.string.about_link_issues),
-                    summary = stringResource(R.string.about_link_issues_summary),
-                    onClick = { uriHandler.openUri(ISSUES_URL) },
+                    onClick = { uriHandler.openUri(WEBSITE_DOWNLOAD_URL) },
                 )
                 SettingsGroupDivider()
                 SettingsNavRow(
                     icon = Icons.Filled.Description,
                     title = stringResource(R.string.about_link_changelog),
                     summary = stringResource(R.string.about_link_changelog_summary),
-                    onClick = { uriHandler.openUri(CHANGELOG_URL) },
+                    onClick = onOpenChangelog,
+                )
+                SettingsGroupDivider()
+                SettingsNavRow(
+                    icon = Icons.Filled.BugReport,
+                    title = stringResource(R.string.about_link_feedback),
+                    summary = stringResource(R.string.about_link_feedback_summary),
+                    onClick = onOpenFeedback,
                 )
                 SettingsGroupDivider()
                 SettingsNavRow(
