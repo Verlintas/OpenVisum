@@ -57,7 +57,7 @@ import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
-import coil3.compose.AsyncImage
+import coil3.compose.SubcomposeAsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
 import androidx.compose.ui.platform.LocalContext
@@ -315,18 +315,44 @@ private fun DeveloperCard(
             ) {
                 val avatarUrl = user?.avatarUrl
                 if (avatarUrl != null) {
-                    AsyncImage(
+                    SubcomposeAsyncImage(
                         model = ImageRequest.Builder(LocalContext.current)
                             .data(avatarUrl)
                             .crossfade(true)
                             .build(),
                         contentDescription = null,
                         contentScale = ContentScale.Crop,
+                        loading = {
+                            Box(
+                                modifier = Modifier.size(64.dp),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(20.dp),
+                                    strokeWidth = 2.dp,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                )
+                            }
+                        },
+                        error = {
+                            Box(
+                                modifier = Modifier.size(64.dp),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Text(
+                                    text = (user?.name ?: user?.login ?: "V")
+                                        .firstOrNull()?.uppercase() ?: "V",
+                                    style = MaterialTheme.typography.headlineMedium,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                )
+                            }
+                        },
                         modifier = Modifier.size(64.dp),
                     )
                 } else {
                     Text(
-                        text = "V",
+                        text = (user?.name ?: user?.login ?: "V")
+                            .firstOrNull()?.uppercase() ?: "V",
                         style = MaterialTheme.typography.headlineMedium,
                         color = MaterialTheme.colorScheme.onPrimaryContainer,
                     )

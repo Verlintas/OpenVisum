@@ -2,6 +2,17 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.0.5] - 2026-09-26
+
+### 修复 Fixed
+
+- **开发者头像不显示**：Coil 3 加载网络图片需要单独的 OkHttp fetcher，此前缺少依赖导致头像静默加载失败；现已补上并显式注册
+- 头像增加加载中与失败占位（显示首字母），失败不再只剩空圆
+
+### 说明
+
+- 仓库卡片的 Stars/Forks/Issues 为 GitHub 实时数据；最新版本号会在每次发版后自动更新
+
 ## [1.0.4] - 2026-09-26
 
 ### 修复 Fixed

@@ -24,8 +24,8 @@ android {
         applicationId = "verlintas.openvisum"
         minSdk = 34
         targetSdk = 36
-        versionCode = 5
-        versionName = "1.0.4"
+        versionCode = 6
+        versionName = "1.0.5"
     }
 
     signingConfigs {
@@ -115,6 +115,7 @@ dependencies {
 
     implementation(libs.coil.compose)
     implementation(libs.coil.video)
+    implementation(libs.coil.network.okhttp)
 
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.kotlinx.serialization.json)

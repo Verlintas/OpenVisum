@@ -47,6 +47,7 @@ kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-
 okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp" }
 coil-compose = { group = "io.coil-kt.coil3", name = "coil-compose", version.ref = "coil" }
 coil-video = { group = "io.coil-kt.coil3", name = "coil-video", version.ref = "coil" }
+coil-network-okhttp = { group = "io.coil-kt.coil3", name = "coil-network-okhttp", version.ref = "coil" }
 libvlc = { group = "org.videolan.android", name = "libvlc-all", version.ref = "libvlc" }
 jcifs = { group = "eu.agno3.jcifs", name = "jcifs-ng", version.ref = "jcifs" }
 jupnp = { group = "org.jupnp", name = "org.jupnp", version.ref = "jupnp" }
