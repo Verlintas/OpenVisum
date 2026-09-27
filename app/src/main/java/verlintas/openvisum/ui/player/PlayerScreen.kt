@@ -188,14 +188,19 @@ fun PlayerScreen(
             )
         }
 
+        val playlist by viewModel.playlist.collectAsStateWithLifecycle()
         PlayerControls(
             state = state,
             visible = controlsVisible,
             isCasting = activeRenderer != null,
+            hasPrevious = playlist.hasPrevious,
+            hasNext = playlist.hasNext,
             onBack = onBack,
             onTogglePlayPause = viewModel::togglePlayPause,
             onSeek = viewModel::seekTo,
             onSeekBy = viewModel::seekBy,
+            onPlayPrevious = viewModel::playPrevious,
+            onPlayNext = viewModel::playNext,
             onOpenSheet = { activeSheet = it },
             onOpenCast = { activeSheet = PlayerSheet.CAST },
         )

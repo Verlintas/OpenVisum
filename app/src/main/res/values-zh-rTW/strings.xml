@@ -271,4 +271,8 @@
     <string name="player_cast_rescan">重新搜尋</string>
     <string name="settings_dlna_receiver_title">允許接收投放（DLNA）</string>
     <string name="settings_dlna_receiver_summary">在同一 Wi-Fi 下作為電視被其他裝置發現；應用程式執行時可接收投放</string>
+    <string name="settings_auto_play_next_title">播完自動連播下一集</string>
+    <string name="settings_auto_play_next_summary">播放結束後自動播放同資料夾的下一集</string>
+    <string name="player_previous">上一集</string>
+    <string name="player_next">下一集</string>
 </resources>

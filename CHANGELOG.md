@@ -7,6 +7,7 @@ All notable changes to this project are documented in this file.
 ### 新增 Added
 
 - **DLNA 接收端（手机变电视）**：设置中开启后，本机作为 DLNA 渲染设备被局域网内其他设备发现，支持被投屏（AVTransport / RenderingControl / ConnectionManager 完整实现，音量、暂停、拖动进度均可从控制端操作）
+- **同文件夹连播**：播放页新增上一集/下一集按钮，播放结束自动连播同文件夹的下一个视频（可在 设置 → 播放 关闭）；顺序按文件名自然排序（第 2 集排在 第 10 集前）
 
 ## [1.0.13] - 2026-09-26
 

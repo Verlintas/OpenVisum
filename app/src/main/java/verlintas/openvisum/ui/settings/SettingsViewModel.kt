@@ -83,6 +83,10 @@ class SettingsViewModel(
         viewModelScope.launch { preferences.setDlnaReceiverEnabled(enabled) }
     }
 
+    fun setAutoPlayNext(enabled: Boolean) {
+        viewModelScope.launch { preferences.setAutoPlayNext(enabled) }
+    }
+
     fun setDefaultPlaybackRate(rate: Float) {
         viewModelScope.launch { preferences.setDefaultPlaybackRate(rate) }
     }

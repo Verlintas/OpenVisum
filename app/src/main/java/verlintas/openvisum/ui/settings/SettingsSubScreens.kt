@@ -55,6 +55,7 @@ import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.ClosedCaption
 import androidx.compose.material.icons.filled.Memory
+import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material.icons.filled.Subtitles
 import androidx.compose.material.icons.filled.Translate
 import androidx.compose.material.icons.filled.Tune
@@ -200,6 +201,14 @@ fun PlaybackSettingsScreen(
                 subtitle = stringResource(R.string.settings_remember_position_hint),
                 checked = settings.rememberPlaybackPosition,
                 onCheckedChange = viewModel::setRememberPlaybackPosition,
+            )
+            SettingsGroupDivider()
+            SettingsToggleRow(
+                icon = Icons.Filled.SkipNext,
+                title = stringResource(R.string.settings_auto_play_next_title),
+                subtitle = stringResource(R.string.settings_auto_play_next_summary),
+                checked = settings.autoPlayNext,
+                onCheckedChange = viewModel::setAutoPlayNext,
             )
         }
     }

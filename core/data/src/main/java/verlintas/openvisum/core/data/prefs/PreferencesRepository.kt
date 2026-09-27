@@ -62,6 +62,7 @@ data class AppSettings(
     val rememberPlaybackPosition: Boolean = true,
     val hideContentOnLaunch: Boolean = true,
     val dlnaReceiverEnabled: Boolean = false,
+    val autoPlayNext: Boolean = true,
 ) {
     companion object {
         const val THEME_SYSTEM = 0
@@ -106,6 +107,7 @@ class PreferencesRepository(
         val REMEMBER_PLAYBACK_POSITION = booleanPreferencesKey("remember_playback_position")
         val HIDE_CONTENT_ON_LAUNCH = booleanPreferencesKey("hide_content_on_launch")
         val DLNA_RECEIVER_ENABLED = booleanPreferencesKey("dlna_receiver_enabled")
+        val AUTO_PLAY_NEXT = booleanPreferencesKey("auto_play_next")
     }
 
     val settings: Flow<AppSettings> = context.dataStore.data
@@ -138,6 +140,7 @@ class PreferencesRepository(
                 rememberPlaybackPosition = preferences[Keys.REMEMBER_PLAYBACK_POSITION] ?: true,
                 hideContentOnLaunch = preferences[Keys.HIDE_CONTENT_ON_LAUNCH] ?: true,
                 dlnaReceiverEnabled = preferences[Keys.DLNA_RECEIVER_ENABLED] ?: false,
+                autoPlayNext = preferences[Keys.AUTO_PLAY_NEXT] ?: true,
             )
         }
 
@@ -214,5 +217,9 @@ class PreferencesRepository(
 
     suspend fun setDlnaReceiverEnabled(enabled: Boolean) {
         context.dataStore.edit { it[Keys.DLNA_RECEIVER_ENABLED] = enabled }
+    }
+
+    suspend fun setAutoPlayNext(enabled: Boolean) {
+        context.dataStore.edit { it[Keys.AUTO_PLAY_NEXT] = enabled }
     }
 }

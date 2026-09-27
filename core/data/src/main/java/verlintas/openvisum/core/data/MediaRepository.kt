@@ -32,7 +32,9 @@ import verlintas.openvisum.core.data.model.MediaSource
 import verlintas.openvisum.core.data.model.toModel
 import verlintas.openvisum.core.data.source.MediaStoreScanner
 import verlintas.openvisum.core.data.source.SafFolderRepository
+import verlintas.openvisum.core.data.source.SiblingVideo
 import verlintas.openvisum.core.data.source.SubtitleFile
+import verlintas.openvisum.core.data.source.VideoFinder
 import verlintas.openvisum.core.data.source.SubtitleFinder
 
 data class FolderSummary(
@@ -48,6 +50,7 @@ class MediaRepository(
     private val scanner: MediaStoreScanner,
     val safFolders: SafFolderRepository,
     private val subtitleFinder: SubtitleFinder,
+    private val videoFinder: VideoFinder,
 ) {
 
     private val mediaDao = database.mediaDao()
@@ -115,6 +118,13 @@ class MediaRepository(
     suspend fun removeSafFolder(treeUri: String) = safFolders.removeFolder(treeUri)
 
     fun safFolderList() = safFolders.observeFolders()
+
+    suspend fun findSiblingVideos(mediaUri: String): List<SiblingVideo> =
+        runCatching { videoFinder.findFor(mediaUri) }
+            .onFailure { throwable ->
+                android.util.Log.w(TAG, "Sibling video search failed for $mediaUri", throwable)
+            }
+            .getOrDefault(emptyList())
 
     suspend fun findSiblingSubtitles(mediaUri: String, displayName: String?): List<SubtitleFile> =
         runCatching { subtitleFinder.findFor(mediaUri, displayName) }

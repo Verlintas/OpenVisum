@@ -70,6 +70,8 @@ import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Replay10
 import androidx.compose.material.icons.filled.ScreenRotation
+import androidx.compose.material.icons.filled.SkipNext
+import androidx.compose.material.icons.filled.SkipPrevious
 import androidx.compose.material.icons.filled.Subtitles
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -112,10 +114,14 @@ fun PlayerControls(
     state: PlaybackState,
     visible: Boolean,
     isCasting: Boolean,
+    hasPrevious: Boolean,
+    hasNext: Boolean,
     onBack: () -> Unit,
     onTogglePlayPause: () -> Unit,
     onSeek: (Long) -> Unit,
     onSeekBy: (Long) -> Unit,
+    onPlayPrevious: () -> Unit,
+    onPlayNext: () -> Unit,
     onOpenSheet: (PlayerSheet) -> Unit,
     onOpenCast: () -> Unit,
 ) {
@@ -230,9 +236,25 @@ fun PlayerControls(
             modifier = Modifier.align(Alignment.Center),
         ) {
             Row(
-                horizontalArrangement = Arrangement.spacedBy(24.dp),
+                horizontalArrangement = Arrangement.spacedBy(20.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
+                AnimatedVisibility(visible = hasPrevious) {
+                    Box(
+                        modifier = Modifier
+                            .size(48.dp)
+                            .clip(CircleShape)
+                            .clickable(onClick = onPlayPrevious),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.SkipPrevious,
+                            contentDescription = stringResource(R.string.player_previous),
+                            tint = Color.White,
+                            modifier = Modifier.size(30.dp),
+                        )
+                    }
+                }
                 Box(
                     modifier = Modifier
                         .size(52.dp)
@@ -296,6 +318,22 @@ fun PlayerControls(
                         tint = Color.White,
                         modifier = Modifier.size(30.dp),
                     )
+                }
+                AnimatedVisibility(visible = hasNext) {
+                    Box(
+                        modifier = Modifier
+                            .size(48.dp)
+                            .clip(CircleShape)
+                            .clickable(onClick = onPlayNext),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.SkipNext,
+                            contentDescription = stringResource(R.string.player_next),
+                            tint = Color.White,
+                            modifier = Modifier.size(30.dp),
+                        )
+                    }
                 }
             }
         }

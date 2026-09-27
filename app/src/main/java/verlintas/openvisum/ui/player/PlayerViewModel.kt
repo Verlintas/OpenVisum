@@ -35,6 +35,7 @@ import kotlinx.coroutines.launch
 import org.videolan.libvlc.util.VLCVideoLayout
 import verlintas.openvisum.core.common.util.LanguageUtils
 import verlintas.openvisum.core.data.MediaRepository
+import verlintas.openvisum.core.data.source.SiblingVideo
 import verlintas.openvisum.core.data.NetworkRepository
 import verlintas.openvisum.core.data.prefs.AppSettings
 import verlintas.openvisum.core.data.prefs.PreferencesRepository
@@ -48,6 +49,14 @@ import verlintas.openvisum.core.player.model.PlaybackState
 import verlintas.openvisum.core.player.model.RendererDevice
 import verlintas.openvisum.core.player.model.SubtitleStyle
 import verlintas.openvisum.core.player.model.VideoScaleMode
+
+data class PlaylistState(
+    val items: List<SiblingVideo> = emptyList(),
+    val index: Int = -1,
+) {
+    val hasPrevious: Boolean get() = index > 0
+    val hasNext: Boolean get() = index >= 0 && index < items.size - 1
+}
 
 data class OnlineSubtitleState(
     val query: String = "",
@@ -74,17 +83,35 @@ class PlayerViewModel(
     private val _onlineSubtitles = MutableStateFlow(OnlineSubtitleState())
     val onlineSubtitles: StateFlow<OnlineSubtitleState> = _onlineSubtitles.asStateFlow()
 
+    private val _playlist = MutableStateFlow(PlaylistState())
+    val playlist: StateFlow<PlaylistState> = _playlist.asStateFlow()
+
     private var openedUri: Uri? = null
     private var lastSavedAt = 0L
     private var lastPosition = -1L
     private var lastPositionChangedAt = 0L
     private var lastRecoveryAt = 0L
     private var rememberPosition = true
+    private var autoPlayNext = true
+    private var lastEnded = false
 
     init {
         viewModelScope.launch {
             preferences.settings.collect { settings ->
                 rememberPosition = settings.rememberPlaybackPosition
+                autoPlayNext = settings.autoPlayNext
+            }
+        }
+        viewModelScope.launch {
+            engine.state.collect { playbackState ->
+                if (playbackState.isEnded) {
+                    if (!lastEnded) {
+                        lastEnded = true
+                        if (autoPlayNext) playNext()
+                    }
+                } else {
+                    lastEnded = false
+                }
             }
         }
         viewModelScope.launch {
@@ -174,6 +201,29 @@ class PlayerViewModel(
                 displayName = resolvedTitle,
                 settings = settings,
             )
+            refreshPlaylist(uri)
+        }
+    }
+
+    fun playNext() {
+        val playlist = _playlist.value
+        val next = playlist.items.getOrNull(playlist.index + 1) ?: return
+        openIfNeeded(next.uri, next.name)
+    }
+
+    fun playPrevious() {
+        val playlist = _playlist.value
+        val previous = playlist.items.getOrNull(playlist.index - 1) ?: return
+        openIfNeeded(previous.uri, previous.name)
+    }
+
+    private suspend fun refreshPlaylist(uri: Uri) {
+        val siblings = repository.findSiblingVideos(uri.toString())
+        val index = siblings.indexOfFirst { it.uri == uri }
+        _playlist.value = if (index >= 0) {
+            PlaylistState(items = siblings, index = index)
+        } else {
+            PlaylistState()
         }
     }
 
