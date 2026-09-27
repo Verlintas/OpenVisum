@@ -1,0 +1,13 @@
+# Keep GitHub language stats focused on the app code
+site/* linguist-documentation
+docs/* linguist-documentation
+*.md linguist-documentation
+
+# Generated files
+app/src/main/java/verlintas/openvisum/ui/theme/GeneratedSchemes.kt linguist-generated=true
+
+# Binary assets
+*.png binary
+*.jpg binary
+*.ttf binary
+*.jks binary
