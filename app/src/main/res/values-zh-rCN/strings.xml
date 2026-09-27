@@ -65,7 +65,7 @@
     <string name="player_error_playback">播放失败</string>
 
     <string name="aspect_fit_screen">适应屏幕</string>
-    <string name="aspect_fill_screen">铺满屏幕（裁剪）</string>
+    <string name="aspect_fill_screen">拉伸铺满</string>
     <string name="aspect_original">原始大小</string>
     <string name="aspect_16_9">16:9</string>
     <string name="aspect_4_3">4:3</string>
@@ -266,4 +266,7 @@
     <string name="sidebar_storage_used">已用 %1$s / %2$s</string>
     <string name="sidebar_storage_library">媒体库 %1$s</string>
     <string name="sidebar_storage_counts">%1$d 个视频 · %2$d 个文件夹</string>
+    <string name="aspect_crop_fill">裁剪填满</string>
+    <string name="player_cast_hint">请确保本机与电视/投影设备连接在同一 Wi-Fi 网络</string>
+    <string name="player_cast_rescan">重新搜索</string>
 </resources>

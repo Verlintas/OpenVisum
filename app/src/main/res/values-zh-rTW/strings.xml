@@ -65,7 +65,7 @@
     <string name="player_error_playback">播放失敗</string>
 
     <string name="aspect_fit_screen">符合畫面</string>
-    <string name="aspect_fill_screen">填滿畫面（裁切）</string>
+    <string name="aspect_fill_screen">拉伸鋪滿</string>
     <string name="aspect_original">原始大小</string>
     <string name="aspect_16_9">16:9</string>
     <string name="aspect_4_3">4:3</string>
@@ -266,4 +266,7 @@
     <string name="sidebar_storage_used">已用 %1$s / %2$s</string>
     <string name="sidebar_storage_library">媒體庫 %1$s</string>
     <string name="sidebar_storage_counts">%1$d 個影片 · %2$d 個資料夾</string>
+    <string name="aspect_crop_fill">裁剪填滿</string>
+    <string name="player_cast_hint">請確保本機與電視/投影裝置連線在同一 Wi-Fi 網路</string>
+    <string name="player_cast_rescan">重新搜尋</string>
 </resources>

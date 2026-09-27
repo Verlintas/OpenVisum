@@ -43,6 +43,7 @@ data class PlaybackState(
 enum class VideoScaleMode {
     FIT_SCREEN,
     FILL_SCREEN,
+    CROP_FILL,
     ORIGINAL,
     RATIO_16_9,
     RATIO_4_3,

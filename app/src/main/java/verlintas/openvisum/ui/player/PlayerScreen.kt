@@ -12,6 +12,7 @@ import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
@@ -24,17 +25,24 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.delay
 import org.videolan.libvlc.util.VLCVideoLayout
 import verlintas.openvisum.OpenVisumApp
+import verlintas.openvisum.core.player.model.VideoScaleMode
 
 @Composable
 fun PlayerScreen(
@@ -64,6 +72,21 @@ fun PlayerScreen(
 
     LaunchedEffect(uri, mediaTitle, restart) {
         viewModel.openIfNeeded(uri, mediaTitle, restart)
+    }
+
+    val view = LocalView.current
+    DisposableEffect(Unit) {
+        val activity = generateSequence(view.context as android.content.Context?) { context ->
+            (context as? android.content.ContextWrapper)?.baseContext
+        }.firstOrNull { it is android.app.Activity } as? android.app.Activity
+        val window = activity?.window
+        val controller = window?.let { WindowCompat.getInsetsController(it, view) }
+        controller?.systemBarsBehavior =
+            WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        controller?.hide(WindowInsetsCompat.Type.systemBars())
+        onDispose {
+            controller?.show(WindowInsetsCompat.Type.systemBars())
+        }
     }
 
     var controlsVisible by remember { mutableStateOf(true) }
@@ -100,17 +123,51 @@ fun PlayerScreen(
                 }
             },
     ) {
-        AndroidView(
-            factory = { ctx ->
-                VLCVideoLayout(ctx).apply {
-                    addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
-                        viewModel.onSurfaceLayoutChanged()
-                    }
-                    viewModel.attach(this)
+        BoxWithConstraints(
+            modifier = Modifier
+                .fillMaxSize()
+                .clipToBounds(),
+            contentAlignment = Alignment.Center,
+        ) {
+            val containerWidth = maxWidth.value
+            val containerHeight = maxHeight.value
+            val videoAspect = if (state.videoWidth > 0 && state.videoHeight > 0) {
+                state.videoWidth.toFloat() / state.videoHeight.toFloat()
+            } else {
+                0f
+            }
+            val cropFill = state.videoScale == VideoScaleMode.CROP_FILL && videoAspect > 0f
+            val layerScale = if (cropFill) {
+                val fitWidth: Float
+                val fitHeight: Float
+                if (containerWidth / containerHeight > videoAspect) {
+                    fitHeight = containerHeight
+                    fitWidth = containerHeight * videoAspect
+                } else {
+                    fitWidth = containerWidth
+                    fitHeight = containerWidth / videoAspect
                 }
-            },
-            modifier = Modifier.fillMaxSize(),
-        )
+                maxOf(containerWidth / fitWidth, containerHeight / fitHeight)
+            } else {
+                1f
+            }
+            AndroidView(
+                factory = { ctx ->
+                    VLCVideoLayout(ctx).apply {
+                        addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
+                            viewModel.onSurfaceLayoutChanged()
+                        }
+                        viewModel.attach(this)
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxSize()
+                    .graphicsLayer {
+                        scaleX = layerScale
+                        scaleY = layerScale
+                    },
+            )
+        }
 
         PlayerControls(
             state = state,
@@ -177,6 +234,7 @@ fun PlayerScreen(
         PlayerSheet.CAST -> CastSheet(
             active = activeRenderer,
             devices = renderers,
+            onRescan = viewModel::rescanRenderers,
             onConnect = viewModel::connectRenderer,
             onDisconnect = viewModel::disconnectRenderer,
             onDismiss = { activeSheet = null },

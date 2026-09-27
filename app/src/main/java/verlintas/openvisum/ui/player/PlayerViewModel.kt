@@ -342,6 +342,11 @@ class PlayerViewModel(
 
     fun startRendererDiscovery() = engine.startRendererDiscovery()
 
+    fun rescanRenderers() {
+        engine.stopRendererDiscovery()
+        engine.startRendererDiscovery()
+    }
+
     fun stopRendererDiscovery() = engine.stopRendererDiscovery()
 
     fun connectRenderer(deviceId: String) = engine.connectRenderer(deviceId)

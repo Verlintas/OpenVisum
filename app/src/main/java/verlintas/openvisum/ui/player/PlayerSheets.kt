@@ -507,12 +507,19 @@ fun CastSheet(
     devices: List<RendererDevice>,
     onConnect: (String) -> Unit,
     onDisconnect: () -> Unit,
+    onRescan: () -> Unit,
     onDismiss: () -> Unit,
 ) {
     TrackBottomSheet(
         title = stringResource(R.string.player_cast),
         onDismiss = onDismiss,
     ) {
+        Text(
+            text = stringResource(R.string.player_cast_hint),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(bottom = 10.dp),
+        )
         if (active != null) {
             ListItem(
                 headlineContent = { Text(stringResource(R.string.player_cast_disconnect, active.name)) },
@@ -528,6 +535,9 @@ fun CastSheet(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(vertical = 12.dp),
             )
+            TextButton(onClick = onRescan) {
+                Text(stringResource(R.string.player_cast_rescan))
+            }
         } else {
             devices.forEach { device ->
                 ListItem(
@@ -555,6 +565,7 @@ fun AspectSheet(
         val modes = listOf(
             VideoScaleMode.FIT_SCREEN to stringResource(R.string.aspect_fit_screen),
             VideoScaleMode.FILL_SCREEN to stringResource(R.string.aspect_fill_screen),
+            VideoScaleMode.CROP_FILL to stringResource(R.string.aspect_crop_fill),
             VideoScaleMode.ORIGINAL to stringResource(R.string.aspect_original),
             VideoScaleMode.RATIO_16_9 to stringResource(R.string.aspect_16_9),
             VideoScaleMode.RATIO_4_3 to stringResource(R.string.aspect_4_3),

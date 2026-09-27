@@ -48,6 +48,11 @@ class VlcPlaybackEngine(context: Context) : PlaybackEngine {
     private var currentMedia: Media? = null
     private var currentFileDescriptor: ParcelFileDescriptor? = null
     private var lastMediaOptions: List<String> = emptyList()
+    private var originalMediaUri: Uri? = null
+    private var originalTitle: String? = null
+    private var streamServer: MediaStreamServer? = null
+    private var castStreamActive = false
+    private var multicastLock: android.net.wifi.WifiManager.MulticastLock? = null
     private var hwDecodingEnabled = true
     private var rotationDegrees = 0
     private val externalSubtitleUris = mutableListOf<Uri>()
@@ -112,7 +117,7 @@ class VlcPlaybackEngine(context: Context) : PlaybackEngine {
 
     override fun attachViews(layout: VLCVideoLayout, displayManager: DisplayManager?) {
         if (!mediaPlayer.vlcVout.areViewsAttached()) {
-            mediaPlayer.attachViews(layout, displayManager, true, false)
+            mediaPlayer.attachViews(layout, displayManager, true, true)
         }
     }
 
@@ -136,6 +141,16 @@ class VlcPlaybackEngine(context: Context) : PlaybackEngine {
         userAudioSelected = false
         userSubtitleSelected = false
         lastMediaOptions = options
+        originalMediaUri = uri
+        originalTitle = title
+        if (_activeRenderer.value != null && isLocalMediaUri(uri)) {
+            val streamUrl = startCastStream(uri)
+            if (streamUrl != null) {
+                openMedia(Uri.parse(streamUrl), title, emptyList(), positionMs = 0L)
+                return
+            }
+        }
+        if (!castStreamActive) stopCastStream()
         openMedia(uri, title, options, positionMs = 0L)
     }
 
@@ -387,6 +402,7 @@ class VlcPlaybackEngine(context: Context) : PlaybackEngine {
         val scaleType = when (mode) {
             VideoScaleMode.FIT_SCREEN -> MediaPlayer.ScaleType.SURFACE_BEST_FIT
             VideoScaleMode.FILL_SCREEN -> MediaPlayer.ScaleType.SURFACE_FILL
+            VideoScaleMode.CROP_FILL -> MediaPlayer.ScaleType.SURFACE_BEST_FIT
             VideoScaleMode.ORIGINAL -> MediaPlayer.ScaleType.SURFACE_ORIGINAL
             VideoScaleMode.RATIO_16_9 -> MediaPlayer.ScaleType.SURFACE_16_9
             VideoScaleMode.RATIO_4_3 -> MediaPlayer.ScaleType.SURFACE_4_3
@@ -442,6 +458,7 @@ class VlcPlaybackEngine(context: Context) : PlaybackEngine {
 
     override fun startRendererDiscovery() {
         if (rendererDiscoverers.isNotEmpty()) return
+        acquireMulticastLock()
         RendererDiscoverer.list(libVlc).orEmpty().forEach { description ->
             runCatching {
                 val discoverer = RendererDiscoverer(libVlc, description.name)
@@ -477,11 +494,39 @@ class VlcPlaybackEngine(context: Context) : PlaybackEngine {
         rendererDiscoverers.clear()
         rendererItems.values.forEach { item -> runCatching { item.release() } }
         rendererItems.clear()
+        releaseMulticastLock()
         publishRenderers()
+    }
+
+    private fun acquireMulticastLock() {
+        if (multicastLock != null) return
+        runCatching {
+            val wifi = appContext.getSystemService(Context.WIFI_SERVICE)
+                as android.net.wifi.WifiManager
+            multicastLock = wifi.createMulticastLock("openvisum-dlna").apply {
+                setReferenceCounted(false)
+                acquire()
+            }
+        }.onFailure { Log.w(TAG, "Multicast lock unavailable", it) }
+    }
+
+    private fun releaseMulticastLock() {
+        runCatching { multicastLock?.release() }
+        multicastLock = null
     }
 
     override fun connectRenderer(deviceId: String) {
         val item = rendererItems[deviceId] ?: return
+        val originalUri = originalMediaUri ?: return
+        val position = _state.value.positionMs
+        if (isLocalMediaUri(originalUri)) {
+            val streamUrl = startCastStream(originalUri)
+            if (streamUrl == null) {
+                _state.update { it.copy(errorMessage = "Failed to start local stream for casting") }
+                return
+            }
+            openMedia(Uri.parse(streamUrl), originalTitle, emptyList(), positionMs = position)
+        }
         val result = mediaPlayer.setRenderer(item)
         if (result == 0) {
             _activeRenderer.value = RendererDevice(
@@ -493,12 +538,46 @@ class VlcPlaybackEngine(context: Context) : PlaybackEngine {
         } else {
             Log.w(TAG, "Failed to select renderer $deviceId (code $result)")
             _state.update { it.copy(errorMessage = "Failed to connect to renderer") }
+            stopCastStream()
+            openMedia(originalUri, originalTitle, lastMediaOptions, positionMs = position)
         }
     }
 
     override fun disconnectRenderer() {
+        val position = _state.value.positionMs
+        val originalUri = originalMediaUri
         mediaPlayer.setRenderer(null)
         _activeRenderer.value = null
+        stopCastStream()
+        if (originalUri != null && _state.value.mediaUri != originalUri) {
+            openMedia(originalUri, originalTitle, lastMediaOptions, positionMs = position)
+            play()
+        }
+    }
+
+    private fun isLocalMediaUri(uri: Uri): Boolean {
+        val scheme = uri.scheme?.lowercase()
+        return scheme == null || scheme == "content" || scheme == "file"
+    }
+
+    private fun startCastStream(uri: Uri): String? {
+        val server = streamServer ?: MediaStreamServer(appContext).also { streamServer = it }
+        if (!server.start(uri)) {
+            stopCastStream()
+            return null
+        }
+        val url = server.streamUrl ?: run {
+            stopCastStream()
+            return null
+        }
+        castStreamActive = true
+        Log.d(TAG, "Casting via $url")
+        return url
+    }
+
+    private fun stopCastStream() {
+        streamServer?.stop()
+        castStreamActive = false
     }
 
     private fun rendererKey(item: RendererItem): String = "${item.type}:${item.name}"
@@ -741,6 +820,8 @@ class VlcPlaybackEngine(context: Context) : PlaybackEngine {
         runCatching {
             mediaPlayer.stop()
             mediaPlayer.detachViews()
+            stopCastStream()
+            streamServer = null
             stopRendererDiscovery()
             releaseMedia()
             mediaPlayer.release()
