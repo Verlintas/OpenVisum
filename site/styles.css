@@ -407,52 +407,6 @@ a { color: inherit; }
   transform: rotate(-45deg);
 }
 
-/* ---------- themes ---------- */
-.theme-lab {
-  display: grid;
-  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
-  gap: 38px;
-  align-items: start;
-}
-.theme-picker {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 12px;
-}
-.theme-picker button {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 13px 16px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--card-border);
-  background: var(--card);
-  color: var(--text);
-  font-family: inherit;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: transform 0.16s ease, border-color 0.2s ease, background 0.2s ease;
-}
-.theme-picker button:hover { transform: translateY(-2px); }
-.theme-picker button.active {
-  border-color: var(--accent-2);
-  background: rgba(var(--accent-rgb), 0.16);
-  box-shadow: 0 10px 26px rgba(var(--accent-rgb), 0.22);
-}
-.theme-picker i { width: 18px; height: 18px; border-radius: 50%; background: var(--c, #fff); flex: none; box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.16) inset; }
-.dynamic-ring {
-  background: conic-gradient(#4F6BED, #00838F, #2E7D32, #B26A00, #C2185B, #6A3DE8, #C62828, #455A64, #4F6BED) !important;
-}
-.theme-preview { display: flex; flex-direction: column; align-items: center; gap: 14px; }
-.theme-preview img {
-  width: min(264px, 64vw);
-  border-radius: 22px;
-  border: 1px solid var(--card-border);
-  box-shadow: 0 20px 48px rgba(5, 8, 18, 0.68);
-}
-.hint { color: var(--text-faint); font-size: 13px; text-align: center; max-width: 300px; margin: 0; }
-
 /* ---------- download ---------- */
 .downloads { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
 .dl-card {
@@ -697,7 +651,6 @@ a { color: inherit; }
   .show-row, .show-row.reverse { grid-template-columns: 1fr; gap: 24px; }
   .show-row.reverse .show-media { order: 0; }
   .show-row.reverse .show-copy { order: 0; }
-  .theme-lab { grid-template-columns: 1fr; }
   .release-panel { grid-template-columns: 1fr; }
   .footer-grid { grid-template-columns: repeat(2, 1fr); }
 }

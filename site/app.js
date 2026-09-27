@@ -133,47 +133,6 @@
     if (releaseLink && data.htmlUrl) releaseLink.href = data.htmlUrl;
   }
 
-  /* ---------------- themes ---------------- */
-  function hexToRgb(hex) {
-    var value = hex.replace('#', '');
-    var num = parseInt(value, 16);
-    return [(num >> 16) & 255, (num >> 8) & 255, num & 255];
-  }
-
-  function applyAccent(accent, accent2) {
-    if (accent === 'dynamic') {
-      accent = '#4F6BED';
-      accent2 = '#8FA2FF';
-    }
-    DOC.style.setProperty('--accent', accent);
-    DOC.style.setProperty('--accent-2', accent2);
-    DOC.style.setProperty('--accent-rgb', hexToRgb(accent).join(', '));
-  }
-
-  function initThemes() {
-    var picker = document.getElementById('themePicker');
-    if (!picker) return;
-    var buttons = picker.querySelectorAll('button');
-    var stored = null;
-    try { stored = localStorage.getItem('openvisum-accent'); } catch (e) {}
-
-    var activate = function (button, persist) {
-      buttons.forEach(function (b) { b.classList.remove('active'); });
-      button.classList.add('active');
-      applyAccent(button.getAttribute('data-accent'), button.getAttribute('data-accent-2'));
-      if (persist) {
-        try { localStorage.setItem('openvisum-accent', button.getAttribute('data-accent')); } catch (e) {}
-      }
-    };
-
-    var initial = null;
-    buttons.forEach(function (b) {
-      if (stored && b.getAttribute('data-accent') === stored) initial = b;
-      b.addEventListener('click', function () { activate(b, true); });
-    });
-    if (initial) activate(initial, false);
-  }
-
   /* ---------------- reveal ---------------- */
   function initReveal() {
     var items = document.querySelectorAll('.reveal');
@@ -269,7 +228,6 @@
     }
 
     initNav();
-    initThemes();
     initReveal();
     initLightbox();
     loadRelease();
