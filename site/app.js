@@ -133,6 +133,23 @@
     if (releaseLink && data.htmlUrl) releaseLink.href = data.htmlUrl;
   }
 
+  /* ---------------- code tabs ---------------- */
+  function initCodeTabs() {
+    var tabs = document.querySelectorAll('.code-tab');
+    if (!tabs.length) return;
+    tabs.forEach(function (tab) {
+      tab.addEventListener('click', function () {
+        tabs.forEach(function (t) { t.classList.remove('active'); });
+        document.querySelectorAll('.code-panel').forEach(function (panel) {
+          panel.classList.remove('active');
+        });
+        tab.classList.add('active');
+        var panel = document.getElementById(tab.getAttribute('data-code'));
+        if (panel) panel.classList.add('active');
+      });
+    });
+  }
+
   /* ---------------- reveal ---------------- */
   function initReveal() {
     var items = document.querySelectorAll('.reveal');
@@ -228,6 +245,7 @@
     }
 
     initNav();
+    initCodeTabs();
     initReveal();
     initLightbox();
     loadRelease();

@@ -44,6 +44,7 @@
     <nav class="nav-links" id="navLinks">
       <a href="#features" class="i18n" data-zh="功能" data-en="Features">功能</a>
       <a href="#showcase" class="i18n" data-zh="展示" data-en="Showcase">展示</a>
+      <a href="#tech" class="i18n" data-zh="技术" data-en="Tech">技术</a>
       <a href="#download" class="i18n" data-zh="下载" data-en="Download">下载</a>
       <a href="#faq" class="i18n" data-zh="FAQ" data-en="FAQ">FAQ</a>
       <a class="nav-gh" href="https://github.com/Verlintas/OpenVisum" target="_blank" rel="noopener">
@@ -243,6 +244,130 @@
             <li class="i18n" data-zh="手机与平板两套布局，同一套设计语言" data-en="Phone and tablet layouts share one design language">手机与平板两套布局，同一套设计语言</li>
           </ul>
         </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ TECH ============ -->
+  <section id="tech" class="section alt">
+    <div class="container">
+      <header class="section-head reveal">
+        <h2 class="i18n" data-zh="技术内幕" data-en="Under the hood">技术内幕</h2>
+        <p class="section-sub i18n" data-zh="不只表面功夫——播放管线、投屏串流、字幕匹配，这些脏活累活都是自己实现的。" data-en="Not just a pretty shell — the playback pipeline, casting server and subtitle matching are all implemented from scratch.">不只表面功夫——播放管线、投屏串流、字幕匹配，这些脏活累活都是自己实现的。</p>
+      </header>
+
+      <div class="tech-top">
+        <div class="arch-card reveal">
+          <h3 class="i18n" data-zh="模块架构" data-en="Module architecture">模块架构</h3>
+          <div class="arch">
+            <div class="arch-box arch-app">
+              <strong>app</strong>
+              <span class="i18n" data-zh="Compose UI · 导航 · ViewModel" data-en="Compose UI · navigation · ViewModels">Compose UI · 导航 · ViewModel</span>
+            </div>
+            <div class="arch-arrow i18n" data-zh="▼ 依赖" data-en="▼ depends on">▼ 依赖</div>
+            <div class="arch-row">
+              <div class="arch-box">
+                <strong>core:player</strong>
+                <span class="i18n" data-zh="libVLC 引擎 · 字幕/音轨 · 局域网串流" data-en="libVLC engine · tracks · LAN streaming">libVLC 引擎 · 字幕/音轨 · 局域网串流</span>
+              </div>
+              <div class="arch-box">
+                <strong>core:data</strong>
+                <span class="i18n" data-zh="Room · MediaStore/SAF · SMB/WebDAV" data-en="Room · MediaStore/SAF · SMB/WebDAV">Room · MediaStore/SAF · SMB/WebDAV</span>
+              </div>
+            </div>
+            <div class="arch-arrow i18n" data-zh="▼ 依赖" data-en="▼ depends on">▼ 依赖</div>
+            <div class="arch-box">
+              <strong>core:common</strong>
+              <span class="i18n" data-zh="纯 Kotlin：字幕匹配 · 语言归一化 · 时间工具" data-en="Pure Kotlin: subtitle matching · language normalization · time utils">纯 Kotlin：字幕匹配 · 语言归一化 · 时间工具</span>
+            </div>
+          </div>
+          <div class="stack">
+            <span class="stack-label i18n" data-zh="技术栈" data-en="Stack">技术栈</span>
+            <div class="stack-chips">
+              <span>Kotlin 2.3</span><span>Jetpack Compose</span><span>Material 3</span><span>libVLC 3.7</span><span>Room</span><span>DataStore</span><span>Coil 3</span><span>OkHttp</span><span>jcifs-ng</span><span>jUPnP</span><span>Coroutines</span><span>kotlinx.serialization</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="eng-stats reveal">
+          <div class="stat"><dt>20k+</dt><dd class="i18n" data-zh="行 Kotlin 代码（92 个文件）" data-en="lines of Kotlin (92 files)">行 Kotlin 代码（92 个文件）</dd></div>
+          <div class="stat"><dt>4</dt><dd class="i18n" data-zh="Gradle 模块：app + 3 个 core" data-en="Gradle modules: app + 3 core">Gradle 模块：app + 3 个 core</dd></div>
+          <div class="stat"><dt>16</dt><dd class="i18n" data-zh="单元测试：字幕匹配 / 时间 / 音轨选择" data-en="unit tests: subtitle matching / time / track selection">单元测试：字幕匹配 / 时间 / 音轨选择</dd></div>
+          <div class="stat"><dt>3</dt><dd class="i18n" data-zh="ABI 签名构建，CI 自动发布与校验" data-en="signed ABIs, auto-published with checksums by CI">ABI 签名构建，CI 自动发布与校验</dd></div>
+        </div>
+      </div>
+
+      <div class="tech-cards">
+        <article class="card reveal">
+          <h3 class="i18n" data-zh="手写局域网串流服务器" data-en="Hand-rolled LAN stream server">手写局域网串流服务器</h3>
+          <p class="i18n" data-zh="约 270 行 Kotlin 实现 HTTP 服务器：Range/206 分段、流式响应、逐请求线程。电视拉流拖动进度即时响应，不引入任何第三方 server 依赖。" data-en="~270 lines of Kotlin implementing an HTTP server: Range/206, streaming responses, per-request threads. TVs can seek instantly — no third-party server dependency.">约 270 行 Kotlin 实现 HTTP 服务器：Range/206 分段、流式响应、逐请求线程。电视拉流拖动进度即时响应，不引入任何第三方 server 依赖。</p>
+        </article>
+        <article class="card reveal">
+          <h3 class="i18n" data-zh="字幕匹配打分算法" data-en="Subtitle matching scorer">字幕匹配打分算法</h3>
+          <p class="i18n" data-zh="先剔除片源发布标签（1080p / BluRay / WEB-DL / x265…），再按「主名精确 100 分、主名+语言 90、包含 60、模糊 30」四级打分；内置简繁双语与 chs&amp;eng 等标记识别。" data-en="Strips release tags (1080p / BluRay / WEB-DL / x265…) then scores in four tiers: exact base 100, base+language 90, contains 60, fuzzy 30 — with CJK and chs&amp;eng token support.">先剔除片源发布标签（1080p / BluRay / WEB-DL / x265…），再按「主名精确 100 分、主名+语言 90、包含 60、模糊 30」四级打分；内置简繁双语与 chs&amp;eng 等标记识别。</p>
+        </article>
+        <article class="card reveal">
+          <h3 class="i18n" data-zh="content:// 与文件描述符桥接" data-en="content:// via file descriptors">content:// 与文件描述符桥接</h3>
+          <p class="i18n" data-zh="libVLC 无法直接打开 Android 的 content MRL：媒体经 ParcelFileDescriptor 桥接打开，外挂字幕先复制到缓存再 addSlave，SAF 文件夹也能直接播。" data-en="libVLC cannot open Android content MRLs: media is opened through a ParcelFileDescriptor, external subtitles are copied to cache before addSlave, and SAF folders play directly.">libVLC 无法直接打开 Android 的 content MRL：媒体经 ParcelFileDescriptor 桥接打开，外挂字幕先复制到缓存再 addSlave，SAF 文件夹也能直接播。</p>
+        </article>
+        <article class="card reveal">
+          <h3 class="i18n" data-zh="真裁剪，不依赖视频滤镜" data-en="True cropping, no video filters">真裁剪，不依赖视频滤镜</h3>
+          <p class="i18n" data-zh="libVLC 的裁剪滤镜在 Android vout 上不可用，改为 TextureView 渲染 + graphicsLayer 等比放大，由父容器裁边——数学保证比例不变形。" data-en="libVLC crop filters do not work on the Android vout, so rendering uses a TextureView scaled uniformly via graphicsLayer and clipped by the parent — distortion-free by construction.">libVLC 的裁剪滤镜在 Android vout 上不可用，改为 TextureView 渲染 + graphicsLayer 等比放大，由父容器裁边——数学保证比例不变形。</p>
+        </article>
+        <article class="card reveal">
+          <h3 class="i18n" data-zh="进度条画面预览" data-en="Live seek thumbnails">进度条画面预览</h3>
+          <p class="i18n" data-zh="用 Coil 的 videoFrameMillis 按 10 秒分桶取帧，内存缓存复用缩略图，拖动时保留上一帧避免闪烁；监听 Coil 3 的 StateFlow 正确触发重组。" data-en="Frames are grabbed per 10-second bucket with Coil's videoFrameMillis, cached in memory and kept on screen while dragging to avoid flicker; Coil 3's StateFlow is observed correctly for recomposition.">用 Coil 的 videoFrameMillis 按 10 秒分桶取帧，内存缓存复用缩略图，拖动时保留上一帧避免闪烁；监听 Coil 3 的 StateFlow 正确触发重组。</p>
+        </article>
+        <article class="card reveal">
+          <h3 class="i18n" data-zh="数据安全与无损刷新" data-en="Credential safety &amp; lossless rescans">数据安全与无损刷新</h3>
+          <p class="i18n" data-zh="SMB/WebDAV 凭据经 Android Keystore AES-GCM 加密；媒体库重扫走 upsert，只更新元数据，收藏与观看进度永不丢失；无统计 SDK。" data-en="SMB/WebDAV credentials are AES-GCM encrypted with the Android Keystore; rescans upsert metadata while favorites and progress survive; no analytics SDKs.">SMB/WebDAV 凭据经 Android Keystore AES-GCM 加密；媒体库重扫走 upsert，只更新元数据，收藏与观看进度永不丢失；无统计 SDK。</p>
+        </article>
+      </div>
+
+      <div class="code-card reveal">
+        <div class="code-tabs">
+          <button class="code-tab active" data-code="code-cast"><span class="i18n" data-zh="投屏串流" data-en="Casting">投屏串流</span></button>
+          <button class="code-tab" data-code="code-sub"><span class="i18n" data-zh="字幕匹配" data-en="Subtitles">字幕匹配</span></button>
+          <button class="code-tab" data-code="code-crop"><span class="i18n" data-zh="裁剪渲染" data-en="Cropping">裁剪渲染</span></button>
+        </div>
+        <pre class="code-panel active" id="code-cast"><code><span class="c-com">// core:player/MediaStreamServer.kt — 内置局域网串流</span>
+val socket = ServerSocket(0)                 <span class="c-com">// 任选一个局域网端口</span>
+<span class="c-com">// 交给 DLNA 渲染设备的地址：</span>
+"http://$ip:${socket.localPort}/media"
+
+<span class="c-com">// 电视拖动进度 → Range 请求 → 206 分段响应</span>
+val start = rangeStart.coerceIn(0L, total - 1)
+val end = (rangeEnd ?: total - 1).coerceIn(start, total - 1)
+writeStatus(
+    client,
+    <span class="c-str">"206 Partial Content"</span>,
+    listOf(
+        <span class="c-str">"Content-Range"</span> to <span class="c-str">"bytes $start-$end/$total"</span>,
+        <span class="c-str">"Content-Length"</span> to <span class="c-str">"${end - start + 1}"</span>,
+    ),
+)</code></pre>
+        <pre class="code-panel" id="code-sub"><code><span class="c-com">// core:common/SubtitleMatcher.kt — 同目录字幕自动匹配</span>
+const val SCORE_EXACT = 100              <span class="c-com">// 主名完全一致</span>
+const val SCORE_BASE_WITH_LANGUAGE = 90  <span class="c-com">// 主名 + 语言标记</span>
+const val SCORE_CONTAINS_BASE = 60       <span class="c-com">// 主名包含关系</span>
+const val SCORE_FUZZY = 30               <span class="c-com">// 模糊匹配</span>
+
+<span class="c-com">// 比对前先剔除发布标签：</span>
+<span class="c-str">"1080p" "bluray" "web-dl" "x265" "10bit" …</span></code></pre>
+        <pre class="code-panel" id="code-crop"><code><span class="c-com">// app/ui/player/PlayerScreen.kt — 裁剪填满：等比放大，父级裁边</span>
+val fitWidth  = <span class="c-kw">if</span> (containerAspect &gt; videoAspect)
+    containerHeight * videoAspect <span class="c-kw">else</span> containerWidth
+val fitHeight = fitWidth / videoAspect
+val layerScale = maxOf(
+    containerWidth / fitWidth,
+    containerHeight / fitHeight,
+)
+
+AndroidView(
+    modifier = Modifier
+        .fillMaxSize()
+        .graphicsLayer { scaleX = layerScale; scaleY = layerScale },
+)</code></pre>
       </div>
     </div>
   </section>
