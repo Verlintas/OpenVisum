@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: 使用说明与常见问题
+    url: https://verlintas.github.io/OpenVisum/#faq
+    about: 安装、投屏、网络播放、隐私等常见问题先看官网 FAQ
+  - name: 下载最新版本
+    url: https://github.com/Verlintas/OpenVisum/releases/latest
+    about: 反馈问题前请先确认使用最新版本

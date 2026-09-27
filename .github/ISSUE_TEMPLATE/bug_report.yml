@@ -1,0 +1,77 @@
+name: Bug 反馈 / Bug report
+description: 报告一个问题（请尽量填写完整，便于快速定位）
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢反馈！提交前请先搜索 [已有 Issues](https://github.com/Verlintas/OpenVisum/issues?q=is%3Aissue)，
+        并确认使用的是[最新版本](https://github.com/Verlintas/OpenVisum/releases/latest)。
+  - type: input
+    id: version
+    attributes:
+      label: 应用版本
+      description: 应用内「设置 → 关于」查看，或下载来源的版本号
+      placeholder: 如 1.0.13
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: 设备型号
+      placeholder: 如 小米 15 / Pixel 9 / 三星 Tab S10
+    validations:
+      required: true
+  - type: input
+    id: android
+    attributes:
+      label: 系统版本
+      placeholder: 如 Android 15（HyperOS 2.0）/ One UI 7
+    validations:
+      required: true
+  - type: dropdown
+    id: source
+    attributes:
+      label: 媒体来源
+      description: 出问题时播放的内容来自哪里？
+      options:
+        - 本地文件（媒体库 / 文件夹）
+        - SMB
+        - WebDAV
+        - HTTP / HLS 直链
+        - 其他 / 不确定
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: 复现步骤
+      placeholder: |
+        1. 打开 ...
+        2. 点击 ...
+        3. 出现 ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: 预期表现
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: 实际表现
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: 日志（可选但很有帮助）
+      description: "可用 adb 抓取：adb logcat -d | grep -iE \"openvisum|vlc\""
+      render: shell
+  - type: textarea
+    id: extra
+    attributes:
+      label: 截图 / 录屏 / 其他补充
