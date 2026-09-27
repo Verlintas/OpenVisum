@@ -45,6 +45,8 @@ data class PlaybackState(
     val audioDelayMs: Long = 0L,
     val videoScale: VideoScaleMode = VideoScaleMode.FIT_SCREEN,
     val aspectRatio: String? = null,
+    val chapters: List<PlayerChapter> = emptyList(),
+    val currentChapter: Int = -1,
     val equalizer: EqualizerState = EqualizerState(),
     val subtitleStyle: SubtitleStyle = SubtitleStyle(),
     val stereoMode: AudioStereoMode = AudioStereoMode.AUTO,
@@ -69,6 +71,13 @@ enum class VideoScaleMode {
     RATIO_21_9,
     RATIO_235_1,
 }
+
+data class PlayerChapter(
+    val index: Int,
+    val name: String?,
+    val startMs: Long,
+    val durationMs: Long,
+)
 
 data class EqualizerState(
     val enabled: Boolean = false,

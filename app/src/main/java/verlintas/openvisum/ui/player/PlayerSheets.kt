@@ -44,6 +44,9 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CloudDownload
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Subtitles
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.IconButton
+import verlintas.openvisum.core.data.Bookmark
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -831,6 +834,101 @@ fun EqualizerSheet(
                             modifier = Modifier.width(48.dp),
                         )
                     }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun BookmarkSheet(
+    state: PlaybackState,
+    bookmarks: List<Bookmark>,
+    onSelectChapter: (Int) -> Unit,
+    onSeekTo: (Long) -> Unit,
+    onAddBookmark: () -> Unit,
+    onDeleteBookmark: (Long) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    TrackBottomSheet(
+        title = stringResource(R.string.player_bookmarks),
+        onDismiss = onDismiss,
+    ) {
+        LazyColumn(modifier = Modifier.heightIn(max = 460.dp)) {
+            if (state.chapters.isNotEmpty()) {
+                item {
+                    Text(
+                        text = stringResource(R.string.player_chapters),
+                        style = MaterialTheme.typography.titleSmall,
+                        modifier = Modifier.padding(vertical = 6.dp),
+                    )
+                }
+                itemsIndexed(
+                    items = state.chapters,
+                    key = { _, chapter -> "chapter-${chapter.index}" },
+                ) { _, chapter ->
+                    ListItem(
+                        headlineContent = {
+                            Text(
+                                text = chapter.name
+                                    ?: stringResource(R.string.player_chapter_default, chapter.index + 1),
+                            )
+                        },
+                        supportingContent = { Text(TimeUtils.formatDuration(chapter.startMs)) },
+                        trailingContent = if (chapter.index == state.currentChapter) {
+                            { Icon(Icons.Filled.Check, contentDescription = null) }
+                        } else {
+                            null
+                        },
+                        modifier = Modifier.clickable { onSelectChapter(chapter.index) },
+                    )
+                }
+                item { HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp)) }
+            }
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = stringResource(R.string.player_bookmarks_section),
+                        style = MaterialTheme.typography.titleSmall,
+                    )
+                    TextButton(onClick = onAddBookmark) {
+                        Icon(
+                            imageVector = Icons.Filled.Add,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp),
+                        )
+                        Spacer(Modifier.width(6.dp))
+                        Text(stringResource(R.string.player_bookmark_add))
+                    }
+                }
+            }
+            if (bookmarks.isEmpty()) {
+                item {
+                    Text(
+                        text = stringResource(R.string.player_bookmarks_empty),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(vertical = 12.dp),
+                    )
+                }
+            } else {
+                items(bookmarks, key = { it.id }) { bookmark ->
+                    ListItem(
+                        headlineContent = { Text(bookmark.label) },
+                        trailingContent = {
+                            IconButton(onClick = { onDeleteBookmark(bookmark.id) }) {
+                                Icon(
+                                    imageVector = Icons.Filled.Delete,
+                                    contentDescription = stringResource(R.string.player_bookmark_delete),
+                                )
+                            }
+                        },
+                        modifier = Modifier.clickable { onSeekTo(bookmark.positionMs) },
+                    )
                 }
             }
         }

@@ -275,4 +275,11 @@
     <string name="settings_auto_play_next_summary">播放結束後自動播放同資料夾的下一集</string>
     <string name="player_previous">上一集</string>
     <string name="player_next">下一集</string>
+    <string name="player_bookmarks">章節與書籤</string>
+    <string name="player_chapters">章節</string>
+    <string name="player_bookmarks_section">書籤</string>
+    <string name="player_bookmark_add">新增目前書籤</string>
+    <string name="player_bookmarks_empty">還沒有書籤，播放時點「新增目前書籤」記錄位置。</string>
+    <string name="player_bookmark_delete">刪除書籤</string>
+    <string name="player_chapter_default">章節 %1$d</string>
 </resources>

@@ -23,6 +23,8 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Database(
     entities = [
@@ -30,8 +32,9 @@ import androidx.room.RoomDatabase
         SafFolderEntity::class,
         NetworkSourceEntity::class,
         StreamHistoryEntity::class,
+        BookmarkEntity::class,
     ],
-    version = 2,
+    version = 3,
     exportSchema = true,
 )
 abstract class OpenVisumDatabase : RoomDatabase() {
@@ -44,10 +47,29 @@ abstract class OpenVisumDatabase : RoomDatabase() {
 
     abstract fun streamHistoryDao(): StreamHistoryDao
 
+    abstract fun bookmarkDao(): BookmarkDao
+
     companion object {
         fun create(context: Context): OpenVisumDatabase =
             Room.databaseBuilder(context, OpenVisumDatabase::class.java, "openvisum.db")
+                .addMigrations(MIGRATION_2_3)
                 .fallbackToDestructiveMigration(dropAllTables = true)
                 .build()
+
+        private val MIGRATION_2_3 = object : Migration(2, 3) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `bookmarks` (" +
+                        "`id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, " +
+                        "`media_uri` TEXT NOT NULL, " +
+                        "`position_ms` INTEGER NOT NULL, " +
+                        "`label` TEXT NOT NULL, " +
+                        "`created_at` INTEGER NOT NULL)",
+                )
+                db.execSQL(
+                    "CREATE INDEX IF NOT EXISTS `index_bookmarks_media_uri` ON `bookmarks` (`media_uri`)",
+                )
+            }
+        }
     }
 }

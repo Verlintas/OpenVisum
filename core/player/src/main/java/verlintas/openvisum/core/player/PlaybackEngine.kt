@@ -97,6 +97,12 @@ interface PlaybackEngine {
 
     fun setAspectRatio(ratio: String?)
 
+    fun setChapter(index: Int)
+
+    fun nextChapter()
+
+    fun previousChapter()
+
     fun setRotation(degrees: Int)
 
     fun setEqualizer(config: EqualizerState)

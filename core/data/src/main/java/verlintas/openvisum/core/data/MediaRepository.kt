@@ -25,6 +25,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
+import verlintas.openvisum.core.data.db.BookmarkEntity
 import verlintas.openvisum.core.data.db.MediaEntity
 import verlintas.openvisum.core.data.db.OpenVisumDatabase
 import verlintas.openvisum.core.data.model.MediaItem
@@ -37,6 +38,13 @@ import verlintas.openvisum.core.data.source.SubtitleFile
 import verlintas.openvisum.core.data.source.VideoFinder
 import verlintas.openvisum.core.data.source.SubtitleFinder
 
+data class Bookmark(
+    val id: Long,
+    val positionMs: Long,
+    val label: String,
+    val createdAt: Long,
+)
+
 data class FolderSummary(
     val folderKey: String,
     val folderName: String,
@@ -46,7 +54,7 @@ data class FolderSummary(
 
 class MediaRepository(
     private val context: Context,
-    database: OpenVisumDatabase,
+    private val database: OpenVisumDatabase,
     private val scanner: MediaStoreScanner,
     val safFolders: SafFolderRepository,
     private val subtitleFinder: SubtitleFinder,
@@ -118,6 +126,33 @@ class MediaRepository(
     suspend fun removeSafFolder(treeUri: String) = safFolders.removeFolder(treeUri)
 
     fun safFolderList() = safFolders.observeFolders()
+
+    fun observeBookmarks(mediaUri: String): Flow<List<Bookmark>> =
+        database.bookmarkDao().observeFor(mediaUri).map { entities ->
+            entities.map { entity ->
+                Bookmark(
+                    id = entity.id,
+                    positionMs = entity.positionMs,
+                    label = entity.label,
+                    createdAt = entity.createdAt,
+                )
+            }
+        }
+
+    suspend fun addBookmark(mediaUri: String, positionMs: Long, label: String) {
+        database.bookmarkDao().insert(
+            BookmarkEntity(
+                mediaUri = mediaUri,
+                positionMs = positionMs,
+                label = label,
+                createdAt = System.currentTimeMillis(),
+            ),
+        )
+    }
+
+    suspend fun deleteBookmark(id: Long) {
+        database.bookmarkDao().delete(id)
+    }
 
     suspend fun findSiblingVideos(mediaUri: String): List<SiblingVideo> =
         runCatching { videoFinder.findFor(mediaUri) }

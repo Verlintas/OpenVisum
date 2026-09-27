@@ -130,6 +130,19 @@ interface MediaDao {
 }
 
 @Dao
+interface BookmarkDao {
+
+    @Query("SELECT * FROM bookmarks WHERE media_uri = :mediaUri ORDER BY position_ms ASC")
+    fun observeFor(mediaUri: String): Flow<List<BookmarkEntity>>
+
+    @Insert
+    suspend fun insert(bookmark: BookmarkEntity): Long
+
+    @Query("DELETE FROM bookmarks WHERE id = :id")
+    suspend fun delete(id: Long)
+}
+
+@Dao
 interface SafFolderDao {
 
     @Query("SELECT * FROM saf_folders ORDER BY addedAt ASC")

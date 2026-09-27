@@ -26,6 +26,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -34,6 +40,8 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.videolan.libvlc.util.VLCVideoLayout
 import verlintas.openvisum.core.common.util.LanguageUtils
+import verlintas.openvisum.core.common.util.TimeUtils
+import verlintas.openvisum.core.data.Bookmark
 import verlintas.openvisum.core.data.MediaRepository
 import verlintas.openvisum.core.data.source.SiblingVideo
 import verlintas.openvisum.core.data.NetworkRepository
@@ -85,6 +93,14 @@ class PlayerViewModel(
 
     private val _playlist = MutableStateFlow(PlaylistState())
     val playlist: StateFlow<PlaylistState> = _playlist.asStateFlow()
+
+    val bookmarks: StateFlow<List<Bookmark>> = engine.state
+        .map { it.mediaUri?.toString() }
+        .distinctUntilChanged()
+        .flatMapLatest { uri ->
+            if (uri == null) flowOf(emptyList()) else repository.observeBookmarks(uri)
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     private var openedUri: Uri? = null
     private var lastSavedAt = 0L
@@ -204,6 +220,25 @@ class PlayerViewModel(
             refreshPlaylist(uri)
         }
     }
+
+    fun addBookmark() {
+        val playbackState = engine.state.value
+        val uri = playbackState.mediaUri ?: return
+        val position = playbackState.positionMs.coerceAtLeast(0L)
+        viewModelScope.launch {
+            repository.addBookmark(
+                mediaUri = uri.toString(),
+                positionMs = position,
+                label = TimeUtils.formatDuration(position),
+            )
+        }
+    }
+
+    fun deleteBookmark(id: Long) {
+        viewModelScope.launch { repository.deleteBookmark(id) }
+    }
+
+    fun selectChapter(index: Int) = engine.setChapter(index)
 
     fun playNext() {
         val playlist = _playlist.value

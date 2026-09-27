@@ -277,4 +277,11 @@
     <string name="settings_auto_play_next_summary">When playback ends, continue with the next video in the same folder</string>
     <string name="player_previous">Previous video</string>
     <string name="player_next">Next video</string>
+    <string name="player_bookmarks">Bookmarks &amp; chapters</string>
+    <string name="player_chapters">Chapters</string>
+    <string name="player_bookmarks_section">Bookmarks</string>
+    <string name="player_bookmark_add">Add bookmark here</string>
+    <string name="player_bookmarks_empty">No bookmarks yet. Add one while watching.</string>
+    <string name="player_bookmark_delete">Delete bookmark</string>
+    <string name="player_chapter_default">Chapter %1$d</string>
 </resources>

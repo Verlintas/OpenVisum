@@ -86,6 +86,7 @@ fun PlayerScreen(
     val state by viewModel.state.collectAsStateWithLifecycle()
     val onlineSubtitles by viewModel.onlineSubtitles.collectAsStateWithLifecycle()
     val renderers by viewModel.renderers.collectAsStateWithLifecycle()
+    val bookmarks by viewModel.bookmarks.collectAsStateWithLifecycle()
     val activeRenderer by viewModel.activeRenderer.collectAsStateWithLifecycle()
     val uri = remember(mediaUri) { Uri.parse(mediaUri) }
 
@@ -252,6 +253,16 @@ fun PlayerScreen(
             onSetAbStart = viewModel::markAbLoopStart,
             onSetAbEnd = viewModel::markAbLoopEnd,
             onClearAb = viewModel::clearAbLoop,
+            onDismiss = { activeSheet = null },
+        )
+
+        PlayerSheet.BOOKMARKS -> BookmarkSheet(
+            state = state,
+            bookmarks = bookmarks,
+            onSelectChapter = viewModel::selectChapter,
+            onSeekTo = viewModel::seekTo,
+            onAddBookmark = viewModel::addBookmark,
+            onDeleteBookmark = viewModel::deleteBookmark,
             onDismiss = { activeSheet = null },
         )
 

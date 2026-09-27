@@ -19,6 +19,7 @@
 
 package verlintas.openvisum.core.data.db
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
@@ -47,6 +48,18 @@ data class MediaEntity(
     val lastPlayedAt: Long = 0L,
     val playbackPositionMs: Long = 0L,
     val playbackDurationMs: Long = 0L,
+)
+
+@Entity(
+    tableName = "bookmarks",
+    indices = [Index("media_uri")],
+)
+data class BookmarkEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    @ColumnInfo(name = "media_uri") val mediaUri: String,
+    @ColumnInfo(name = "position_ms") val positionMs: Long,
+    @ColumnInfo(name = "label") val label: String,
+    @ColumnInfo(name = "created_at") val createdAt: Long,
 )
 
 @Entity(tableName = "saf_folders")

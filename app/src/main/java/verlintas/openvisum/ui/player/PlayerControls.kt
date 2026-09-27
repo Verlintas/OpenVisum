@@ -61,6 +61,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AspectRatio
+import androidx.compose.material.icons.filled.Bookmarks
 import androidx.compose.material.icons.filled.Cast
 import androidx.compose.material.icons.filled.CastConnected
 import androidx.compose.material.icons.filled.Forward10
@@ -481,6 +482,13 @@ fun PlayerControls(
                         },
                         label = stringResource(R.string.player_aspect),
                         onClick = { onOpenSheet(PlayerSheet.ASPECT) },
+                    )
+                    ControlButton(
+                        icon = {
+                            Icon(Icons.Filled.Bookmarks, contentDescription = null, tint = Color.White)
+                        },
+                        label = stringResource(R.string.player_bookmarks_section),
+                        onClick = { onOpenSheet(PlayerSheet.BOOKMARKS) },
                     )
                     ControlButton(
                         icon = {

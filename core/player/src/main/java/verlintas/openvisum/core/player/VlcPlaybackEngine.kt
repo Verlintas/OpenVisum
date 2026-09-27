@@ -40,6 +40,7 @@ import java.io.File
 import verlintas.openvisum.core.player.model.AudioStereoMode
 import verlintas.openvisum.core.player.model.EqualizerState
 import verlintas.openvisum.core.player.model.PlaybackState
+import verlintas.openvisum.core.player.model.PlayerChapter
 import verlintas.openvisum.core.player.model.PlayerTrack
 import verlintas.openvisum.core.player.model.RendererDevice
 import verlintas.openvisum.core.player.model.SubtitleStyle
@@ -120,6 +121,7 @@ class VlcPlaybackEngine(context: Context) : PlaybackEngine {
                 MediaPlayer.Event.TimeChanged -> onTimeChanged(event.timeChanged)
                 MediaPlayer.Event.LengthChanged -> {
                     _state.update { it.copy(durationMs = event.lengthChanged) }
+                    refreshChapters()
                     applyPendingSeekIfNeeded()
                 }
                 MediaPlayer.Event.SeekableChanged -> _state.update { it.copy(seekable = event.seekable) }
@@ -435,6 +437,21 @@ class VlcPlaybackEngine(context: Context) : PlaybackEngine {
     override fun setAspectRatio(ratio: String?) {
         mediaPlayer.setAspectRatio(ratio)
         _state.update { it.copy(aspectRatio = ratio) }
+    }
+
+    override fun setChapter(index: Int) {
+        runCatching { mediaPlayer.setChapter(index) }
+        refreshChapters()
+    }
+
+    override fun nextChapter() {
+        runCatching { mediaPlayer.nextChapter() }
+        refreshChapters()
+    }
+
+    override fun previousChapter() {
+        runCatching { mediaPlayer.previousChapter() }
+        refreshChapters()
     }
 
     override fun setRotation(degrees: Int) {
@@ -767,6 +784,27 @@ class VlcPlaybackEngine(context: Context) : PlaybackEngine {
                 language = detail?.language,
                 codec = detail?.codec,
             )
+        }
+    }
+
+    private fun refreshChapters() {
+        runCatching {
+            val titles = mediaPlayer.titles ?: return
+            val titleIndex = mediaPlayer.title
+            val chapters = if (titleIndex in titles.indices) {
+                mediaPlayer.getChapters(titleIndex)
+            } else {
+                null
+            } ?: return
+            val list = chapters.mapIndexed { index, chapter ->
+                PlayerChapter(
+                    index = index,
+                    name = chapter.name?.takeIf { it.isNotBlank() },
+                    startMs = chapter.timeOffset,
+                    durationMs = chapter.duration,
+                )
+            }
+            _state.update { it.copy(chapters = list, currentChapter = mediaPlayer.chapter) }
         }
     }
 

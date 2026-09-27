@@ -27,4 +27,5 @@ enum class PlayerSheet {
     EQUALIZER,
     ONLINE_SUBTITLE,
     CAST,
+    BOOKMARKS,
 }
