@@ -197,7 +197,9 @@
     var box = document.getElementById('lightbox');
     var img = document.getElementById('lbImg');
     if (!box || !img) return;
-    var figures = Array.prototype.slice.call(document.querySelectorAll('.g-item img'));
+    var figures = Array.prototype.slice.call(
+      document.querySelectorAll('.g-item img, .show-media img')
+    );
     if (!figures.length) return;
     var index = 0;
 
