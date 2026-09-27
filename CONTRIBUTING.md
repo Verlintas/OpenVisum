@@ -42,6 +42,16 @@ site/           官网静态页（GitHub Pages）
 - 不要提交密钥、签名文件（`*.jks`）、`local.properties` 或本地凭据
 - 界面改动请附上截图
 
+## 版权头
+
+所有源码文件（Kotlin、Gradle 脚本、site/tools 下的源文件）都必须带有 GPL-3.0-or-later 版权头，格式见任意现有文件的开头。提交前可本地校验：
+
+```bash
+tools/check-license-headers.sh
+```
+
+CI 会在构建前执行同样的检查，缺失头会直接失败。
+
 ## 代码风格
 
 - 沿用现有代码风格（Kotlin 官方风格、Compose 惯用写法）

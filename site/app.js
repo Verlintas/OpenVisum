@@ -1,3 +1,4 @@
+/* Copyright (C) 2026 Verlintas · SPDX-License-Identifier: GPL-3.0-or-later */
 (function () {
   var MIRRORED_PREFIX = 'downloads/';
   var DOC = document.documentElement;

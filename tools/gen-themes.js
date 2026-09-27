@@ -1,3 +1,4 @@
+/* Copyright (C) 2026 Verlintas · SPDX-License-Identifier: GPL-3.0-or-later */
 // Generates Material 3 color schemes for OpenVisum themes.
 // Usage: npm i @material/material-color-utilities && node gen-themes.js > GeneratedSchemes.kt
 const { Hct, SchemeContent, MaterialDynamicColors } = require('@material/material-color-utilities');
@@ -34,6 +35,24 @@ function argbOf(name, scheme) {
 }
 
 let out = '';
+out += '/*\n';
+out += ' * Copyright (C) 2026 Verlintas\n';
+out += ' * SPDX-License-Identifier: GPL-3.0-or-later\n';
+out += ' *\n';
+out += ' * This file is part of OpenVisum.\n';
+out += ' *\n';
+out += ' * OpenVisum is free software: you can redistribute it and/or modify it under\n';
+out += ' * the terms of the GNU General Public License as published by the Free Software\n';
+out += ' * Foundation, either version 3 of the License, or (at your option) any later\n';
+out += ' * version.\n';
+out += ' *\n';
+out += ' * OpenVisum is distributed in the hope that it will be useful, but WITHOUT ANY\n';
+out += ' * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR\n';
+out += ' * A PARTICULAR PURPOSE. See the GNU General Public License for more details.\n';
+out += ' *\n';
+out += ' * You should have received a copy of the GNU General Public License along with\n';
+out += ' * OpenVisum. If not, see <https://www.gnu.org/licenses/>.\n';
+out += ' */\n\n';
 out += '// Generated from https://github.com/material-foundation/material-color-utilities\n';
 out += '// Do not edit manually. Regenerate with tools/gen-themes.js.\n';
 out += 'package verlintas.openvisum.ui.theme\n\n';
