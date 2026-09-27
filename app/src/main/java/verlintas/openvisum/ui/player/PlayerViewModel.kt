@@ -32,6 +32,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -57,6 +58,12 @@ import verlintas.openvisum.core.player.model.PlaybackState
 import verlintas.openvisum.core.player.model.RendererDevice
 import verlintas.openvisum.core.player.model.SubtitleStyle
 import verlintas.openvisum.core.player.model.VideoScaleMode
+
+data class SleepTimerState(
+    val minutes: Int? = null,
+    val endsAtElapsedMs: Long? = null,
+    val endOfItem: Boolean = false,
+)
 
 data class PlaylistState(
     val items: List<SiblingVideo> = emptyList(),
@@ -94,6 +101,10 @@ class PlayerViewModel(
     private val _playlist = MutableStateFlow(PlaylistState())
     val playlist: StateFlow<PlaylistState> = _playlist.asStateFlow()
 
+    private val _sleepTimer = MutableStateFlow<SleepTimerState?>(null)
+    val sleepTimer: StateFlow<SleepTimerState?> = _sleepTimer.asStateFlow()
+    private var sleepJob: Job? = null
+
     val bookmarks: StateFlow<List<Bookmark>> = engine.state
         .map { it.mediaUri?.toString() }
         .distinctUntilChanged()
@@ -123,7 +134,11 @@ class PlayerViewModel(
                 if (playbackState.isEnded) {
                     if (!lastEnded) {
                         lastEnded = true
-                        if (autoPlayNext) playNext()
+                        if (_sleepTimer.value?.endOfItem == true) {
+                            clearSleepTimer()
+                        } else if (autoPlayNext) {
+                            playNext()
+                        }
                     }
                 } else {
                     lastEnded = false
@@ -219,6 +234,35 @@ class PlayerViewModel(
             )
             refreshPlaylist(uri)
         }
+    }
+
+    fun setSleepTimerMinutes(minutes: Int) {
+        sleepJob?.cancel()
+        if (minutes <= 0) {
+            _sleepTimer.value = null
+            return
+        }
+        val durationMs = minutes * 60_000L
+        _sleepTimer.value = SleepTimerState(
+            minutes = minutes,
+            endsAtElapsedMs = SystemClock.elapsedRealtime() + durationMs,
+        )
+        sleepJob = viewModelScope.launch {
+            delay(durationMs)
+            engine.pause()
+            _sleepTimer.value = null
+        }
+    }
+
+    fun setSleepTimerEndOfItem() {
+        sleepJob?.cancel()
+        _sleepTimer.value = SleepTimerState(endOfItem = true)
+    }
+
+    fun clearSleepTimer() {
+        sleepJob?.cancel()
+        sleepJob = null
+        _sleepTimer.value = null
     }
 
     fun addBookmark() {

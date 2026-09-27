@@ -282,4 +282,9 @@
     <string name="player_bookmarks_empty">还没有书签，播放时点「添加当前书签」记录位置。</string>
     <string name="player_bookmark_delete">删除书签</string>
     <string name="player_chapter_default">章节 %1$d</string>
+    <string name="player_sleep_timer">睡眠定时</string>
+    <string name="player_sleep_off">关闭</string>
+    <string name="player_sleep_minutes">%1$d 分钟</string>
+    <string name="player_sleep_end_of_item">播完当前</string>
+    <string name="player_sleep_active">%1$s 后暂停</string>
 </resources>

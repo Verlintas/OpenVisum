@@ -284,4 +284,9 @@
     <string name="player_bookmarks_empty">No bookmarks yet. Add one while watching.</string>
     <string name="player_bookmark_delete">Delete bookmark</string>
     <string name="player_chapter_default">Chapter %1$d</string>
+    <string name="player_sleep_timer">Sleep timer</string>
+    <string name="player_sleep_off">Off</string>
+    <string name="player_sleep_minutes">%1$d min</string>
+    <string name="player_sleep_end_of_item">End of video</string>
+    <string name="player_sleep_active">Sleep in %1$s</string>
 </resources>

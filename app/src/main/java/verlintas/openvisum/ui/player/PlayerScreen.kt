@@ -87,6 +87,7 @@ fun PlayerScreen(
     val onlineSubtitles by viewModel.onlineSubtitles.collectAsStateWithLifecycle()
     val renderers by viewModel.renderers.collectAsStateWithLifecycle()
     val bookmarks by viewModel.bookmarks.collectAsStateWithLifecycle()
+    val sleepTimer by viewModel.sleepTimer.collectAsStateWithLifecycle()
     val activeRenderer by viewModel.activeRenderer.collectAsStateWithLifecycle()
     val uri = remember(mediaUri) { Uri.parse(mediaUri) }
 
@@ -249,6 +250,10 @@ fun PlayerScreen(
 
         PlayerSheet.SPEED -> SpeedSheet(
             state = state,
+            sleepTimer = sleepTimer,
+            onSetSleepMinutes = viewModel::setSleepTimerMinutes,
+            onSleepEndOfItem = viewModel::setSleepTimerEndOfItem,
+            onClearSleep = viewModel::clearSleepTimer,
             onSelect = viewModel::setRate,
             onSetAbStart = viewModel::markAbLoopStart,
             onSetAbEnd = viewModel::markAbLoopEnd,

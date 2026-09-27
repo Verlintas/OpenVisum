@@ -19,6 +19,7 @@
 
 package verlintas.openvisum.ui.player
 
+import android.os.SystemClock
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
@@ -456,10 +457,14 @@ private fun DelaySlider(
 @Composable
 fun SpeedSheet(
     state: PlaybackState,
+    sleepTimer: SleepTimerState?,
     onSelect: (Float) -> Unit,
     onSetAbStart: () -> Unit,
     onSetAbEnd: () -> Unit,
     onClearAb: () -> Unit,
+    onSetSleepMinutes: (Int) -> Unit,
+    onSleepEndOfItem: () -> Unit,
+    onClearSleep: () -> Unit,
     onDismiss: () -> Unit,
 ) {
     val rates = listOf(0.25f, 0.5f, 0.75f, 1.0f, 1.25f, 1.5f, 2.0f, 2.5f, 3.0f, 4.0f)
@@ -520,8 +525,53 @@ fun SpeedSheet(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(vertical = 4.dp),
         )
+        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+        Text(
+            text = stringResource(R.string.player_sleep_timer),
+            style = MaterialTheme.typography.titleSmall,
+            modifier = Modifier.padding(vertical = 4.dp),
+        )
+        val sleepOptions = listOf(0, 10, 15, 30, 60)
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            sleepOptions.chunked(3).forEach { rowOptions ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    rowOptions.forEach { minutes ->
+                        val selected = if (minutes == 0) {
+                            sleepTimer == null
+                        } else {
+                            sleepTimer?.minutes == minutes
+                        }
+                        FilterChip(
+                            selected = selected,
+                            onClick = { if (minutes == 0) onClearSleep() else onSetSleepMinutes(minutes) },
+                            label = {
+                                Text(
+                                    text = if (minutes == 0) {
+                                        stringResource(R.string.player_sleep_off)
+                                    } else {
+                                        stringResource(R.string.player_sleep_minutes, minutes)
+                                    },
+                                )
+                            },
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
+                    repeat(3 - rowOptions.size) { Spacer(Modifier.weight(1f)) }
+                }
+            }
+            FilterChip(
+                selected = sleepTimer?.endOfItem == true,
+                onClick = onSleepEndOfItem,
+                label = { Text(stringResource(R.string.player_sleep_end_of_item)) },
+            )
+        }
+        Spacer(Modifier.size(4.dp))
     }
 }
+
 
 @Composable
 fun CastSheet(

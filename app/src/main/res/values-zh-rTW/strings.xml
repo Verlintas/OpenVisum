@@ -282,4 +282,9 @@
     <string name="player_bookmarks_empty">還沒有書籤，播放時點「新增目前書籤」記錄位置。</string>
     <string name="player_bookmark_delete">刪除書籤</string>
     <string name="player_chapter_default">章節 %1$d</string>
+    <string name="player_sleep_timer">睡眠定時</string>
+    <string name="player_sleep_off">關閉</string>
+    <string name="player_sleep_minutes">%1$d 分鐘</string>
+    <string name="player_sleep_end_of_item">播完目前</string>
+    <string name="player_sleep_active">%1$s 後暫停</string>
 </resources>
