@@ -287,4 +287,8 @@
     <string name="player_sleep_minutes">%1$d 分钟</string>
     <string name="player_sleep_end_of_item">播完当前</string>
     <string name="player_sleep_active">%1$s 后暂停</string>
+    <string name="settings_export_logs_title">导出诊断日志</string>
+    <string name="settings_export_logs_summary">保存设备信息与最近的应用日志，便于反馈问题</string>
+    <string name="settings_export_logs_done">诊断日志已导出</string>
+    <string name="settings_export_logs_failed">导出失败</string>
 </resources>

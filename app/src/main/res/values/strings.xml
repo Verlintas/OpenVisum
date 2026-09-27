@@ -289,4 +289,8 @@
     <string name="player_sleep_minutes">%1$d min</string>
     <string name="player_sleep_end_of_item">End of video</string>
     <string name="player_sleep_active">Sleep in %1$s</string>
+    <string name="settings_export_logs_title">Export diagnostic logs</string>
+    <string name="settings_export_logs_summary">Save device info and recent app logs to share when reporting issues</string>
+    <string name="settings_export_logs_done">Diagnostic logs exported</string>
+    <string name="settings_export_logs_failed">Export failed</string>
 </resources>

@@ -37,6 +37,14 @@ import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Subtitles
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.material.icons.filled.BugReport
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.platform.LocalContext
+import kotlinx.coroutines.launch
+import verlintas.openvisum.diagnostics.DiagnosticReport
+import verlintas.openvisum.ui.components.LocalAppSnackbar
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -66,6 +74,28 @@ fun SettingsScreen(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val settings = state.settings
+    val context = LocalContext.current
+    val snackbar = LocalAppSnackbar.current
+    val scope = rememberCoroutineScope()
+    val exportLogsLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("text/plain"),
+    ) { uri ->
+        if (uri == null) return@rememberLauncherForActivityResult
+        val report = DiagnosticReport.build(context, state.versionName)
+        val saved = runCatching {
+            context.contentResolver.openOutputStream(uri, "wt")?.use { stream ->
+                stream.write(report.toByteArray())
+                true
+            } ?: false
+        }.getOrDefault(false)
+        scope.launch {
+            snackbar?.showSnackbar(
+                context.getString(
+                    if (saved) R.string.settings_export_logs_done else R.string.settings_export_logs_failed,
+                ),
+            )
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -166,6 +196,13 @@ fun SettingsScreen(
                     subtitle = stringResource(R.string.settings_dlna_receiver_summary),
                     checked = settings.dlnaReceiverEnabled,
                     onCheckedChange = viewModel::setDlnaReceiverEnabled,
+                )
+                SettingsGroupDivider()
+                SettingsNavRow(
+                    icon = Icons.Filled.BugReport,
+                    title = stringResource(R.string.settings_export_logs_title),
+                    summary = stringResource(R.string.settings_export_logs_summary),
+                    onClick = { exportLogsLauncher.launch(DiagnosticReport.suggestedFileName()) },
                 )
                 SettingsGroupDivider()
                 SettingsNavRow(

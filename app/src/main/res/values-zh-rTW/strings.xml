@@ -287,4 +287,8 @@
     <string name="player_sleep_minutes">%1$d 分鐘</string>
     <string name="player_sleep_end_of_item">播完目前</string>
     <string name="player_sleep_active">%1$s 後暫停</string>
+    <string name="settings_export_logs_title">匯出診斷記錄</string>
+    <string name="settings_export_logs_summary">儲存裝置資訊與最近的應用程式記錄，方便回報問題</string>
+    <string name="settings_export_logs_done">診斷記錄已匯出</string>
+    <string name="settings_export_logs_failed">匯出失敗</string>
 </resources>
