@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented in this file.
 
+## [Unreleased]
+
+### 新增 Added
+
+- **DLNA 接收端（手机变电视）**：设置中开启后，本机作为 DLNA 渲染设备被局域网内其他设备发现，支持被投屏（AVTransport / RenderingControl / ConnectionManager 完整实现，音量、暂停、拖动进度均可从控制端操作）
+
 ## [1.0.13] - 2026-09-26
 
 ### 修复 Fixed

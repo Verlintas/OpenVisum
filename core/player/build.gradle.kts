@@ -41,6 +41,13 @@ dependencies {
     api(libs.libvlc)
     implementation(libs.androidx.core.ktx)
     implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.jupnp)
+    implementation(libs.jupnp.support)
+    implementation(libs.jupnp.android)
+    implementation(libs.jetty.server)
+    implementation(libs.jetty.servlet)
+    implementation(libs.jetty.client)
+    implementation(libs.javax.servlet)
 
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)

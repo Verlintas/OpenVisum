@@ -55,7 +55,6 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.okhttp)
     implementation(libs.jcifs)
-    implementation(libs.jupnp)
 
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)

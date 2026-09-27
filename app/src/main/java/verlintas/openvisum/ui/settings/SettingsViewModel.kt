@@ -79,6 +79,10 @@ class SettingsViewModel(
         viewModelScope.launch { preferences.setHideContentOnLaunch(enabled) }
     }
 
+    fun setDlnaReceiverEnabled(enabled: Boolean) {
+        viewModelScope.launch { preferences.setDlnaReceiverEnabled(enabled) }
+    }
+
     fun setDefaultPlaybackRate(rate: Float) {
         viewModelScope.launch { preferences.setDefaultPlaybackRate(rate) }
     }

@@ -39,6 +39,8 @@ import verlintas.openvisum.core.data.source.WebDavBrowser
 import verlintas.openvisum.core.data.subtitle.OpenSubtitlesProvider
 import verlintas.openvisum.core.data.subtitle.SubtitleSearchRepository
 import verlintas.openvisum.core.player.PlaybackEngine
+import verlintas.openvisum.core.player.receiver.DlnaReceiver
+import verlintas.openvisum.dlna.DlnaRendererHost
 import verlintas.openvisum.core.player.VlcPlaybackEngine
 
 class OpenVisumApp : Application() {
@@ -102,4 +104,8 @@ class AppContainer(context: Context) {
     }
 
     val playbackEngine: PlaybackEngine by lazy { VlcPlaybackEngine(appContext) }
+
+    val dlnaReceiver: DlnaReceiver by lazy {
+        DlnaReceiver(appContext, DlnaRendererHost(appContext, playbackEngine))
+    }
 }

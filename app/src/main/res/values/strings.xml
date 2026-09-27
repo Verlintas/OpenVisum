@@ -271,4 +271,6 @@
     <string name="aspect_crop_fill">Crop to fill</string>
     <string name="player_cast_hint">Make sure this device and the TV are on the same Wi-Fi network</string>
     <string name="player_cast_rescan">Search again</string>
+    <string name="settings_dlna_receiver_title">Allow cast receiving (DLNA)</string>
+    <string name="settings_dlna_receiver_summary">Appear as a TV on the LAN; other devices can cast to this phone while the app is running</string>
 </resources>

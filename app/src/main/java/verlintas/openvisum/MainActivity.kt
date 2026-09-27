@@ -25,6 +25,10 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import kotlinx.coroutines.launch
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -93,6 +97,19 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         pendingMediaUri.value = intent?.data
+
+        val container = (application as OpenVisumApp).container
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.CREATED) {
+                container.preferencesRepository.settings.collect { settings ->
+                    if (settings.dlnaReceiverEnabled) {
+                        container.dlnaReceiver.start()
+                    } else {
+                        container.dlnaReceiver.stop()
+                    }
+                }
+            }
+        }
 
         setContent {
             val app = LocalContext.current.applicationContext as OpenVisumApp

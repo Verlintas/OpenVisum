@@ -31,6 +31,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CloudDownload
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Cast
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.PlayArrow
@@ -157,6 +158,14 @@ fun SettingsScreen(
                     subtitle = stringResource(R.string.settings_hide_content_summary),
                     checked = settings.hideContentOnLaunch,
                     onCheckedChange = viewModel::setHideContentOnLaunch,
+                )
+                SettingsGroupDivider()
+                SettingsToggleRow(
+                    icon = Icons.Filled.Cast,
+                    title = stringResource(R.string.settings_dlna_receiver_title),
+                    subtitle = stringResource(R.string.settings_dlna_receiver_summary),
+                    checked = settings.dlnaReceiverEnabled,
+                    onCheckedChange = viewModel::setDlnaReceiverEnabled,
                 )
                 SettingsGroupDivider()
                 SettingsNavRow(

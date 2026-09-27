@@ -269,4 +269,6 @@
     <string name="aspect_crop_fill">裁剪填滿</string>
     <string name="player_cast_hint">請確保本機與電視/投影裝置連線在同一 Wi-Fi 網路</string>
     <string name="player_cast_rescan">重新搜尋</string>
+    <string name="settings_dlna_receiver_title">允許接收投放（DLNA）</string>
+    <string name="settings_dlna_receiver_summary">在同一 Wi-Fi 下作為電視被其他裝置發現；應用程式執行時可接收投放</string>
 </resources>
