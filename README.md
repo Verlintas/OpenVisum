@@ -4,16 +4,21 @@
 
 An open-source Android video player powered by libVLC. Plays virtually any format, with automatic audio-track and subtitle detection.
 
+[![Release](https://img.shields.io/github/v/release/Verlintas/OpenVisum?color=4f6bed)](https://github.com/Verlintas/OpenVisum/releases)
+[![License](https://img.shields.io/github/license/Verlintas/OpenVisum?color=4f6bed)](LICENSE)
+[![Platform](https://img.shields.io/badge/Android-14%2B-3ddc84)](https://developer.android.com)
+[![Website](https://img.shields.io/badge/website-verlintas.github.io-8fa2ff)](https://verlintas.github.io/OpenVisum/)
+
 <p align="center">
-  <img src="docs/screenshots/library.png" width="24%" alt="Library" />
-  <img src="docs/screenshots/player.png" width="24%" alt="Player with subtitles" />
-  <img src="docs/screenshots/appearance.png" width="24%" alt="Theme colors" />
-  <img src="docs/screenshots/about.png" width="24%" alt="About" />
+  <img src="docs/screenshots/home.png" width="23%" alt="Home" />
+  <img src="docs/screenshots/player.png" width="23%" alt="Player with subtitles" />
+  <img src="docs/screenshots/library.png" width="23%" alt="Library" />
+  <img src="docs/screenshots/tablet-home.png" width="23%" alt="Tablet" />
 </p>
 
 ## 官网 Website
 
-项目介绍、截图与最新版 APK 镜像：[https://verlintas.github.io/OpenVisum/](https://verlintas.github.io/OpenVisum/)
+项目介绍、交互式主题演示、截图画廊与最新版 APK 镜像：[https://verlintas.github.io/OpenVisum/](https://verlintas.github.io/OpenVisum/)
 
 ## 特性 Features
 
@@ -34,9 +39,11 @@ An open-source Android video player powered by libVLC. Plays virtually any forma
 - 立体声模式、HDMI 源码输出（实验性）
 
 **播放**
-- 画面比例（适应/铺满/原始/16:9/4:3/21:9/2.35:1）、旋转
-- 0.25x–4x 变速、A-B 循环
-- 投屏到 Chromecast / DLNA 渲染设备
+- 拖动进度条时实时显示画面预览缩略图（10 秒分桶取帧 + 时间码）
+- 画面比例（适应屏幕 / 拉伸铺满 / **裁剪填满** / 原始大小 / 16:9 / 4:3 / 21:9 / 2.35:1）与应用内旋转；裁剪模式等比放大、裁边不留黑边且不变形
+- 0.25x–4x 变速、A-B 循环、±10s 快进快退
+- 全屏沉浸播放器：隐藏系统栏，触控与手势区域不遮挡顶部按钮
+- 投屏到 DLNA / Chromecast 渲染设备：本地视频经内置局域网串流服务器直传（支持拖动进度），网络来源视频直接投递原地址
 
 **媒体库与网络**
 - 媒体库 + 文件夹双模式：MediaStore 扫描、SAF 添加任意文件夹
@@ -45,10 +52,12 @@ An open-source Android video player powered by libVLC. Plays virtually any forma
 - HTTP / HTTPS / HLS (m3u8) 直链播放与历史记录
 
 **界面**
-- 观影工作区首页：全屏海报 Hero、继续观看/最近/收藏/文件夹分行、侧边栏导航
-- 平板/折叠屏适配：宽屏常驻侧边栏 + 自适应多列网格 + 内容限宽
-- Material 3 + 官方色彩算法生成的 **9 种主题色**（品牌蓝/青碧/松绿/琥珀/玫瑰/紫罗兰/绯红/石墨 + 跟随系统动态取色），明暗双色板
-- 大标题折叠主页、双列网格、分组式设置、播放器玻璃质感控件、全套过渡动画
+- 观影工作区首页：全屏海报 Hero、继续观看/最近/收藏/文件夹分行
+- 手机常驻**迷你侧栏**：纯图标导航 + 底部实时存储占用圆环；展开为纯文字抽屉，含存储明细（进度条、已用/总量、媒体库占用与媒体数量）
+- 平板/折叠屏适配：宽屏常驻侧边文字栏 + 自适应多列网格 + 内容限宽
+- 启动**隐私缓冲**：默认隐藏媒体内容，轻触后才显示，可在设置中关闭
+- Material 3 + 官方色彩算法生成的 **9 种主题色**（品牌蓝/青碧/松绿/琥珀/玫瑰/紫罗兰/绯红/石墨 + 跟随系统动态取色），明暗双色板，550ms 平滑换肤
+- Manrope 字体、大标题折叠主页、播放器玻璃质感控件、全局 Snackbar 与触感反馈、全套过渡动画
 - 应用内语言切换（跟随系统 / 简体中文 / 繁體中文 / English，系统级 per-app language）
 - 默认倍速、记忆播放位置、默认字幕样式等完整设置项
 - 无 GMS 依赖，适配各大厂商定制 Android 系统
@@ -60,7 +69,7 @@ An open-source Android video player powered by libVLC. Plays virtually any forma
 
 ## 下载 Download
 
-前往 [Releases](https://github.com/Verlintas/OpenVisum/releases) 下载对应架构的 APK（`arm64-v8a` 适用于绝大多数手机）。
+前往 [Releases](https://github.com/Verlintas/OpenVisum/releases) 下载对应架构的 APK（`arm64-v8a` 适用于绝大多数手机）；[官网](https://verlintas.github.io/OpenVisum/) 提供镜像下载与 SHA-256 校验值。
 
 ## 构建 Build
 
@@ -95,16 +104,24 @@ openvisum.cnMirrors=true
 
 ```
 app/            UI、导航、播放页、设置、网络、媒体库
-core/player/    PlaybackEngine 接口 + libVLC 实现、音轨/字幕/均衡器/投屏
+core/player/    PlaybackEngine 接口 + libVLC 实现、音轨/字幕/均衡器/投屏、局域网串流服务器
 core/data/      Room、MediaStore 扫描、SAF、SMB/WebDAV、字幕 Provider
 core/common/    工具（时间/语言/字幕匹配）
+site/           官网静态页（GitHub Pages）
 ```
+
+更多设计细节见 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)，厂商系统兼容说明见 [docs/OEM_COMPAT.md](docs/OEM_COMPAT.md)。
 
 ## 已知限制 Known limitations
 
 - 手机作为 DLNA 接收端（接收其他设备投屏）尚未实现，计划 v1.1
+- DLNA 投屏兼容性因电视/接收端实现而异；路由器开启 AP 隔离或使用访客网络时无法发现设备与串流
 - HDMI 源码输出依赖设备音频通路，行为因厂商而异（实验性）
 - 在线字幕下载需要 OpenSubtitles 账号（API key 免费申请）
+
+## 更新日志 Changelog
+
+见 [CHANGELOG.md](CHANGELOG.md)。
 
 ## 许可证 License
 
