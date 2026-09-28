@@ -38,6 +38,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -174,16 +175,24 @@ private fun RailTextItem(
     onClick: () -> Unit,
     trailing: String? = null,
 ) {
-    val container = if (selected) {
-        MaterialTheme.colorScheme.secondaryContainer
-    } else {
-        Color.Transparent
-    }
-    val content = if (selected) {
-        MaterialTheme.colorScheme.onSecondaryContainer
-    } else {
-        MaterialTheme.colorScheme.onSurface
-    }
+    val container by androidx.compose.animation.animateColorAsState(
+        targetValue = if (selected) {
+            MaterialTheme.colorScheme.secondaryContainer
+        } else {
+            Color.Transparent
+        },
+        animationSpec = androidx.compose.animation.core.tween(240),
+        label = "railContainer",
+    )
+    val content by androidx.compose.animation.animateColorAsState(
+        targetValue = if (selected) {
+            MaterialTheme.colorScheme.onSecondaryContainer
+        } else {
+            MaterialTheme.colorScheme.onSurface
+        },
+        animationSpec = androidx.compose.animation.core.tween(240),
+        label = "railContent",
+    )
     androidx.compose.foundation.layout.Row(
         modifier = Modifier
             .fillMaxWidth()

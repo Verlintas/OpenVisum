@@ -42,6 +42,18 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -110,16 +122,32 @@ private fun MiniNavItem(
     selected: Boolean,
     onClick: () -> Unit,
 ) {
-    val container = if (selected) {
-        MaterialTheme.colorScheme.secondaryContainer
-    } else {
-        Color.Transparent
-    }
-    val tint = if (selected) {
-        MaterialTheme.colorScheme.onSecondaryContainer
-    } else {
-        MaterialTheme.colorScheme.onSurfaceVariant
-    }
+    val container by animateColorAsState(
+        targetValue = if (selected) {
+            MaterialTheme.colorScheme.secondaryContainer
+        } else {
+            Color.Transparent
+        },
+        animationSpec = tween(240),
+        label = "miniContainer",
+    )
+    val tint by animateColorAsState(
+        targetValue = if (selected) {
+            MaterialTheme.colorScheme.onSecondaryContainer
+        } else {
+            MaterialTheme.colorScheme.onSurfaceVariant
+        },
+        animationSpec = tween(240),
+        label = "miniTint",
+    )
+    val iconScale by animateFloatAsState(
+        targetValue = if (selected) 1f else 0.88f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMediumLow,
+        ),
+        label = "miniScale",
+    )
     Box(
         modifier = Modifier
             .padding(vertical = 3.dp)
@@ -133,7 +161,12 @@ private fun MiniNavItem(
             imageVector = icon,
             contentDescription = label,
             tint = tint,
-            modifier = Modifier.size(24.dp),
+            modifier = Modifier
+                .size(24.dp)
+                .graphicsLayer {
+                    scaleX = iconScale
+                    scaleY = iconScale
+                },
         )
     }
 }
@@ -149,6 +182,13 @@ private fun StorageRing(
     } else {
         0f
     }
+    var entered by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) { entered = true }
+    val animatedFraction by animateFloatAsState(
+        targetValue = if (entered) fraction else 0f,
+        animationSpec = tween(durationMillis = 900, easing = FastOutSlowInEasing),
+        label = "storageSweep",
+    )
     val trackColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
     val progressColor = MaterialTheme.colorScheme.primary
     Column(
@@ -175,7 +215,7 @@ private fun StorageRing(
                 drawArc(
                     color = progressColor,
                     startAngle = -90f,
-                    sweepAngle = 360f * fraction,
+                    sweepAngle = 360f * animatedFraction,
                     useCenter = false,
                     topLeft = Offset(inset, inset),
                     size = arcSize,

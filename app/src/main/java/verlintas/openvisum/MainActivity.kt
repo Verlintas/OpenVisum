@@ -204,7 +204,10 @@ class MainActivity : ComponentActivity() {
                     navController.navigate(route) {
                         popUpTo(Routes.HOME) { saveState = true }
                         launchSingleTop = true
-                        restoreState = true
+                        // Restoring state when navigating back to HOME would
+                        // re-apply the state just saved from the popped tab and
+                        // leave that tab on top (navigation appears to do nothing).
+                        restoreState = route != Routes.HOME
                     }
                 }
 

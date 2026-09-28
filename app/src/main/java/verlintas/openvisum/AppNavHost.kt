@@ -70,23 +70,40 @@ fun AppNavGraph(
     homeViewModel: HomeViewModel,
 ) {
     val context = LocalContext.current
+                val pushEnter: androidx.compose.animation.AnimatedContentTransitionScope<androidx.navigation.NavBackStackEntry>.() -> androidx.compose.animation.EnterTransition = {
+                    slideInHorizontally(
+                        animationSpec = tween(320, easing = FastOutSlowInEasing),
+                        initialOffsetX = { fullWidth -> fullWidth },
+                    )
+                }
+                val pushExit: androidx.compose.animation.AnimatedContentTransitionScope<androidx.navigation.NavBackStackEntry>.() -> androidx.compose.animation.ExitTransition = {
+                    androidx.compose.animation.ExitTransition.None
+                }
+                val pushPopEnter: androidx.compose.animation.AnimatedContentTransitionScope<androidx.navigation.NavBackStackEntry>.() -> androidx.compose.animation.EnterTransition = {
+                    androidx.compose.animation.EnterTransition.None
+                }
+                val pushPopExit: androidx.compose.animation.AnimatedContentTransitionScope<androidx.navigation.NavBackStackEntry>.() -> androidx.compose.animation.ExitTransition = {
+                    slideOutHorizontally(
+                        animationSpec = tween(280, easing = FastOutSlowInEasing),
+                        targetOffsetX = { fullWidth -> fullWidth },
+                    )
+                }
                 NavHost(
                     navController = navController,
                     startDestination = Routes.HOME,
+                    // Top-level tabs use a Material "fade through": the outgoing
+                    // tab fades away while the incoming one fades in with a
+                    // subtle scale-up.
                     enterTransition = {
-                        slideInHorizontally(
-                            animationSpec = tween(340, easing = FastOutSlowInEasing),
-                            initialOffsetX = { fullWidth -> fullWidth },
-                        )
+                        fadeIn(tween(240, delayMillis = 90)) +
+                            scaleIn(
+                                animationSpec = tween(300, delayMillis = 90, easing = FastOutSlowInEasing),
+                                initialScale = 0.92f,
+                            )
                     },
-                    exitTransition = { androidx.compose.animation.ExitTransition.None },
-                    popEnterTransition = { androidx.compose.animation.EnterTransition.None },
-                    popExitTransition = {
-                        slideOutHorizontally(
-                            animationSpec = tween(300, easing = FastOutSlowInEasing),
-                            targetOffsetX = { fullWidth -> fullWidth },
-                        )
-                    },
+                    exitTransition = { fadeOut(tween(120)) },
+                    popEnterTransition = { fadeIn(tween(200)) },
+                    popExitTransition = { fadeOut(tween(140)) },
                 ) {
                     composable(Routes.HOME) {
                         HomeScreen(
@@ -185,35 +202,65 @@ fun AppNavGraph(
                         )
                     }
 
-                    composable(Routes.SETTINGS_PLAYBACK) {
+                    composable(
+                        Routes.SETTINGS_PLAYBACK,
+                        enterTransition = pushEnter,
+                        exitTransition = pushExit,
+                        popEnterTransition = pushPopEnter,
+                        popExitTransition = pushPopExit,
+                    ) {
                         PlaybackSettingsScreen(
                             viewModel = settingsViewModel(app),
                             onBack = { navController.popBackStack() },
                         )
                     }
 
-                    composable(Routes.SETTINGS_SUBTITLES) {
+                    composable(
+                        Routes.SETTINGS_SUBTITLES,
+                        enterTransition = pushEnter,
+                        exitTransition = pushExit,
+                        popEnterTransition = pushPopEnter,
+                        popExitTransition = pushPopExit,
+                    ) {
                         SubtitleSettingsScreen(
                             viewModel = settingsViewModel(app),
                             onBack = { navController.popBackStack() },
                         )
                     }
 
-                    composable(Routes.SETTINGS_ONLINE) {
+                    composable(
+                        Routes.SETTINGS_ONLINE,
+                        enterTransition = pushEnter,
+                        exitTransition = pushExit,
+                        popEnterTransition = pushPopEnter,
+                        popExitTransition = pushPopExit,
+                    ) {
                         OnlineSubtitleSettingsScreen(
                             viewModel = settingsViewModel(app),
                             onBack = { navController.popBackStack() },
                         )
                     }
 
-                    composable(Routes.SETTINGS_APPEARANCE) {
+                    composable(
+                        Routes.SETTINGS_APPEARANCE,
+                        enterTransition = pushEnter,
+                        exitTransition = pushExit,
+                        popEnterTransition = pushPopEnter,
+                        popExitTransition = pushPopExit,
+                    ) {
                         AppearanceSettingsScreen(
                             viewModel = settingsViewModel(app),
                             onBack = { navController.popBackStack() },
                         )
                     }
 
-                    composable(Routes.SETTINGS_ABOUT) {
+                    composable(
+                        Routes.SETTINGS_ABOUT,
+                        enterTransition = pushEnter,
+                        exitTransition = pushExit,
+                        popEnterTransition = pushPopEnter,
+                        popExitTransition = pushPopExit,
+                    ) {
                         AboutSettingsScreen(
                             viewModel = settingsViewModel(app),
                             onBack = { navController.popBackStack() },
@@ -223,19 +270,37 @@ fun AppNavGraph(
                         )
                     }
 
-                    composable(Routes.SETTINGS_LICENSES) {
+                    composable(
+                        Routes.SETTINGS_LICENSES,
+                        enterTransition = pushEnter,
+                        exitTransition = pushExit,
+                        popEnterTransition = pushPopEnter,
+                        popExitTransition = pushPopExit,
+                    ) {
                         LicensesScreen(
                             onBack = { navController.popBackStack() },
                         )
                     }
 
-                    composable(Routes.SETTINGS_CHANGELOG) {
+                    composable(
+                        Routes.SETTINGS_CHANGELOG,
+                        enterTransition = pushEnter,
+                        exitTransition = pushExit,
+                        popEnterTransition = pushPopEnter,
+                        popExitTransition = pushPopExit,
+                    ) {
                         ChangelogScreen(
                             onBack = { navController.popBackStack() },
                         )
                     }
 
-                    composable(Routes.SETTINGS_FEEDBACK) {
+                    composable(
+                        Routes.SETTINGS_FEEDBACK,
+                        enterTransition = pushEnter,
+                        exitTransition = pushExit,
+                        popEnterTransition = pushPopEnter,
+                        popExitTransition = pushPopExit,
+                    ) {
                         FeedbackScreen(
                             onBack = { navController.popBackStack() },
                         )
@@ -268,6 +333,10 @@ fun AppNavGraph(
                                 defaultValue = ""
                             },
                         ),
+                        enterTransition = pushEnter,
+                        exitTransition = pushExit,
+                        popEnterTransition = pushPopEnter,
+                        popExitTransition = pushPopExit,
                     ) { entry ->
                         val sourceId = entry.arguments?.getLong("sourceId") ?: 0L
                         val name = entry.arguments?.getString("name").orEmpty()
@@ -296,6 +365,10 @@ fun AppNavGraph(
                                 defaultValue = ""
                             },
                         ),
+                        enterTransition = pushEnter,
+                        exitTransition = pushExit,
+                        popEnterTransition = pushPopEnter,
+                        popExitTransition = pushPopExit,
                     ) { entry ->
                         val folderKey = entry.arguments?.getString("folderKey").orEmpty()
                         val name = entry.arguments?.getString("name").orEmpty()
@@ -324,6 +397,10 @@ fun AppNavGraph(
                                 defaultValue = ""
                             },
                         ),
+                        enterTransition = pushEnter,
+                        exitTransition = pushExit,
+                        popEnterTransition = pushPopEnter,
+                        popExitTransition = pushPopExit,
                     ) { entry ->
                         val treeUri = Uri.parse(entry.arguments?.getString("uri").orEmpty())
                         val name = entry.arguments?.getString("name").orEmpty()
