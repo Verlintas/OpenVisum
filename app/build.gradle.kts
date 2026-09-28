@@ -52,8 +52,8 @@ android {
         applicationId = "verlintas.openvisum"
         minSdk = 34
         targetSdk = 36
-        versionCode = 15
-        versionName = "1.1.0"
+        versionCode = 16
+        versionName = "1.1.1"
     }
 
     signingConfigs {
