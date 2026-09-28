@@ -193,7 +193,11 @@ fun SettingsScreen(
                 SettingsToggleRow(
                     icon = Icons.Filled.Cast,
                     title = stringResource(R.string.settings_dlna_receiver_title),
-                    subtitle = stringResource(R.string.settings_dlna_receiver_summary),
+                    subtitle = if (settings.dlnaReceiverEnabled) {
+                        stringResource(R.string.settings_dlna_receiver_active, android.os.Build.MODEL)
+                    } else {
+                        stringResource(R.string.settings_dlna_receiver_summary)
+                    },
                     checked = settings.dlnaReceiverEnabled,
                     onCheckedChange = viewModel::setDlnaReceiverEnabled,
                 )

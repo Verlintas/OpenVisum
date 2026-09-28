@@ -469,7 +469,7 @@ fun SpeedSheet(
 ) {
     val rates = listOf(0.25f, 0.5f, 0.75f, 1.0f, 1.25f, 1.5f, 2.0f, 2.5f, 3.0f, 4.0f)
     TrackBottomSheet(
-        title = stringResource(R.string.player_speed),
+        title = stringResource(R.string.player_playback),
         onDismiss = onDismiss,
     ) {
         LazyColumn(modifier = Modifier.heightIn(max = 320.dp)) {

@@ -291,4 +291,8 @@
     <string name="settings_export_logs_summary">儲存裝置資訊與最近的應用程式記錄，方便回報問題</string>
     <string name="settings_export_logs_done">診斷記錄已匯出</string>
     <string name="settings_export_logs_failed">匯出失敗</string>
+    <string name="player_playback">播放</string>
+    <string name="player_sleep_pill_timed">睡眠 %1$s</string>
+    <string name="player_sleep_pill_end">播完暫停</string>
+    <string name="settings_dlna_receiver_active">已開啟 · 以「OpenVisum · %1$s」在區域網路可見</string>
 </resources>

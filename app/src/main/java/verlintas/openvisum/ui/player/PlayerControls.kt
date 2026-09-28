@@ -61,6 +61,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AspectRatio
+import androidx.compose.material.icons.filled.Bedtime
 import androidx.compose.material.icons.filled.Bookmarks
 import androidx.compose.material.icons.filled.Cast
 import androidx.compose.material.icons.filled.CastConnected
@@ -70,7 +71,6 @@ import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Replay10
-import androidx.compose.material.icons.filled.ScreenRotation
 import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material.icons.filled.SkipPrevious
 import androidx.compose.material.icons.filled.Subtitles
@@ -117,6 +117,7 @@ fun PlayerControls(
     isCasting: Boolean,
     hasPrevious: Boolean,
     hasNext: Boolean,
+    sleepLabel: String?,
     onBack: () -> Unit,
     onTogglePlayPause: () -> Unit,
     onSeek: (Long) -> Unit,
@@ -209,6 +210,31 @@ fun PlayerControls(
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f),
                 )
+                sleepLabel?.let { label ->
+                    Row(
+                        modifier = Modifier
+                            .padding(end = 8.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(Color.White.copy(alpha = 0.12f))
+                            .padding(horizontal = 8.dp, vertical = 3.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Bedtime,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(13.dp),
+                        )
+                        Spacer(Modifier.width(4.dp))
+                        Text(
+                            text = label,
+                            color = Color.White,
+                            style = MaterialTheme.typography.labelSmall,
+                            maxLines = 1,
+                            softWrap = false,
+                        )
+                    }
+                }
                 IconButton(onClick = onOpenCast) {
                     Icon(
                         imageVector = if (isCasting) Icons.Filled.CastConnected else Icons.Filled.Cast,
@@ -489,13 +515,6 @@ fun PlayerControls(
                         },
                         label = stringResource(R.string.player_bookmarks_section),
                         onClick = { onOpenSheet(PlayerSheet.BOOKMARKS) },
-                    )
-                    ControlButton(
-                        icon = {
-                            Icon(Icons.Filled.ScreenRotation, contentDescription = null, tint = Color.White)
-                        },
-                        label = stringResource(R.string.player_rotate),
-                        onClick = { onOpenSheet(PlayerSheet.ASPECT) },
                     )
                 }
             }

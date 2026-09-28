@@ -40,11 +40,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.Modifier
@@ -60,6 +63,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.delay
 import org.videolan.libvlc.util.VLCVideoLayout
+import verlintas.openvisum.R
 import verlintas.openvisum.OpenVisumApp
 import verlintas.openvisum.core.player.model.VideoScaleMode
 
@@ -191,12 +195,34 @@ fun PlayerScreen(
         }
 
         val playlist by viewModel.playlist.collectAsStateWithLifecycle()
+        var sleepRemainingMs by remember { mutableLongStateOf(0L) }
+        LaunchedEffect(sleepTimer) {
+            val endsAt = sleepTimer?.endsAtElapsedMs
+            if (endsAt == null) {
+                sleepRemainingMs = 0L
+                return@LaunchedEffect
+            }
+            while (true) {
+                sleepRemainingMs = (endsAt - android.os.SystemClock.elapsedRealtime()).coerceAtLeast(0L)
+                if (sleepRemainingMs <= 0L) break
+                kotlinx.coroutines.delay(1_000)
+            }
+        }
+        val sleepLabel = when {
+            sleepTimer?.endOfItem == true -> stringResource(R.string.player_sleep_pill_end)
+            sleepTimer?.endsAtElapsedMs != null && sleepRemainingMs > 0L -> stringResource(
+                R.string.player_sleep_pill_timed,
+                verlintas.openvisum.core.common.util.TimeUtils.formatDuration(sleepRemainingMs),
+            )
+            else -> null
+        }
         PlayerControls(
             state = state,
             visible = controlsVisible,
             isCasting = activeRenderer != null,
             hasPrevious = playlist.hasPrevious,
             hasNext = playlist.hasNext,
+            sleepLabel = sleepLabel,
             onBack = onBack,
             onTogglePlayPause = viewModel::togglePlayPause,
             onSeek = viewModel::seekTo,

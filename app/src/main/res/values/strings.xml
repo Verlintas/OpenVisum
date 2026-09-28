@@ -293,4 +293,8 @@
     <string name="settings_export_logs_summary">Save device info and recent app logs to share when reporting issues</string>
     <string name="settings_export_logs_done">Diagnostic logs exported</string>
     <string name="settings_export_logs_failed">Export failed</string>
+    <string name="player_playback">Playback</string>
+    <string name="player_sleep_pill_timed">Sleep %1$s</string>
+    <string name="player_sleep_pill_end">Stop at end</string>
+    <string name="settings_dlna_receiver_active">On · visible on the LAN as OpenVisum · %1$s</string>
 </resources>
