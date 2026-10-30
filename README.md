@@ -20,7 +20,7 @@ OpenVisum 是一个 Android 视频播放器：播放内核使用 libVLC 3.7，�
 
 - 要求：Android 14（API 34）及以上，arm64-v8a / armeabi-v7a / x86_64
 - 无 GMS 依赖；不包含统计 SDK，不要求账号
-- 项目主页（含更新日志与 APK 镜像）：<https://verlintas.github.io/OpenVisum/>
+- 项目主页（含更新日志与 APK 镜像）：<https://verlintas.dev/OpenVisum/>
 
 ## 截图
 
@@ -39,9 +39,9 @@ OpenVisum 是一个 Android 视频播放器：播放内核使用 libVLC 3.7，�
 | `armeabi-v7a` | 老旧 32 位设备 | 部分老机可用 |
 | `x86_64` | Android 模拟器、x86 平板 | 开发调试用 |
 
-- 下载：[GitHub Releases](https://github.com/Verlintas/OpenVisum/releases/latest) 或[官网镜像](https://verlintas.github.io/OpenVisum/#download)
+- 下载：[GitHub Releases](https://github.com/Verlintas/OpenVisum/releases/latest) 或[官网镜像](https://verlintas.dev/OpenVisum/#download)
 - 安装时系统会提示「未知来源」权限，属于侧载 APK 的正常流程
-- 校验下载文件（SHA-256 见官网 [releases.json](https://verlintas.github.io/OpenVisum/releases.json)）：
+- 校验下载文件（SHA-256 见官网 [releases.json](https://verlintas.dev/OpenVisum/releases.json)）：
 
   ```bash
   sha256sum app-arm64-v8a-release.apk          # Linux

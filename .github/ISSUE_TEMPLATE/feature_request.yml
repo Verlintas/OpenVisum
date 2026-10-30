@@ -7,7 +7,7 @@ body:
     attributes:
       value: |
         提交前请先搜索[已有 Issues](https://github.com/Verlintas/OpenVisum/issues?q=is%3Aissue)
-        与[官网](https://verlintas.github.io/OpenVisum/)，确认没有重复。
+        与[官网](https://verlintas.dev/OpenVisum/)，确认没有重复。
   - type: textarea
     id: problem
     attributes:

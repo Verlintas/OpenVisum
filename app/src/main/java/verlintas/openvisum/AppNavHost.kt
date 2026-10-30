@@ -133,7 +133,7 @@ fun AppNavGraph(
                                         android.content.Intent(
                                             android.content.Intent.ACTION_VIEW,
                                             android.net.Uri.parse(
-                                                "https://verlintas.github.io/OpenVisum/",
+                                                "https://verlintas.dev/OpenVisum/",
                                             ),
                                         ),
                                     )

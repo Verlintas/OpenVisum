@@ -194,7 +194,7 @@ class MainActivity : ComponentActivity() {
                         context.startActivity(
                             Intent(
                                 Intent.ACTION_VIEW,
-                                Uri.parse("https://verlintas.github.io/OpenVisum/"),
+                                Uri.parse("https://verlintas.dev/OpenVisum/"),
                             ),
                         )
                     }

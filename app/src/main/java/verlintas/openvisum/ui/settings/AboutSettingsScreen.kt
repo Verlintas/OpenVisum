@@ -91,7 +91,7 @@ import verlintas.openvisum.ui.components.SettingsNavRow
 import verlintas.openvisum.ui.components.ShimmerRowPlaceholder
 import verlintas.openvisum.ui.components.staggeredEntrance
 
-private const val WEBSITE_URL = "https://verlintas.github.io/OpenVisum/"
+private const val WEBSITE_URL = "https://verlintas.dev/OpenVisum/"
 private const val WEBSITE_DOWNLOAD_URL = "${WEBSITE_URL}#download"
 private const val REPO_URL = "https://github.com/Verlintas/OpenVisum"
 private const val LICENSE_URL = "$REPO_URL/blob/main/LICENSE"

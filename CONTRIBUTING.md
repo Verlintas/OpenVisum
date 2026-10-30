@@ -7,7 +7,7 @@ Thanks for your interest in contributing! Issues and pull requests are welcome.
 ## 提交 Issue
 
 - **Bug**：请使用内置的 Bug 反馈模板，附上应用版本、设备型号、系统版本与复现步骤，有日志更好
-- **功能建议**：请先搜索已有 Issue 与[官网](https://verlintas.github.io/OpenVisum/)，避免重复
+- **功能建议**：请先搜索已有 Issue 与[官网](https://verlintas.dev/OpenVisum/)，避免重复
 - 提交前请确认使用的是[最新版本](https://github.com/Verlintas/OpenVisum/releases/latest)
 
 ## 开发环境
