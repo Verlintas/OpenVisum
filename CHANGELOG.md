@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented in this file.
 
+## [Unreleased]
+
+### 新增 Added
+
+- **macOS 原生版（v0.1 预览）**：SwiftUI + libVLC 的独立 Mac 应用（Apple Silicon / Intel），支持本地/网络播放、拖拽打开、文件夹媒体库与缩略图、播放进度记忆、字幕与音轨切换、倍速、9 套强调色；工程与打包脚本见 `macos/`
+
 ## [1.1.1] - 2026-09-28
 
 ### 修复 Fixed

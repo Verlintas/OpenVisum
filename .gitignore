@@ -13,3 +13,11 @@ keystore.properties
 *.keystore
 *.apk
 *.aab
+
+# macOS app
+macos/Vendor/VLC.app/
+macos/build/
+macos/*.xcodeproj/
+macos/Info.plist
+macos/DerivedData/
+macos/.DS_Store

@@ -1,0 +1,60 @@
+name: OpenVisumMac
+options:
+  bundleIdPrefix: dev.verlintas
+  deploymentTarget:
+    macOS: "14.0"
+  createIntermediateGroups: true
+
+targets:
+  OpenVisum:
+    type: application
+    platform: macOS
+    sources:
+      - path: Sources
+      - path: Resources
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.verlintas.openvisum.mac
+        PRODUCT_NAME: OpenVisum
+        MARKETING_VERSION: "0.1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        SWIFT_VERSION: "5.0"
+        SWIFT_INCLUDE_PATHS: "$(SRCROOT)/Vendor/include"
+        OTHER_LDFLAGS: "$(inherited) -L$(SRCROOT)/Vendor/VLC.app/Contents/MacOS/lib -lvlc"
+        LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/../Frameworks $(SRCROOT)/Vendor/VLC.app/Contents/MacOS/lib"
+        CODE_SIGN_IDENTITY: "-"
+        CODE_SIGN_STYLE: Manual
+        DEVELOPMENT_TEAM: ""
+        ENABLE_HARDENED_RUNTIME: NO
+        COMBINE_HIDPI_IMAGES: YES
+    info:
+      path: Info.plist
+      properties:
+        CFBundleDisplayName: OpenVisum
+        CFBundleName: OpenVisum
+        LSMinimumSystemVersion: "14.0"
+        LSApplicationCategoryType: public.app-category.video
+        NSHumanReadableCopyright: "© 2026 Verlintas · GPL-3.0-or-later"
+        NSHighResolutionCapable: true
+        CFBundleIconFile: AppIcon
+        NSPrincipalClass: NSApplication
+        VLCPluginsPath: "$(SRCROOT)/Vendor/VLC.app/Contents/MacOS/plugins"
+        CFBundleDocumentTypes:
+          - CFBundleTypeName: Video
+            LSHandlerRank: Alternate
+            LSItemContentTypes:
+              - public.movie
+              - public.audio
+          - CFBundleTypeName: Subtitle
+            CFBundleTypeRole: Viewer
+            LSHandlerRank: Alternate
+            LSItemContentTypes:
+              - public.subtitle
+
+schemes:
+  OpenVisum:
+    build:
+      targets:
+        OpenVisum: all
+    run:
+      config: Debug
