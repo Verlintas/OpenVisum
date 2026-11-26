@@ -5,7 +5,7 @@
 <h1 align="center">OpenVisum</h1>
 
 <p align="center">
-  基于 libVLC 的 Android 视频播放器 · GPL-3.0-or-later
+  基于 libVLC 的 Android / macOS 视频播放器 · GPL-3.0-or-later
 </p>
 
 <p align="center">
@@ -18,9 +18,12 @@
 
 OpenVisum 是一个 Android 视频播放器：播放内核使用 libVLC 3.7，界面与业务逻辑使用 Kotlin + Jetpack Compose 实现。媒体来源支持 MediaStore 媒体库、SAF 文件夹、SMB、WebDAV 与 HTTP / HLS 直链；支持字幕自动匹配、DLNA 投屏与 9 套主题色。
 
-- 要求：Android 14（API 34）及以上，arm64-v8a / armeabi-v7a / x86_64
+同时提供 macOS 原生预览版（SwiftUI + libVLC，v0.1），工程与构建说明见 [`macos/`](macos/)。
+
+- Android 要求：Android 14（API 34）及以上，arm64-v8a / armeabi-v7a / x86_64
+- macOS 要求：macOS 14 及以上，Apple Silicon / Intel 通用包（预览版，未签名）
 - 无 GMS 依赖；不包含统计 SDK，不要求账号
-- 项目主页（含更新日志与 APK 镜像）：<https://verlintas.dev/OpenVisum/>
+- 项目主页（含更新日志与下载）：<https://verlintas.dev/OpenVisum/>
 
 ## 截图
 
@@ -39,7 +42,9 @@ OpenVisum 是一个 Android 视频播放器：播放内核使用 libVLC 3.7，�
 | `armeabi-v7a` | 老旧 32 位设备 | 部分老机可用 |
 | `x86_64` | Android 模拟器、x86 平板 | 开发调试用 |
 
-- 下载：[GitHub Releases](https://github.com/Verlintas/OpenVisum/releases/latest) 或[官网镜像](https://verlintas.dev/OpenVisum/#download)
+macOS 预览版：[下载通用包](https://github.com/Verlintas/OpenVisum/releases/tag/macos-v0.1.0)（macOS 14+，Apple Silicon / Intel，未签名；首次打开请右键 → 打开）。
+
+- Android 下载：[GitHub Releases](https://github.com/Verlintas/OpenVisum/releases/latest) 或[官网镜像](https://verlintas.dev/OpenVisum/#download)
 - 安装时系统会提示「未知来源」权限，属于侧载 APK 的正常流程
 - 校验下载文件（SHA-256 见官网 [releases.json](https://verlintas.dev/OpenVisum/releases.json)）：
 

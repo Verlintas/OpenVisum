@@ -17,6 +17,7 @@ keystore.properties
 # macOS app
 macos/Vendor/VLC.app/
 macos/build/
+macos/build-release/
 macos/*.xcodeproj/
 macos/Info.plist
 macos/DerivedData/

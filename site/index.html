@@ -4,13 +4,13 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>OpenVisum — 开源 Android 视频播放器 · libVLC 内核</title>
-<meta name="description" content="OpenVisum：开源 Android 视频播放器，libVLC 内核。全格式解码、字幕自动匹配、10 段均衡器、DLNA 投屏、9 套主题色，无 GMS 依赖，GPL-3.0。" />
+<title>OpenVisum — 开源视频播放器 · Android / macOS · libVLC 内核</title>
+<meta name="description" content="OpenVisum：开源视频播放器，Android 与 macOS 原生版，libVLC 内核。全格式解码、字幕自动匹配、10 段均衡器、DLNA 投屏、9 套主题色，GPL-3.0。" />
 <meta name="theme-color" content="#0b101c" />
 <link rel="canonical" href="https://verlintas.dev/OpenVisum/" />
 <meta property="og:type" content="website" />
-<meta property="og:title" content="OpenVisum — 开源 Android 视频播放器" />
-<meta property="og:description" content="libVLC 内核，全格式解码、字幕全链路、DLNA 投屏与 9 套主题色的开源播放器。" />
+<meta property="og:title" content="OpenVisum — 开源视频播放器（Android / macOS）" />
+<meta property="og:description" content="libVLC 内核，全格式解码、字幕全链路、DLNA 投屏与 9 套主题色；Android 与 macOS 原生版。" />
 <meta property="og:url" content="https://verlintas.dev/OpenVisum/" />
 <meta property="og:image" content="https://verlintas.dev/OpenVisum/screenshots/home.png" />
 <meta name="twitter:card" content="summary_large_image" />
@@ -21,11 +21,11 @@
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
   "name": "OpenVisum",
-  "operatingSystem": "Android 14+",
+  "operatingSystem": "Android 14+, macOS 14+",
   "applicationCategory": "MultimediaApplication",
   "license": "https://www.gnu.org/licenses/gpl-3.0.html",
   "offers": { "@type": "Offer", "price": "0", "priceCurrency": "CNY" },
-  "description": "开源 Android 视频播放器，libVLC 内核，全格式解码、字幕全链路、网络播放与投屏。",
+  "description": "开源视频播放器，Android 与 macOS 原生版，libVLC 内核，全格式解码、字幕全链路、网络播放与投屏。",
   "url": "https://verlintas.dev/OpenVisum/"
 }
 </script>
@@ -74,7 +74,7 @@
           <span id="versionDate" class="i18n" data-zh="最新版本" data-en="latest release">最新版本</span>
         </div>
         <h1>OpenVisum</h1>
-        <p class="tagline i18n" data-zh="开源 Android 视频播放器，libVLC 内核。什么格式都能播，字幕自动匹配，界面为好看又好用而设计。" data-en="Open-source Android video player powered by libVLC. Plays virtually anything, matches subtitles automatically, and is built to look and feel great.">开源 Android 视频播放器，libVLC 内核。什么格式都能播，字幕自动匹配，界面为好看又好用而设计。</p>
+        <p class="tagline i18n" data-zh="开源视频播放器，Android 与 macOS 原生版，libVLC 内核。什么格式都能播，字幕自动匹配，界面为好看又好用而设计。" data-en="Open-source video player for Android and macOS, powered by libVLC. Plays virtually anything, matches subtitles automatically, and is built to look and feel great.">开源视频播放器，Android 与 macOS 原生版，libVLC 内核。什么格式都能播，字幕自动匹配，界面为好看又好用而设计。</p>
         <div class="hero-actions">
           <a class="btn primary" href="#download">
             <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M12 3a1 1 0 0 1 1 1v9.59l3.3-3.3a1 1 0 1 1 1.4 1.42l-5 5a1 1 0 0 1-1.4 0l-5-5a1 1 0 1 1 1.4-1.42l3.3 3.3V4a1 1 0 0 1 1-1Zm-7 15a1 1 0 0 1 1 1v1h12v-1a1 1 0 1 1 2 0v1.5A1.5 1.5 0 0 1 18.5 22h-13A1.5 1.5 0 0 1 4 20.5V19a1 1 0 0 1 1-1Z"/></svg>
@@ -378,7 +378,7 @@ AndroidView(
     <div class="container">
       <header class="section-head reveal">
         <h2 class="i18n" data-zh="下载" data-en="Download">下载</h2>
-        <p class="section-sub i18n" data-zh="本站镜像最新版本；历史版本见 GitHub Releases。APK 使用固定签名，可直接覆盖升级。" data-en="This site mirrors the latest build; older versions live on GitHub Releases. APKs share a stable signing key, so they upgrade in place.">本站镜像最新版本；历史版本见 GitHub Releases。APK 使用固定签名，可直接覆盖升级。</p>
+        <p class="section-sub i18n" data-zh="Android APK 由本站镜像，macOS 版为 GitHub Release 直链。APK 使用固定签名，可直接覆盖升级。" data-en="Android APKs are mirrored here; the macOS build links to GitHub Releases. APKs share a stable signing key, so they upgrade in place.">Android APK 由本站镜像，macOS 版为 GitHub Release 直链。APK 使用固定签名，可直接覆盖升级。</p>
       </header>
 
       <div class="downloads" id="downloads">
@@ -405,6 +405,31 @@ AndroidView(
             <code>—</code><button class="copy i18n" data-zh="复制" data-en="Copy">复制</button>
           </div>
           <a class="btn primary" data-asset="app-x86_64-release.apk" href="#"><span class="i18n" data-zh="下载" data-en="Download">下载</span><span class="size" data-size="app-x86_64-release.apk"></span></a>
+        </div>
+      </div>
+
+      <div class="mac-card reveal">
+        <div class="mac-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4.5" width="18" height="12" rx="2.5"/><path d="M2 19.5h20"/>
+          </svg>
+        </div>
+        <div class="mac-copy">
+          <h3>OpenVisum for macOS <span class="tag preview i18n" data-zh="v0.1 预览" data-en="v0.1 preview">v0.1 预览</span></h3>
+          <p class="i18n" data-zh="原生 SwiftUI 界面，libVLC 3.0.24 内核；已内嵌完整 VLC 运行库，无需另装 VLC。" data-en="Native SwiftUI interface with libVLC 3.0.24. The full VLC runtime is bundled — no separate VLC install needed.">原生 SwiftUI 界面，libVLC 3.0.24 内核；已内嵌完整 VLC 运行库，无需另装 VLC。</p>
+          <ul class="mac-meta">
+            <li>macOS 14+</li>
+            <li class="i18n" data-zh="Apple Silicon / Intel 通用" data-en="Universal: Apple Silicon / Intel">Apple Silicon / Intel 通用</li>
+            <li class="i18n" data-zh="约 79 MB" data-en="~79 MB">约 79 MB</li>
+          </ul>
+        </div>
+        <div class="mac-action">
+          <a class="btn primary" href="https://github.com/Verlintas/OpenVisum/releases/download/macos-v0.1.0/OpenVisum-macOS-0.1.0.zip" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><path fill="currentColor" d="M12 3a1 1 0 0 1 1 1v9.59l3.3-3.3a1 1 0 1 1 1.4 1.42l-5 5a1 1 0 0 1-1.4 0l-5-5a1 1 0 1 1 1.4-1.42l3.3 3.3V4a1 1 0 0 1 1-1Zm-7 15a1 1 0 0 1 1 1v1h12v-1a1 1 0 1 1 2 0v1.5A1.5 1.5 0 0 1 18.5 22h-13A1.5 1.5 0 0 1 4 20.5V19a1 1 0 0 1 1-1Z"/></svg>
+            <span class="i18n" data-zh="下载 macOS 版" data-en="Download for macOS">下载 macOS 版</span>
+          </a>
+          <p class="download-note i18n" data-zh="未签名预览版：首次打开请右键 → 打开。" data-en="Unsigned preview: right-click → Open on first launch.">未签名预览版：首次打开请右键 → 打开。</p>
+          <a class="notes-link i18n" href="https://github.com/Verlintas/OpenVisum/releases/tag/macos-v0.1.0" target="_blank" rel="noopener" data-zh="安装说明与 SHA-256" data-en="Install notes & SHA-256">安装说明与 SHA-256</a>
         </div>
       </div>
 
@@ -447,6 +472,10 @@ AndroidView(
           <p class="i18n" data-zh="项目基于最新系统 API 与 Compose 构建，未适配旧版本。旧设备可在 GitHub 提出需求，视情况评估。" data-en="The project is built against modern system APIs and Compose and has not been back-ported. Old-device requests are tracked on GitHub.">项目基于最新系统 API 与 Compose 构建，未适配旧版本。旧设备可在 GitHub 提出需求，视情况评估。</p>
         </details>
         <details class="reveal">
+          <summary class="i18n" data-zh="有 macOS 版吗？" data-en="Is there a macOS version?">有 macOS 版吗？</summary>
+          <p class="i18n" data-zh="有，目前是 v0.1 预览版：原生 SwiftUI + libVLC，通用二进制（Apple Silicon / Intel），要求 macOS 14 及以上。已内嵌完整 VLC 运行库，无需另装 VLC。预览版未经过 Apple 公证，首次打开需右键 → 打开。" data-en="Yes — a v0.1 preview: native SwiftUI + libVLC, universal (Apple Silicon / Intel), macOS 14+. The full VLC runtime is bundled, so no separate VLC install is needed. It is not notarized; right-click → Open on first launch.">有，目前是 v0.1 预览版：原生 SwiftUI + libVLC，通用二进制（Apple Silicon / Intel），要求 macOS 14 及以上。已内嵌完整 VLC 运行库，无需另装 VLC。预览版未经过 Apple 公证，首次打开需右键 → 打开。</p>
+        </details>
+        <details class="reveal">
           <summary class="i18n" data-zh="安装时提示“未知来源 / 有风险”怎么办？" data-en="Installing warns about unknown sources?">安装时提示“未知来源 / 有风险”怎么办？</summary>
           <p class="i18n" data-zh="侧载 APK 时系统会给出标准安全提示。本站 APK 与 GitHub Release 完全一致，可对照 releases.json 中的 SHA-256 校验；如不放心可自行编译。" data-en="That's the standard warning for sideloaded APKs. Site downloads match the GitHub release exactly; compare SHA-256 from releases.json, or build it yourself.">侧载 APK 时系统会给出标准安全提示。本站 APK 与 GitHub Release 完全一致，可对照 releases.json 中的 SHA-256 校验；如不放心可自行编译。</p>
         </details>
@@ -471,7 +500,7 @@ AndroidView(
   <div class="container footer-grid">
     <div class="footer-brand">
       <a class="brand" href="#top"><span class="brand-mark"></span><span class="brand-name">OpenVisum</span></a>
-      <p class="i18n" data-zh="开源 Android 视频播放器，由 libVLC 驱动。" data-en="Open-source Android video player powered by libVLC.">开源 Android 视频播放器，由 libVLC 驱动。</p>
+      <p class="i18n" data-zh="开源视频播放器，Android 与 macOS 原生版，由 libVLC 驱动。" data-en="Open-source video player for Android and macOS, powered by libVLC.">开源视频播放器，Android 与 macOS 原生版，由 libVLC 驱动。</p>
       <p class="footer-note i18n" data-zh="非商业开源项目 · 无广告 · 无统计" data-en="Non-commercial open source · No ads · No trackers">非商业开源项目 · 无广告 · 无统计</p>
     </div>
     <div class="footer-col">

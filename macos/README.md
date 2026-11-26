@@ -2,7 +2,11 @@
 
 OpenVisum 的 macOS 原生版本（SwiftUI + libVLC / VLCKit 等价的 libVLC 接入）。
 
-当前为 **v0.1 预览版**，交互对齐移动端：
+当前为 **v0.1 预览版**。预编译通用包（Apple Silicon / Intel，macOS 14+）：
+[GitHub Release](https://github.com/Verlintas/OpenVisum/releases/tag/macos-v0.1.0)。
+应用已内嵌 VLC 运行库；未经过 Apple 公证，首次打开请右键 → 打开。
+
+交互对齐移动端：
 
 - 可折叠侧栏（展开为文字导航 + 存储明细，收起为图标栏 + 存储圆环）
 - 首页 Hero（继续观看/立即播放、收藏、元信息）+ 横向行卡（继续观看、最近添加、收藏）
