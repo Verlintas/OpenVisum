@@ -1,23 +1,23 @@
 /*
  * Copyright (C) 2026 Verlintas
  * SPDX-License-Identifier: GPL-3.0-or-later
- *
- * This file is part of OpenVisum.
- *
- * OpenVisum is free software: you can redistribute it and/or modify it under
- * the terms of the GNU General Public License as published by the Free Software
- * Foundation, either version 3 of the License, or (at your option) any later
- * version.
- *
- * OpenVisum is distributed in the hope that it will be useful, but WITHOUT ANY
- * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
- * A PARTICULAR PURPOSE. See the GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along with
- * OpenVisum. If not, see <https://www.gnu.org/licenses/>.
  */
 
 import SwiftUI
+
+enum LibraryFilter: String, CaseIterable, Identifiable {
+    case all
+    case favorites
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .all: "全部"
+        case .favorites: "收藏"
+        }
+    }
+}
 
 struct LibraryView: View {
     @EnvironmentObject private var library: LibraryStore
@@ -27,25 +27,28 @@ struct LibraryView: View {
     let onOpenSettings: () -> Void
 
     @State private var query = ""
+    @State private var filter: LibraryFilter = .all
 
     private var filteredItems: [MediaItem] {
-        guard !query.isEmpty else { return library.items }
-        return library.items.filter {
-            $0.displayName.localizedCaseInsensitiveContains(query)
+        var base = filter == .favorites ? library.favoriteItems : library.items
+        if !query.isEmpty {
+            base = base.filter { $0.displayName.localizedCaseInsensitiveContains(query) }
         }
+        return base
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             header
             Divider().overlay(Palette.border)
+            chips
             content
         }
         .background(Palette.background)
     }
 
     private var header: some View {
-        HStack(alignment: .center, spacing: 14) {
+        HStack(alignment: .center, spacing: 12) {
             VStack(alignment: .leading, spacing: 2) {
                 Text("媒体库")
                     .font(.system(size: 22, weight: .bold, design: .rounded))
@@ -103,6 +106,45 @@ struct LibraryView: View {
         )
     }
 
+    private var chips: some View {
+        HStack(spacing: 8) {
+            ForEach(LibraryFilter.allCases) { option in
+                let selected = filter == option
+                let count = option == .all ? library.items.count : library.favoriteItems.count
+                Button {
+                    withAnimation(.easeOut(duration: 0.18)) {
+                        filter = option
+                    }
+                } label: {
+                    HStack(spacing: 5) {
+                        Text(option.title)
+                        Text("\(count)")
+                            .font(.system(size: 10).monospacedDigit())
+                            .foregroundStyle(selected ? accent.color.opacity(0.8) : Palette.textTertiary)
+                    }
+                    .font(.system(size: 12, weight: selected ? .semibold : .regular))
+                    .foregroundStyle(selected ? accent.color : Palette.textSecondary)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(
+                        Capsule()
+                            .fill(selected ? accent.color.opacity(0.16) : Color.white.opacity(0.05))
+                    )
+                    .overlay(
+                        Capsule().strokeBorder(
+                            selected ? accent.color.opacity(0.45) : Color.clear,
+                            lineWidth: 1
+                        )
+                    )
+                }
+                .buttonStyle(.plain)
+            }
+            Spacer()
+        }
+        .padding(.horizontal, 26)
+        .padding(.vertical, 12)
+    }
+
     @ViewBuilder
     private var content: some View {
         if library.folders.isEmpty {
@@ -118,12 +160,15 @@ struct LibraryView: View {
             }
         } else if filteredItems.isEmpty {
             emptyState(
-                icon: "magnifyingglass",
-                title: query.isEmpty ? "没有找到视频" : "没有匹配「\(query)」的视频",
-                subtitle: query.isEmpty ? "尝试重新扫描，或添加其他文件夹" : "换个关键词试试"
+                icon: filter == .favorites ? "heart" : "magnifyingglass",
+                title: emptyTitle,
+                subtitle: emptySubtitle
             ) {
                 if !query.isEmpty {
                     Button("清除搜索") { query = "" }
+                        .buttonStyle(.bordered)
+                } else if filter == .favorites {
+                    Button("浏览全部视频") { filter = .all }
                         .buttonStyle(.bordered)
                 }
             }
@@ -134,20 +179,22 @@ struct LibraryView: View {
                     spacing: 18
                 ) {
                     ForEach(filteredItems) { item in
-                        LibraryCard(item: item, accent: accent) {
-                            onPlay(item.url)
-                        }
-                        .contextMenu {
-                            Button("播放") { onPlay(item.url) }
-                            Button("在访达中显示") {
-                                NSWorkspace.shared.activateFileViewerSelecting([item.url])
-                            }
-                        }
+                        GridMediaCard(item: item, accent: accent, onPlay: onPlay)
                     }
                 }
                 .padding(24)
             }
         }
+    }
+
+    private var emptyTitle: String {
+        if !query.isEmpty { return "没有匹配「\(query)」的视频" }
+        return filter == .favorites ? "还没有收藏" : "没有找到视频"
+    }
+
+    private var emptySubtitle: String {
+        if !query.isEmpty { return "换个关键词试试" }
+        return filter == .favorites ? "在视频卡片上点爱心即可收藏" : "尝试重新扫描，或添加其他文件夹"
     }
 
     private func emptyState<Actions: View>(
@@ -172,88 +219,92 @@ struct LibraryView: View {
     }
 }
 
-private struct LibraryCard: View {
+private struct GridMediaCard: View {
     @EnvironmentObject private var library: LibraryStore
 
     let item: MediaItem
     let accent: AccentTheme
-    let onPlay: () -> Void
+    let onPlay: (URL) -> Void
 
     @State private var isHovering = false
 
     var body: some View {
-        Button(action: onPlay) {
-            VStack(alignment: .leading, spacing: 8) {
-                ZStack {
-                    if let image = library.thumbnail(for: item) {
-                        Image(nsImage: image)
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                    } else {
-                        LinearGradient(
-                            colors: [Palette.surfaceElevated, Palette.surface],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                        Image(systemName: "film")
-                            .font(.system(size: 24, weight: .light))
-                            .foregroundStyle(Palette.textTertiary)
-                    }
-                    if isHovering {
-                        Color.black.opacity(0.28)
-                        Image(systemName: "play.circle.fill")
-                            .font(.system(size: 38))
-                            .foregroundStyle(.white)
-                    }
+        VStack(alignment: .leading, spacing: 8) {
+            ZStack {
+                MediaThumbnail(item: item, library: library)
+                    .frame(height: 120)
+                    .frame(maxWidth: .infinity)
+                    .clipped()
+                if isHovering {
+                    Color.black.opacity(0.28)
+                    Image(systemName: "play.circle.fill")
+                        .font(.system(size: 38))
+                        .foregroundStyle(.white)
                 }
-                .frame(height: 120)
-                .frame(maxWidth: .infinity)
-                .clipped()
-                .overlay(alignment: .bottomLeading) {
-                    Text(item.fileExtension)
-                        .font(.system(size: 9, weight: .bold))
-                        .foregroundStyle(.white.opacity(0.92))
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 3)
-                        .background(Color.black.opacity(0.55))
-                        .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
-                        .padding(7)
+            }
+            .frame(height: 120)
+            .frame(maxWidth: .infinity)
+            .clipped()
+            .overlay(alignment: .bottomLeading) {
+                Text(item.fileExtension)
+                    .font(.system(size: 9, weight: .bold))
+                    .foregroundStyle(.white.opacity(0.92))
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 3)
+                    .background(Color.black.opacity(0.55))
+                    .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
+                    .padding(7)
+            }
+            .overlay(alignment: .topTrailing) {
+                Button {
+                    library.toggleFavorite(item)
+                } label: {
+                    Image(systemName: library.isFavorite(item) ? "heart.fill" : "heart")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(library.isFavorite(item) ? accent.color : .white.opacity(0.85))
+                        .padding(6)
+                        .background(Circle().fill(Color.black.opacity(0.45)))
                 }
-                .overlay(alignment: .bottom) {
-                    let fraction = library.progressFraction(for: item)
-                    if fraction > 0 {
-                        GeometryReader { proxy in
-                            VStack {
-                                Spacer()
-                                Capsule()
-                                    .fill(accent.color)
-                                    .frame(
-                                        width: proxy.size.width * fraction,
-                                        height: 3
-                                    )
-                            }
+                .buttonStyle(.plain)
+                .padding(6)
+                .opacity(isHovering || library.isFavorite(item) ? 1 : 0)
+            }
+            .overlay(alignment: .bottom) {
+                let fraction = library.progressFraction(for: item)
+                if fraction > 0 {
+                    GeometryReader { proxy in
+                        VStack {
+                            Spacer()
+                            Capsule()
+                                .fill(accent.color)
+                                .frame(width: proxy.size.width * fraction, height: 3)
                         }
                     }
                 }
-                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(item.displayName)
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundStyle(.white)
-                        .lineLimit(1)
-                    Text(item.folderName)
-                        .font(.system(size: 10))
-                        .foregroundStyle(Palette.textTertiary)
-                        .lineLimit(1)
-                }
             }
-            .contentShape(Rectangle())
+            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .onTapGesture { onPlay(item.url) }
+            .onHover { hovering in
+                withAnimation(.easeOut(duration: 0.15)) { isHovering = hovering }
+            }
+
+            Text(item.displayName)
+                .font(.system(size: 12, weight: .medium))
+                .foregroundStyle(.white)
+                .lineLimit(1)
+            Text(item.folderName)
+                .font(.system(size: 10))
+                .foregroundStyle(Palette.textTertiary)
+                .lineLimit(1)
         }
-        .buttonStyle(.plain)
-        .onHover { hovering in
-            withAnimation(.easeOut(duration: 0.15)) {
-                isHovering = hovering
+        .contentShape(Rectangle())
+        .contextMenu {
+            Button("播放") { onPlay(item.url) }
+            Button(library.isFavorite(item) ? "取消收藏" : "收藏") {
+                library.toggleFavorite(item)
+            }
+            Button("在访达中显示") {
+                NSWorkspace.shared.activateFileViewerSelecting([item.url])
             }
         }
     }

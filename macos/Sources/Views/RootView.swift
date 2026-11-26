@@ -56,36 +56,47 @@ struct RootView: View {
     @State private var isPlayerPresented = false
     @State private var isFilePickerPresented = false
     @State private var isDropTargeted = false
+    @AppStorage("sidebarCollapsed") private var sidebarCollapsed = false
 
     private var accent: AccentTheme { AccentTheme(rawValue: accentRaw) ?? .brand }
 
     var body: some View {
         Group {
             if isPlayerPresented {
-                PlayerView(onClose: closePlayer)
+                PlayerView(onClose: closePlayer, onPlay: play)
                     .transition(.opacity.combined(with: .scale(scale: 1.015)))
             } else {
-                NavigationSplitView {
-                    sidebar
-                        .navigationSplitViewColumnWidth(min: 200, ideal: 216, max: 240)
-                } detail: {
-                    switch section {
-                    case .home:
-                        HomeView(
-                            accent: accent,
-                            onPlay: play,
-                            onOpenFile: { isFilePickerPresented = true },
-                            onOpenLibrary: { section = .library }
-                        )
-                    case .library:
-                        LibraryView(
-                            accent: accent,
-                            onPlay: play,
-                            onOpenSettings: { section = .settings }
-                        )
-                    case .settings:
-                        SettingsView(accentRaw: $accentRaw)
+                HStack(spacing: 0) {
+                    SidebarView(
+                        section: $section,
+                        collapsed: $sidebarCollapsed,
+                        accent: accent,
+                        library: library
+                    )
+                    .frame(width: sidebarCollapsed ? 78 : 224)
+                    .animation(.spring(response: 0.32, dampingFraction: 0.88), value: sidebarCollapsed)
+
+                    Group {
+                        switch section {
+                        case .home:
+                            HomeView(
+                                accent: accent,
+                                onPlay: play,
+                                onOpenFile: { isFilePickerPresented = true },
+                                onOpenLibrary: { section = .library }
+                            )
+                        case .library:
+                            LibraryView(
+                                accent: accent,
+                                onPlay: play,
+                                onOpenSettings: { section = .settings }
+                            )
+                        case .settings:
+                            SettingsView(accentRaw: $accentRaw)
+                        }
                     }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .transition(.opacity)
                 }
                 .tint(accent.color)
                 .transition(.opacity)
@@ -134,58 +145,6 @@ struct RootView: View {
         }
     }
 
-    private var sidebar: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            HStack(spacing: 10) {
-                AppMark(size: 28, accent: accent)
-                VStack(alignment: .leading, spacing: 1) {
-                    Text("OpenVisum")
-                        .font(.system(size: 14, weight: .semibold))
-                    Text("macOS")
-                        .font(.system(size: 10, weight: .medium))
-                        .foregroundStyle(Palette.textTertiary)
-                }
-            }
-            .padding(.horizontal, 16)
-            .padding(.top, 18)
-            .padding(.bottom, 22)
-
-            ForEach([SidebarSection.home, SidebarSection.library]) { item in
-                SidebarButton(
-                    section: item,
-                    selected: section == item,
-                    accent: accent
-                ) {
-                    section = item
-                }
-            }
-
-            Spacer()
-
-            VStack(alignment: .leading, spacing: 6) {
-                Text("\(library.items.count) 个视频")
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(Palette.textSecondary)
-                Text("v0.1.0 · libVLC 3.0.24")
-                    .font(.system(size: 10))
-                    .foregroundStyle(Palette.textTertiary)
-            }
-            .padding(.horizontal, 18)
-            .padding(.bottom, 14)
-
-            SidebarButton(
-                section: .settings,
-                selected: section == .settings,
-                accent: accent
-            ) {
-                section = .settings
-            }
-            .padding(.bottom, 8)
-        }
-        .frame(maxHeight: .infinity, alignment: .top)
-        .background(Palette.surface.opacity(0.55))
-    }
-
     private func play(_ url: URL) {
         if isPlayerPresented, player.currentMediaURL == url {
             return
@@ -224,6 +183,7 @@ struct SidebarButton: View {
     let section: SidebarSection
     let selected: Bool
     let accent: AccentTheme
+    var collapsed: Bool = false
     let action: () -> Void
 
     @State private var isHovering = false
@@ -232,29 +192,33 @@ struct SidebarButton: View {
         Button(action: action) {
             HStack(spacing: 10) {
                 Image(systemName: section.icon)
-                    .font(.system(size: 13, weight: .semibold))
-                    .frame(width: 18)
-                Text(section.title)
-                    .font(.system(size: 13, weight: selected ? .semibold : .regular))
-                Spacer()
+                    .font(.system(size: 14, weight: .semibold))
+                    .frame(width: 20)
+                if !collapsed {
+                    Text(section.title)
+                        .font(.system(size: 13, weight: selected ? .semibold : .regular))
+                    Spacer(minLength: 0)
+                }
             }
             .foregroundStyle(selected ? accent.color : Palette.textSecondary)
-            .padding(.horizontal, 10)
-            .padding(.vertical, 8)
+            .padding(.horizontal, collapsed ? 0 : 10)
+            .padding(.vertical, 9)
+            .frame(width: collapsed ? 46 : nil, height: collapsed ? 42 : nil)
             .background(
-                RoundedRectangle(cornerRadius: 9, style: .continuous)
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
                     .fill(
                         selected
                             ? accent.color.opacity(0.16)
-                            : (isHovering ? Color.white.opacity(0.05) : Color.clear)
+                            : (isHovering ? Color.white.opacity(0.06) : Color.clear)
                     )
             )
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .padding(.horizontal, 8)
+        .padding(.horizontal, collapsed ? 0 : 8)
         .onHover { isHovering = $0 }
         .animation(.easeOut(duration: 0.14), value: isHovering)
+        .help(collapsed ? section.title : "")
     }
 }
 

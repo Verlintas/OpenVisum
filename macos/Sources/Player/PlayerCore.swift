@@ -42,6 +42,8 @@ final class PlayerCore: ObservableObject {
     @Published private(set) var subtitleTracks: [Track] = []
     @Published private(set) var currentAudioTrack: Int32 = -1
     @Published private(set) var currentSubtitleTrack: Int32 = -1
+    @Published private(set) var videoSize: CGSize = .zero
+    @Published private(set) var equalizerPreset: Int?
     @Published private(set) var errorMessage: String?
 
     private var instance: OpaquePointer?
@@ -103,6 +105,7 @@ final class PlayerCore: ObservableObject {
         isEnded = false
         timeMs = 0
         durationMs = 0
+        videoSize = .zero
 
         let media: OpaquePointer?
         if url.isFileURL {
@@ -136,6 +139,9 @@ final class PlayerCore: ObservableObject {
         }
         if autoplay {
             play()
+        }
+        if let preset = equalizerPreset {
+            setEqualizerPreset(preset)
         }
         refreshTracks()
     }
@@ -206,6 +212,28 @@ final class PlayerCore: ObservableObject {
         if let player {
             libvlc_media_player_set_rate(player, value)
         }
+    }
+
+    // MARK: - Equalizer
+
+    nonisolated static func equalizerPresetNames() -> [String] {
+        let count = Int(libvlc_audio_equalizer_get_preset_count())
+        return (0..<count).compactMap { index in
+            libvlc_audio_equalizer_get_preset_name(UInt32(index)).map { String(cString: $0) }
+        }
+    }
+
+    func setEqualizerPreset(_ index: Int?) {
+        guard let player else { return }
+        guard let index else {
+            libvlc_media_player_set_equalizer(player, nil)
+            equalizerPreset = nil
+            return
+        }
+        guard let equalizer = libvlc_audio_equalizer_new_from_preset(UInt32(index)) else { return }
+        libvlc_media_player_set_equalizer(player, equalizer)
+        libvlc_audio_equalizer_release(equalizer)
+        equalizerPreset = index
     }
 
     // MARK: - Tracks
@@ -297,6 +325,15 @@ final class PlayerCore: ObservableObject {
         }
         if tickCount % 5 == 0 {
             refreshTracks()
+            var width: UInt32 = 0
+            var height: UInt32 = 0
+            if libvlc_video_get_size(player, 0, &width, &height) == 0,
+               width > 0, height > 0 {
+                let size = CGSize(width: Int(width), height: Int(height))
+                if size != videoSize {
+                    videoSize = size
+                }
+            }
         }
         if tickCount % 25 == 0, isPlaying, durationMs > 0, let url = currentURL {
             onProgress?(url, timeMs, durationMs)

@@ -1,27 +1,12 @@
 /*
  * Copyright (C) 2026 Verlintas
  * SPDX-License-Identifier: GPL-3.0-or-later
- *
- * This file is part of OpenVisum.
- *
- * OpenVisum is free software: you can redistribute it and/or modify it under
- * the terms of the GNU General Public License as published by the Free Software
- * Foundation, either version 3 of the License, or (at your option) any later
- * version.
- *
- * OpenVisum is distributed in the hope that it will be useful, but WITHOUT ANY
- * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
- * A PARTICULAR PURPOSE. See the GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along with
- * OpenVisum. If not, see <https://www.gnu.org/licenses/>.
  */
 
 import SwiftUI
 
 struct HomeView: View {
     @EnvironmentObject private var library: LibraryStore
-    @EnvironmentObject private var player: PlayerCore
 
     let accent: AccentTheme
     let onPlay: (URL) -> Void
@@ -30,36 +15,60 @@ struct HomeView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 28) {
+            VStack(alignment: .leading, spacing: 26) {
                 header
 
-                if let (item, progress) = library.continueWatching() {
-                    continueCard(item: item, progress: progress)
+                if let hero = library.heroEntry() {
+                    heroCard(item: hero.0, progress: hero.1)
                 }
 
-                let recent = library.recentItems()
+                let continuing = library.continueItems()
+                if !continuing.isEmpty {
+                    MediaRow(
+                        title: "继续观看",
+                        items: continuing.map(\.0),
+                        accent: accent,
+                        onPlay: onPlay,
+                        onShowAll: onOpenLibrary
+                    )
+                }
+
+                let recent = library.recentlyAdded()
                 if !recent.isEmpty {
-                    recentSection(recent)
+                    MediaRow(
+                        title: "最近添加",
+                        items: recent,
+                        accent: accent,
+                        onPlay: onPlay,
+                        onShowAll: onOpenLibrary
+                    )
+                }
+
+                if !library.favoriteItems.isEmpty {
+                    MediaRow(
+                        title: "收藏",
+                        items: library.favoriteItems,
+                        accent: accent,
+                        onPlay: onPlay,
+                        onShowAll: onOpenLibrary
+                    )
                 }
 
                 if library.items.isEmpty {
                     emptyState
-                } else if recent.isEmpty {
-                    recentlyAddedSection
                 }
             }
-            .padding(30)
+            .padding(28)
             .frame(maxWidth: .infinity, alignment: .leading)
         }
         .background(Palette.background)
-        .navigationTitle("")
     }
 
     private var header: some View {
         HStack(alignment: .bottom) {
             VStack(alignment: .leading, spacing: 4) {
                 Text(greeting)
-                    .font(.system(size: 26, weight: .bold, design: .rounded))
+                    .font(.system(size: 25, weight: .bold, design: .rounded))
                 Text("今天想看点什么？")
                     .font(.system(size: 13))
                     .foregroundStyle(Palette.textSecondary)
@@ -84,149 +93,119 @@ struct HomeView: View {
         }
     }
 
-    private func continueCard(item: MediaItem, progress: PlaybackProgress) -> some View {
-        Button {
-            onPlay(item.url)
-        } label: {
-            ZStack(alignment: .bottomLeading) {
-                thumbnail(item: item)
-                    .frame(height: 300)
-                    .frame(maxWidth: .infinity)
-                    .clipped()
+    private func heroCard(item: MediaItem, progress: PlaybackProgress?) -> some View {
+        ZStack(alignment: .bottomLeading) {
+            HeroThumbnail(item: item, library: library)
+                .frame(height: 340)
+                .frame(maxWidth: .infinity)
+                .clipped()
 
-                LinearGradient(
-                    colors: [.clear, Color.black.opacity(0.75)],
-                    startPoint: .center,
-                    endPoint: .bottom
-                )
-
-                VStack(alignment: .leading, spacing: 10) {
-                    Text("继续观看")
-                        .font(.system(size: 11, weight: .semibold))
-                        .textCase(.uppercase)
-                        .tracking(1.2)
-                        .foregroundStyle(accent.color)
-                    Text(item.displayName)
-                        .font(.system(size: 24, weight: .bold))
-                        .foregroundStyle(.white)
-                        .lineLimit(2)
-                    HStack(spacing: 10) {
-                        Text(item.folderName)
-                            .font(.system(size: 12))
-                            .foregroundStyle(.white.opacity(0.7))
-                        Text("·")
-                            .foregroundStyle(.white.opacity(0.4))
-                        Text("\(formatDuration(progress.positionMs)) / \(formatDuration(progress.durationMs))")
-                            .font(.system(size: 12).monospacedDigit())
-                            .foregroundStyle(.white.opacity(0.7))
-                    }
-                    progressBar(fraction: progress.durationMs > 0
-                        ? Double(progress.positionMs) / Double(progress.durationMs) : 0)
-                        .frame(width: 320)
-                }
-                .padding(26)
-            }
-            .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    .strokeBorder(Palette.border, lineWidth: 1)
+            LinearGradient(
+                colors: [.clear, Color.black.opacity(0.35), Color.black.opacity(0.82)],
+                startPoint: .top,
+                endPoint: .bottom
             )
-            .overlay(alignment: .center) {
-                Image(systemName: "play.circle.fill")
-                    .font(.system(size: 54))
-                    .foregroundStyle(.white.opacity(0.92))
-                    .shadow(radius: 14)
-                    .opacity(0.9)
-            }
-        }
-        .buttonStyle(.plain)
-    }
 
-    private func recentSection(_ recent: [MediaItem]) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Text("最近播放")
-                    .font(.system(size: 16, weight: .semibold))
-                Spacer()
-                Button("打开媒体库", action: onOpenLibrary)
-                    .buttonStyle(.link)
-                    .font(.system(size: 12))
-            }
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 14) {
-                    ForEach(recent) { item in
-                        Button {
-                            onPlay(item.url)
-                        } label: {
-                            VStack(alignment: .leading, spacing: 8) {
-                                thumbnail(item: item)
-                                    .frame(width: 210, height: 118)
-                                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                                    .overlay(alignment: .bottom) {
-                                        let fraction = library.progressFraction(for: item)
-                                        if fraction > 0 {
-                                            progressBar(fraction: fraction)
-                                                .padding(.horizontal, 8)
-                                                .padding(.bottom, 7)
-                                        }
-                                    }
-                                Text(item.displayName)
-                                    .font(.system(size: 12, weight: .medium))
-                                    .foregroundStyle(.white)
-                                    .lineLimit(1)
-                                    .frame(width: 210, alignment: .leading)
-                                    .multilineTextAlignment(.leading)
-                            }
-                            .contentShape(Rectangle())
-                        }
-                        .buttonStyle(.plain)
+            VStack(alignment: .leading, spacing: 12) {
+                Text(progress == nil ? "立即播放" : "继续观看")
+                    .font(.system(size: 11, weight: .semibold))
+                    .tracking(1.4)
+                    .textCase(.uppercase)
+                    .foregroundStyle(accent.color)
+
+                Text(item.displayName)
+                    .font(.system(size: 30, weight: .bold))
+                    .foregroundStyle(.white)
+                    .lineLimit(2)
+                    .shadow(color: .black.opacity(0.3), radius: 10, y: 2)
+
+                HStack(spacing: 8) {
+                    metaChip(item.folderName)
+                    if let progress, progress.durationMs > 0 {
+                        metaChip("\(formatDuration(progress.positionMs)) / \(formatDuration(progress.durationMs))")
+                    }
+                    if let size = try? item.url.resourceValues(forKeys: [.fileSizeKey]).fileSize {
+                        metaChip(formatBytes(Int64(size)))
                     }
                 }
-                .padding(.vertical, 2)
-            }
-        }
-    }
 
-    private var recentlyAddedSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Text("最近加入")
-                    .font(.system(size: 16, weight: .semibold))
-                Spacer()
-                Button("打开媒体库", action: onOpenLibrary)
-                    .buttonStyle(.link)
-                    .font(.system(size: 12))
-            }
-            LazyVGrid(
-                columns: [GridItem(.adaptive(minimum: 210, maximum: 280), spacing: 16)],
-                alignment: .leading,
-                spacing: 18
-            ) {
-                ForEach(library.items.prefix(8)) { item in
+                if let progress, progress.durationMs > 0 {
+                    progressBar(fraction: Double(progress.positionMs) / Double(progress.durationMs))
+                        .frame(width: 340)
+                }
+
+                HStack(spacing: 10) {
                     Button {
                         onPlay(item.url)
                     } label: {
-                        VStack(alignment: .leading, spacing: 8) {
-                            thumbnail(item: item)
-                                .frame(height: 118)
-                                .frame(maxWidth: .infinity)
-                                .clipped()
-                                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                            Text(item.displayName)
-                                .font(.system(size: 12, weight: .medium))
-                                .foregroundStyle(.white)
-                                .lineLimit(1)
-                            Text(item.folderName)
-                                .font(.system(size: 10))
-                                .foregroundStyle(Palette.textTertiary)
-                        }
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .contentShape(Rectangle())
+                        Label(progress == nil ? "播放" : "继续播放", systemImage: "play.fill")
+                            .font(.system(size: 13, weight: .semibold))
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(.white)
+                    .foregroundStyle(.black)
+                    .controlSize(.large)
+
+                    Button {
+                        onPlay(item.url)
+                    } label: {
+                        Label("从头播放", systemImage: "arrow.counterclockwise")
+                            .font(.system(size: 13, weight: .medium))
+                    }
+                    .buttonStyle(.bordered)
+                    .tint(.white)
+                    .foregroundStyle(.white)
+                    .controlSize(.large)
+                }
+                .padding(.top, 2)
+            }
+            .padding(28)
+
+            VStack {
+                HStack {
+                    Spacer()
+                    Button {
+                        library.toggleFavorite(item)
+                    } label: {
+                        Image(systemName: library.isFavorite(item) ? "heart.fill" : "heart")
+                            .font(.system(size: 15, weight: .semibold))
+                            .foregroundStyle(library.isFavorite(item) ? accent.color : .white)
+                            .frame(width: 38, height: 38)
+                            .background(Circle().fill(Color.black.opacity(0.35)))
+                            .overlay(Circle().strokeBorder(.white.opacity(0.18), lineWidth: 1))
                     }
                     .buttonStyle(.plain)
+                    .padding(22)
                 }
+                Spacer()
             }
         }
+        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                .strokeBorder(Palette.border, lineWidth: 1)
+        )
+    }
+
+    private func metaChip(_ text: String) -> some View {
+        Text(text)
+            .font(.system(size: 11, weight: .medium))
+            .foregroundStyle(.white.opacity(0.85))
+            .padding(.horizontal, 9)
+            .padding(.vertical, 4)
+            .background(Capsule().fill(Color.white.opacity(0.12)))
+    }
+
+    private func progressBar(fraction: Double) -> some View {
+        GeometryReader { proxy in
+            ZStack(alignment: .leading) {
+                Capsule().fill(Color.white.opacity(0.22))
+                Capsule()
+                    .fill(accent.color)
+                    .frame(width: max(3, proxy.size.width * min(1, max(0, fraction))))
+            }
+        }
+        .frame(height: 3)
     }
 
     private var emptyState: some View {
@@ -262,21 +241,129 @@ struct HomeView: View {
                 )
         )
     }
+}
 
-    private func progressBar(fraction: Double) -> some View {
-        GeometryReader { proxy in
-            ZStack(alignment: .leading) {
-                Capsule().fill(Color.white.opacity(0.22))
-                Capsule()
-                    .fill(accent.color)
-                    .frame(width: max(3, proxy.size.width * min(1, max(0, fraction))))
+struct MediaRow: View {
+    @EnvironmentObject private var library: LibraryStore
+
+    let title: String
+    let items: [MediaItem]
+    let accent: AccentTheme
+    let onPlay: (URL) -> Void
+    let onShowAll: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 11) {
+            HStack {
+                Text(title)
+                    .font(.system(size: 16, weight: .semibold))
+                Spacer()
+                Button("查看全部", action: onShowAll)
+                    .buttonStyle(.link)
+                    .font(.system(size: 12))
+            }
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 14) {
+                    ForEach(items) { item in
+                        MediaCard(item: item, accent: accent, onPlay: onPlay)
+                    }
+                }
+                .padding(.vertical, 2)
             }
         }
-        .frame(height: 3)
     }
+}
 
-    @ViewBuilder
-    private func thumbnail(item: MediaItem) -> some View {
+struct MediaCard: View {
+    @EnvironmentObject private var library: LibraryStore
+
+    let item: MediaItem
+    let accent: AccentTheme
+    let onPlay: (URL) -> Void
+
+    @State private var isHovering = false
+
+    var body: some View {
+        Button {
+            onPlay(item.url)
+        } label: {
+            VStack(alignment: .leading, spacing: 7) {
+                ZStack {
+                    MediaThumbnail(item: item, library: library)
+                        .frame(width: 210, height: 118)
+                        .clipped()
+                    if isHovering {
+                        Color.black.opacity(0.3)
+                        Image(systemName: "play.circle.fill")
+                            .font(.system(size: 34))
+                            .foregroundStyle(.white)
+                    }
+                    if library.isFavorite(item) {
+                        VStack {
+                            HStack {
+                                Spacer()
+                                Image(systemName: "heart.fill")
+                                    .font(.system(size: 10))
+                                    .foregroundStyle(accent.color)
+                                    .padding(6)
+                                    .background(Circle().fill(Color.black.opacity(0.45)))
+                                    .padding(6)
+                            }
+                            Spacer()
+                        }
+                    }
+                }
+                .frame(width: 210, height: 118)
+                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .overlay(alignment: .bottom) {
+                    let fraction = library.progressFraction(for: item)
+                    if fraction > 0 {
+                        GeometryReader { proxy in
+                            VStack {
+                                Spacer()
+                                Capsule()
+                                    .fill(accent.color)
+                                    .frame(width: proxy.size.width * fraction, height: 3)
+                            }
+                        }
+                    }
+                }
+
+                Text(item.displayName)
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(.white)
+                    .lineLimit(1)
+                    .frame(width: 210, alignment: .leading)
+                Text(item.folderName)
+                    .font(.system(size: 10))
+                    .foregroundStyle(Palette.textTertiary)
+                    .lineLimit(1)
+                    .frame(width: 210, alignment: .leading)
+            }
+            .contentShape(Rectangle())
+            .scaleEffect(isHovering ? 1.015 : 1)
+        }
+        .buttonStyle(.plain)
+        .onHover { hovering in
+            withAnimation(.easeOut(duration: 0.15)) { isHovering = hovering }
+        }
+        .contextMenu {
+            Button("播放") { onPlay(item.url) }
+            Button(library.isFavorite(item) ? "取消收藏" : "收藏") {
+                library.toggleFavorite(item)
+            }
+            Button("在访达中显示") {
+                NSWorkspace.shared.activateFileViewerSelecting([item.url])
+            }
+        }
+    }
+}
+
+struct MediaThumbnail: View {
+    let item: MediaItem
+    @ObservedObject var library: LibraryStore
+
+    var body: some View {
         if let image = library.thumbnail(for: item) {
             Image(nsImage: image)
                 .resizable()
@@ -289,7 +376,31 @@ struct HomeView: View {
                     endPoint: .bottomTrailing
                 )
                 Image(systemName: "film")
-                    .font(.system(size: 26, weight: .light))
+                    .font(.system(size: 24, weight: .light))
+                    .foregroundStyle(Palette.textTertiary)
+            }
+        }
+    }
+}
+
+struct HeroThumbnail: View {
+    let item: MediaItem
+    @ObservedObject var library: LibraryStore
+
+    var body: some View {
+        if let image = library.thumbnail(for: item) {
+            Image(nsImage: image)
+                .resizable()
+                .aspectRatio(contentMode: .fill)
+        } else {
+            ZStack {
+                LinearGradient(
+                    colors: [Palette.surfaceElevated, Palette.surface],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+                Image(systemName: "film")
+                    .font(.system(size: 40, weight: .light))
                     .foregroundStyle(Palette.textTertiary)
             }
         }

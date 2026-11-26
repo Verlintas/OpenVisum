@@ -37,6 +37,13 @@ struct PlaybackProgress: Codable {
     var lastPlayedAt: Date
 }
 
+struct Bookmark: Codable, Identifiable, Hashable {
+    var id: UUID
+    var positionMs: Int64
+    var label: String
+    var createdAt: Date
+}
+
 @MainActor
 final class LibraryStore: ObservableObject {
 
@@ -45,6 +52,11 @@ final class LibraryStore: ObservableObject {
     @Published private(set) var progress: [String: PlaybackProgress] = [:]
     @Published private(set) var thumbnails: [String: NSImage] = [:]
     @Published private(set) var isScanning = false
+    @Published private(set) var favorites: Set<String> = []
+    @Published private(set) var bookmarks: [String: [Bookmark]] = [:]
+    @Published private(set) var storageUsedBytes: Int64 = 0
+    @Published private(set) var storageTotalBytes: Int64 = 0
+    @Published private(set) var libraryBytes: Int64 = 0
 
     private var thumbnailTasks: Set<String> = []
     private let storageURL: URL
@@ -58,6 +70,8 @@ final class LibraryStore: ObservableObject {
     private struct Persisted: Codable {
         var folders: [String]
         var progress: [String: PlaybackProgress]
+        var favorites: [String]?
+        var bookmarks: [String: [Bookmark]]?
     }
 
     init() {
@@ -119,6 +133,7 @@ final class LibraryStore: ObservableObject {
             await MainActor.run {
                 self.items = sorted
                 self.isScanning = false
+                self.refreshStorage()
             }
         }
     }
@@ -155,6 +170,16 @@ final class LibraryStore: ObservableObject {
             .sorted { $0.1 > $1.1 }
             .prefix(limit)
             .map(\.0)
+    }
+
+    func continueItems(limit: Int = 12) -> [(MediaItem, PlaybackProgress)] {
+        recentItems(limit: 40).compactMap { item in
+            guard let entry = progress[item.id] else { return nil }
+            guard entry.positionMs > 5_000, entry.durationMs - entry.positionMs > 10_000 else { return nil }
+            return (item, entry)
+        }
+        .prefix(limit)
+        .map { $0 }
     }
 
     func continueWatching() -> (MediaItem, PlaybackProgress)? {
@@ -227,6 +252,128 @@ final class LibraryStore: ObservableObject {
         return rep.representation(using: .jpeg, properties: [.compressionFactor: 0.82])
     }
 
+    // MARK: - Favorites
+
+    func isFavorite(_ item: MediaItem) -> Bool {
+        favorites.contains(item.id)
+    }
+
+    func toggleFavorite(_ item: MediaItem) {
+        if favorites.contains(item.id) {
+            favorites.remove(item.id)
+        } else {
+            favorites.insert(item.id)
+        }
+        save()
+    }
+
+    var favoriteItems: [MediaItem] {
+        items.filter { favorites.contains($0.id) }
+    }
+
+    // MARK: - Bookmarks
+
+    func bookmarks(for url: URL) -> [Bookmark] {
+        (bookmarks[url.absoluteString] ?? []).sorted { $0.positionMs < $1.positionMs }
+    }
+
+    func addBookmark(url: URL, positionMs: Int64) {
+        var list = bookmarks[url.absoluteString] ?? []
+        guard !list.contains(where: { abs($0.positionMs - positionMs) < 1_000 }) else { return }
+        list.append(
+            Bookmark(
+                id: UUID(),
+                positionMs: positionMs,
+                label: formatDuration(positionMs),
+                createdAt: Date()
+            )
+        )
+        bookmarks[url.absoluteString] = list
+        save()
+    }
+
+    func removeBookmark(url: URL, id: UUID) {
+        var list = bookmarks[url.absoluteString] ?? []
+        list.removeAll { $0.id == id }
+        bookmarks[url.absoluteString] = list
+        save()
+    }
+
+    // MARK: - Storage
+
+    func refreshStorage() {
+        if let attributes = try? FileManager.default.attributesOfFileSystem(
+            forPath: NSHomeDirectory()
+        ) {
+            if let total = attributes[.systemSize] as? NSNumber {
+                storageTotalBytes = total.int64Value
+            }
+            if let free = attributes[.systemFreeSize] as? NSNumber {
+                storageUsedBytes = max(0, storageTotalBytes - free.int64Value)
+            }
+        }
+        libraryBytes = items.reduce(into: Int64(0)) { sum, item in
+            if let size = try? item.url.resourceValues(forKeys: [.fileSizeKey]).fileSize {
+                sum += Int64(size)
+            }
+        }
+    }
+
+    var storageFraction: Double {
+        guard storageTotalBytes > 0 else { return 0 }
+        return min(1, max(0, Double(storageUsedBytes) / Double(storageTotalBytes)))
+    }
+
+    // MARK: - Playlist siblings
+
+    /// Videos next to the given file, in natural filename order.
+    nonisolated static func siblingVideos(of url: URL) -> [URL] {
+        let directory = url.deletingLastPathComponent()
+        guard let entries = try? FileManager.default.contentsOfDirectory(
+            at: directory,
+            includingPropertiesForKeys: [.isRegularFileKey],
+            options: [.skipsHiddenFiles, .skipsPackageDescendants]
+        ) else { return [url] }
+        let videos = entries
+            .filter { videoExtensions.contains($0.pathExtension.lowercased()) }
+            .sorted {
+                $0.lastPathComponent.localizedStandardCompare($1.lastPathComponent) == .orderedAscending
+            }
+        return videos.isEmpty ? [url] : videos
+    }
+
+    func recentlyAdded(limit: Int = 12) -> [MediaItem] {
+        items
+            .compactMap { item -> (MediaItem, Date)? in
+                guard let date = try? item.url
+                    .resourceValues(forKeys: [.contentModificationDateKey])
+                    .contentModificationDate else { return nil }
+                return (item, date)
+            }
+            .sorted { $0.1 > $1.1 }
+            .prefix(limit)
+            .map(\.0)
+    }
+
+    // MARK: - Hero
+
+    func heroEntry() -> (MediaItem, PlaybackProgress?)? {
+        if let `continue` = continueWatching() {
+            return (`continue`.0, `continue`.1)
+        }
+        if let recent = recentItems(limit: 1).first {
+            let entry = progress[recent.id]
+            if let entry, entry.positionMs > 5_000 {
+                return (recent, entry)
+            }
+            return (recent, nil)
+        }
+        if let first = items.first {
+            return (first, nil)
+        }
+        return nil
+    }
+
     // MARK: - Persistence
 
     private func load() {
@@ -234,16 +381,29 @@ final class LibraryStore: ObservableObject {
               let persisted = try? JSONDecoder().decode(Persisted.self, from: data) else { return }
         folders = persisted.folders.map { URL(fileURLWithPath: $0) }
         progress = persisted.progress
+        favorites = Set(persisted.favorites ?? [])
+        bookmarks = persisted.bookmarks ?? [:]
     }
 
     private func save() {
         let persisted = Persisted(
             folders: folders.map(\.path),
-            progress: progress
+            progress: progress,
+            favorites: Array(favorites),
+            bookmarks: bookmarks
         )
         guard let data = try? JSONEncoder().encode(persisted) else { return }
         try? data.write(to: storageURL, options: .atomic)
     }
+}
+
+func formatBytes(_ bytes: Int64) -> String {
+    let formatter = ByteCountFormatter()
+    formatter.allowedUnits = [.useMB, .useGB, .useTB]
+    formatter.countStyle = .file
+    formatter.includesUnit = true
+    formatter.allowsNonnumericFormatting = false
+    return formatter.string(fromByteCount: bytes)
 }
 
 func formatDuration(_ milliseconds: Int64) -> String {
