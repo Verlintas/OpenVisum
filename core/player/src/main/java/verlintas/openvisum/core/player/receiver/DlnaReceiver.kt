@@ -27,14 +27,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import org.jupnp.UpnpService
-import org.jupnp.UpnpServiceConfiguration
-import org.jupnp.UpnpServiceImpl
-import org.jupnp.android.AndroidRouter
-import org.jupnp.android.AndroidUpnpServiceConfiguration
+import verlintas.openvisum.core.player.upnp.UpnpStack
 import org.jupnp.model.types.UDN
-import org.jupnp.protocol.ProtocolFactory
-import org.jupnp.registry.Registry
-import org.jupnp.transport.Router
 
 /**
  * Hosts a UPnP MediaRenderer so other devices on the LAN can cast to this
@@ -61,8 +55,7 @@ class DlnaReceiver(
     fun start(): Boolean {
         if (upnpService != null) return true
         return runCatching {
-            val service = ReceiverUpnpService(AndroidUpnpServiceConfiguration(), appContext)
-            service.startup()
+            val service = UpnpStack.acquire(appContext)
             val device = MediaRendererDevice(host, deviceUdn())
             service.registry.addDevice(device.device)
             upnpService = service
@@ -87,7 +80,7 @@ class DlnaReceiver(
         if (service == null) return
         runCatching {
             device?.let { service.registry.removeDevice(it.device) }
-            service.shutdown()
+            UpnpStack.release()
             Log.i(TAG, "DLNA receiver stopped")
         }.onFailure { Log.w(TAG, "Failed to stop DLNA receiver cleanly", it) }
     }
@@ -98,15 +91,6 @@ class DlnaReceiver(
         }.getOrNull().orEmpty()
         val source = "openvisum-dmr-$androidId"
         return UDN(UUID.nameUUIDFromBytes(source.toByteArray()).toString())
-    }
-
-    private class ReceiverUpnpService(
-        configuration: UpnpServiceConfiguration,
-        private val context: Context,
-    ) : UpnpServiceImpl(configuration) {
-
-        override fun createRouter(protocolFactory: ProtocolFactory, registry: Registry): Router =
-            AndroidRouter(configuration, protocolFactory, context)
     }
 
     private companion object {

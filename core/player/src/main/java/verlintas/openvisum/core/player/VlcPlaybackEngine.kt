@@ -23,6 +23,9 @@ import android.content.Context
 import android.net.Uri
 import android.os.ParcelFileDescriptor
 import android.os.SystemClock
+import android.os.Handler
+import android.os.Looper
+import verlintas.openvisum.core.player.upnp.UpnpCaster
 import android.util.Log
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -64,6 +67,12 @@ class VlcPlaybackEngine(context: Context) : PlaybackEngine {
 
     private val rendererDiscoverers = mutableListOf<RendererDiscoverer>()
     private val rendererItems = mutableMapOf<String, RendererItem>()
+
+    private val mainHandler = Handler(Looper.getMainLooper())
+    private var upnpCaster: UpnpCaster? = null
+    private val upnpDevices = LinkedHashMap<String, UpnpCaster.Device>()
+    private var upnpSession: UpnpCaster.Device? = null
+    private var upnpPollRunnable: Runnable? = null
 
     private var currentMedia: Media? = null
     private var currentFileDescriptor: ParcelFileDescriptor? = null
@@ -274,6 +283,10 @@ class VlcPlaybackEngine(context: Context) : PlaybackEngine {
     private var pendingSeekAttempts = 0
 
     override fun play() {
+        upnpSession?.let { device ->
+            upnpCaster?.play(device)
+            return
+        }
         if (_state.value.isEnded) {
             mediaPlayer.setTime(0L)
             _state.update { it.copy(positionMs = 0L, isEnded = false) }
@@ -283,19 +296,37 @@ class VlcPlaybackEngine(context: Context) : PlaybackEngine {
     }
 
     override fun pause() {
+        upnpSession?.let { device ->
+            upnpCaster?.pause(device)
+            return
+        }
         if (mediaPlayer.isPlaying) mediaPlayer.pause()
     }
 
     override fun togglePlayPause() {
+        if (upnpSession != null) {
+            if (_state.value.isPlaying) pause() else play()
+            return
+        }
         if (mediaPlayer.isPlaying) pause() else play()
     }
 
     override fun stop() {
+        if (upnpSession != null) {
+            upnpCaster?.stop(upnpSession!!)
+            _state.update { it.copy(isPlaying = false) }
+            return
+        }
         mediaPlayer.stop()
         _state.update { it.copy(isPlaying = false, positionMs = 0L) }
     }
 
     override fun seekTo(positionMs: Long) {
+        upnpSession?.let { device ->
+            upnpCaster?.seek(device, positionMs)
+            _state.update { it.copy(positionMs = positionMs) }
+            return
+        }
         val current = _state.value
         Log.d(
             TAG,
@@ -416,7 +447,9 @@ class VlcPlaybackEngine(context: Context) : PlaybackEngine {
     }
 
     override fun setVolume(volume: Int) {
-        mediaPlayer.setVolume(volume.coerceIn(0, 100))
+        val value = volume.coerceIn(0, 100)
+        mediaPlayer.setVolume(value)
+        upnpSession?.let { device -> upnpCaster?.setVolume(device, value) }
     }
 
     override fun setVideoScale(mode: VideoScaleMode) {
@@ -495,7 +528,10 @@ class VlcPlaybackEngine(context: Context) : PlaybackEngine {
     override fun startRendererDiscovery() {
         if (rendererDiscoverers.isNotEmpty()) return
         acquireMulticastLock()
-        RendererDiscoverer.list(libVlc).orEmpty().forEach { description ->
+        startUpnpDiscovery()
+        val descriptions = RendererDiscoverer.list(libVlc).orEmpty()
+        Log.i(TAG, "Renderer discoverers: " + descriptions.map { it.name })
+        descriptions.forEach { description ->
             runCatching {
                 val discoverer = RendererDiscoverer(libVlc, description.name)
                 discoverer.setEventListener { event ->
@@ -503,16 +539,19 @@ class VlcPlaybackEngine(context: Context) : PlaybackEngine {
                         RendererDiscoverer.Event.ItemAdded -> event.item?.let { item ->
                             item.retain()
                             rendererItems[rendererKey(item)] = item
+                            Log.i(TAG, "Renderer added: ${item.name} / ${item.type} / ${item.displayName}")
                         }
 
                         RendererDiscoverer.Event.ItemDeleted -> event.item?.let { item ->
                             rendererItems.remove(rendererKey(item))?.release()
+                            Log.i(TAG, "Renderer removed: ${item.name}")
                         }
                     }
                     runCatching { event.release() }
                     publishRenderers()
                 }
                 discoverer.start()
+                Log.i(TAG, "Renderer discovery started: ${description.name}")
                 rendererDiscoverers += discoverer
             }.onFailure { throwable ->
                 Log.w(TAG, "Renderer discovery unavailable for ${description.name}", throwable)
@@ -530,7 +569,31 @@ class VlcPlaybackEngine(context: Context) : PlaybackEngine {
         rendererDiscoverers.clear()
         rendererItems.values.forEach { item -> runCatching { item.release() } }
         rendererItems.clear()
+        upnpCaster?.stopDiscovery()
         releaseMulticastLock()
+        publishRenderers()
+    }
+
+    private fun startUpnpDiscovery() {
+        if (upnpCaster != null) return
+        val caster = UpnpCaster(appContext)
+        upnpCaster = caster
+        caster.startDiscovery { devices ->
+            mainHandler.post {
+                synchronized(upnpDevices) {
+                    upnpDevices.clear()
+                    devices.forEach { upnpDevices[it.udn] = it }
+                }
+                publishRenderers()
+            }
+        }
+    }
+
+    private fun stopUpnpCasterIfIdle() {
+        if (upnpSession != null) return
+        upnpCaster?.shutdown()
+        upnpCaster = null
+        synchronized(upnpDevices) { upnpDevices.clear() }
         publishRenderers()
     }
 
@@ -552,6 +615,10 @@ class VlcPlaybackEngine(context: Context) : PlaybackEngine {
     }
 
     override fun connectRenderer(deviceId: String) {
+        if (deviceId.startsWith(UPNP_PREFIX)) {
+            connectUpnpRenderer(deviceId.removePrefix(UPNP_PREFIX))
+            return
+        }
         val item = rendererItems[deviceId] ?: return
         val originalUri = originalMediaUri ?: return
         val position = _state.value.positionMs
@@ -579,7 +646,97 @@ class VlcPlaybackEngine(context: Context) : PlaybackEngine {
         }
     }
 
+    private fun connectUpnpRenderer(udn: String) {
+        val caster = upnpCaster ?: return
+        val device = synchronized(upnpDevices) { upnpDevices[udn] } ?: return
+        val originalUri = originalMediaUri ?: return
+        val title = originalTitle ?: originalUri.lastPathSegment.orEmpty()
+        val position = _state.value.positionMs
+        val castUrl = if (isLocalMediaUri(originalUri)) {
+            startCastStream(originalUri)
+        } else {
+            originalUri.toString()
+        }
+        if (castUrl == null) {
+            _state.update { it.copy(errorMessage = "Failed to start local stream for casting") }
+            return
+        }
+        runCatching { mediaPlayer.pause() }
+        val metadata = UpnpCaster.buildDidl(title, castUrl)
+        caster.setAVTransportURI(device, castUrl, metadata) { ok, message ->
+            mainHandler.post {
+                if (!ok) {
+                    _state.update {
+                        it.copy(errorMessage = message ?: "Failed to connect to renderer")
+                    }
+                    stopCastStream()
+                    return@post
+                }
+                upnpSession = device
+                caster.activeDevice = device
+                _activeRenderer.value = RendererDevice(UPNP_PREFIX + udn, device.name, "DLNA")
+                caster.play(device)
+                caster.seek(device, position)
+                startUpnpPolling(device)
+                Log.i(TAG, "Casting to UPnP renderer ${device.name}")
+            }
+        }
+    }
+
+    private fun startUpnpPolling(device: UpnpCaster.Device) {
+        stopUpnpPolling()
+        val runnable = object : Runnable {
+            override fun run() {
+                val caster = upnpCaster ?: return
+                caster.queryStatus(device) { status ->
+                    mainHandler.post {
+                        if (upnpSession !== device) return@post
+                        _state.update { current ->
+                            current.copy(
+                                positionMs = if (status.positionMs > 0) status.positionMs else current.positionMs,
+                                durationMs = if (status.durationMs > 0) status.durationMs else current.durationMs,
+                                isPlaying = status.isPlaying,
+                                isBuffering = false,
+                            )
+                        }
+                    }
+                }
+                mainHandler.postDelayed(this, UPNP_POLL_INTERVAL_MS)
+            }
+        }
+        upnpPollRunnable = runnable
+        mainHandler.post(runnable)
+    }
+
+    private fun stopUpnpPolling() {
+        upnpPollRunnable?.let { mainHandler.removeCallbacks(it) }
+        upnpPollRunnable = null
+    }
+
+    private fun stopUpnpCasting(resumeLocal: Boolean) {
+        val device = upnpSession ?: return
+        val position = _state.value.positionMs
+        val originalUri = originalMediaUri
+        upnpSession = null
+        stopUpnpPolling()
+        upnpCaster?.let { caster ->
+            caster.stop(device)
+            caster.activeDevice = null
+        }
+        _activeRenderer.value = null
+        stopCastStream()
+        if (resumeLocal && originalUri != null) {
+            openMedia(originalUri, originalTitle, lastMediaOptions, positionMs = position)
+            play()
+        }
+        stopUpnpCasterIfIdle()
+    }
+
     override fun disconnectRenderer() {
+        if (upnpSession != null) {
+            stopUpnpCasting(resumeLocal = true)
+            return
+        }
         val position = _state.value.positionMs
         val originalUri = originalMediaUri
         mediaPlayer.setRenderer(null)
@@ -619,13 +776,23 @@ class VlcPlaybackEngine(context: Context) : PlaybackEngine {
     private fun rendererKey(item: RendererItem): String = "${item.type}:${item.name}"
 
     private fun publishRenderers() {
-        _renderers.value = rendererItems.map { (key, item) ->
+        val libVlcDevices = rendererItems.map { (key, item) ->
             RendererDevice(
                 id = key,
                 name = item.displayName.ifBlank { item.name },
                 type = item.type,
             )
         }
+        val dlnaDevices = synchronized(upnpDevices) {
+            upnpDevices.values.map { device ->
+                RendererDevice(
+                    id = UPNP_PREFIX + device.udn,
+                    name = device.name,
+                    type = "DLNA",
+                )
+            }
+        }
+        _renderers.value = libVlcDevices + dlnaDevices
     }
 
     private fun onTimeChanged(positionMs: Long) {
@@ -875,6 +1042,10 @@ class VlcPlaybackEngine(context: Context) : PlaybackEngine {
         if (released) return
         released = true
         runCatching {
+            stopUpnpPolling()
+            upnpCaster?.shutdown()
+            upnpCaster = null
+            upnpSession = null
             mediaPlayer.stop()
             mediaPlayer.detachViews()
             stopCastStream()
@@ -893,6 +1064,8 @@ class VlcPlaybackEngine(context: Context) : PlaybackEngine {
         private const val SEEK_STALE_TOLERANCE_MS = 4_000L
         private const val MAX_PENDING_SEEK_ATTEMPTS = 5
         private const val TIME_LOG_INTERVAL_MS = 2_000L
+        private const val UPNP_PREFIX = "upnp:"
+        private const val UPNP_POLL_INTERVAL_MS = 2_000L
 
         private val DEFAULT_OPTIONS = listOf(
             "--audio-time-stretch",

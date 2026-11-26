@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.1.2] - 2026-11-27
+
+### 修复 Fixed
+
+- **DLNA 投屏搜不到设备**：Android 版 libVLC 只提供 Chromecast（microdns）渲染器发现模块，不含 UPnP/DLNA 发现，因此电视永远搜不到。现在改用 jUPnP 自建 DLNA 控制点：SSDP 发现 MediaRenderer 设备，通过 AVTransport / RenderingControl 完成投屏、暂停、进度、音量控制；本地视频仍由内置串流服务器提供给电视拉流。与「接收投屏」共用同一个 UPnP 服务栈，避免端口与 Jetty 冲突
+
 ## [Unreleased]
 
 ### 新增 Added
